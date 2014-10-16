@@ -22,7 +22,7 @@ bugs <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN04/lsn.
 obs<- getSSNdata.frame(bugs, Name = "Obs")
 
 colnames(edgedf)
-colnames(obs)
+colnames(stations.df)
 
 # Function to calculate accumulated attributes at sites
 siteaccum <- function(Edgedf, Sitesdf, EdgeVar, AEdgeVar, upratio, station, by.site, by.edge) {
@@ -52,7 +52,19 @@ for (i in 1:length(edgevars)) {
 ###################################
 #######   random forests  ##########
 #######################################
-# --- EDIT THIS From another project.
+
+
+# -----------------------------------------------------------
+rf.vars <- read.csv('VarNames_RF.csv')
+ncol(comb[,rf.vars[rf.vars$RF_Keep == 1,'col']])
+
+rf.df <- (comb[,rf.vars[rf.vars$RF_Keep == 1,'col']])
+
+colnames(rf.df)
+
+# All the col left are the ones we want to accumulate, except the noaccum.
+
+
 
 library(randomForest)
 colnames(ref.cal) 
