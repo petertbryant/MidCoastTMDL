@@ -1,13 +1,5 @@
 
-# Function to calculate accumulated attributes at sites # THIS NEEDS WORK
-siteaccum <- function(Edgedf, Sitesdf, EdgeVar, AEdgeVar, upDist, by.site, by.edge) {
-  # get the cols
-  dfx <- Sitesdf[,c(by.site, upDist)]
-  dfy <- Edgedf[,c(by.edge, EdgeVar, AEdgeVar)]
-  dfm <- merge(dfx, dfy, by.x=by.site, by.y=by.edge, all.x=TRUE)
-  Sitesdf$AEdgeVar <- dfm$AEdgeVar - (dfm$upDist * dfm$EdgeVar)
-  return(Sitesdf)
-}
+
 
 # library(raster)
 # # import the edge shapefile
@@ -34,12 +26,52 @@ colnames(obs)
 
 #obs <- siteaccum(edgedf, obs, "RCASQM", "ARCASQM", "ratio", "rid", "rid")
 
-dfx <- obs[,c("rid", "ratio")]
+dfx <- obs[,c("STATION_KE","rid", "ratio")]
 dfy <- edgedf[,c("rid", "RCASQM", "ARCASQM")]
 dfm <- merge(dfx, dfy, by.x="rid", by.y="rid", all.x=TRUE)
 dfm$accum <- dfm$ARCASQM - (dfm$ratio * dfm$RCASQM)
-dfm2 <- dfm[,c("rid","accum")]
-obs2 <- merge(obs, dfm2, by.x="rid", by.y="rid", all.x =TRUE)
+dfm2 <- dfm[,c("STATION_KE","accum")]
+obs2 <- merge(obs, dfm2, by = 'STATION_KE', all.x =TRUE)
+
+# Function to calculate accumulated attributes at sites # THIS NEEDS WORK
+siteaccum <- function(Edgedf, Sitesdf, EdgeVar, AEdgeVar, upDist, station, by.site, by.edge) {
+  # get the cols
+  dfx <- Sitesdf[,c(station, by.site, upDist)]
+  dfy <- Edgedf[,c(by.edge, EdgeVar, AEdgeVar)]
+  dfm <- merge(dfx, dfy, by.x=by.site, by.y=by.edge, all.x=TRUE)
+  dfm$accum <- dfm[,AEdgeVar] - (dfm[,upDist] * dfm[,EdgeVar])
+  #dfm2 <- dfm[,c(station,'accum')]
+  #Sitesdf <- merge(Sitesdf, dfm2, by = station, all.x = TRUE)
+  #return(Sitesdf)
+  return(dfm$accum)
+}
+
+obs3 <- siteaccum(Edgedf = edgedf, 
+                  Sitesdf = obs,
+                  EdgeVar = "RCASQM", 
+                  AEdgeVar = "ARCASQM", 
+                  upDist = "ratio",
+                  station = "STATION_KE",
+                  by.site = "rid",
+                  by.edge = "rid")
+
+
+
+Aedgevars <- names(edgedf)[grep('^A',names(edgedf))]
+edgevars <- gsub('^A','',Aedgevars)
+
+obs2 <- obs
+for (i in 1:length(edgevars)) {
+  newcol <- siteaccum(Edgedf = edgedf, 
+                      Sitesdf = obs,
+                      EdgeVar = edgevars[i], 
+                      AEdgeVar = Aedgevars[i], 
+                      upDist = "ratio",
+                      station = "STATION_KE",
+                      by.site = "rid",
+                      by.edge = "rid")
+  obs2 <- cbind(obs2, newcol)
+}
 
 ###################################
 #######   random forests  ##########

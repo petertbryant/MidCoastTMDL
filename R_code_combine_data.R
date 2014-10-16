@@ -1,15 +1,20 @@
 library(plyr)
 library(RODBC)
 library(SSN)
+library(foreign)
 options(stringsAsFactors = FALSE)
 
 ## READ DATA FROM ACCESS 2007
 indb <- "//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN04/Tables.mdb"
-tablename <- "edge_table_final"
+tablename1 <- "edge_table_final"
+tablename2 <- 'stations_table'
+tablename3 <- 'FSS_by_SVN'
 channel <-odbcConnectAccess2007(indb)
-edgedf <- sqlFetch(channel, tablename)
+edgedf <- sqlFetch(channel, tablename1)
+stations.df <- sqlFetch(channel, tablename2)
+fss <- sqlFetch(channel, tablename3)
 close(channel)
-rm(indb, tablename, channel)
+rm(indb, tablename1, tablename2, tablename3, channel)
 
 #read in the SSN object
 bugs <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN04/lsn.ssn", o.write=FALSE)
@@ -59,6 +64,7 @@ slope.all <- slope.all[!duplicated(slope.all$STATION_KEY),]
 # 
 # all(sort(precip$TS_May05) == sort(phab.bugs[phab.bugs$SVN %in% precip$SVN,'TS_May05'])) #TRUE
 
+#Put the dfs together without duplicating columns
 precip2 <- precip[,names(precip)[!names(precip) %in% names(phab.bugs)]]
 precip <- cbind(data.frame('SVN' = precip[,'SVN']),precip2)
 rm(precip2)
@@ -77,18 +83,34 @@ rm(comb2)
 
 comb <- merge(comb, obs.a, by = 'STATION_KEY', all.y = TRUE)
 
-View(comb[,1:99])
-View(comb[,100:199])
-View(comb[,200:299])
-View(comb[,300:399])
-View(comb[,c(1:2,400:496)])
-View(comb[,500:505])
+comb2 <- comb[,names(comb)[!names(comb) %in% names(stations.df)]]
+comb <- cbind(data.frame('STATION_KEY' = comb[,'STATION_KEY']), comb2)
+rm(comb2)
 
-na.list <- apply((apply(comb, 2, is.na)),2,table)
-na.df <- data.frame('col' = names(na.list))
-na.df$na.count <- NA
-for (i in 1:length(na.list)) {
-  if(!is.na((na.list[i][[1]][2]))) {
-    na.df$na.count[i] <- na.list[i][[1]][2]
-  }
-}
+comb <- merge(comb, stations.df, by = 'STATION_KEY', all.x = TRUE)
+
+#Calculate stream power by first pulling in the most up to date nhd flow data
+nhd <- read.dbf('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/Watershed_Characteristics/NHDplus_21/EROMExtension/EROM_MA0001.DBF')
+nhd.flow <- nhd[,c('Comid','Q0001A')]
+
+comb <- merge(comb, nhd.flow, by.x = "NHDP21_COMID", by.y = 'Comid', all.x = TRUE)
+
+comb$STRMPWR <- comb$XSLOPE_MAP * comb$Q0001A
+
+#Pull in updated FSS values
+#names(comb)[grep('FSS',names(comb))] #FSS_May05
+comb <- merge(comb, fss[,c('SVN','FSS_26Aug14')], by = 'SVN', all.x = TRUE)
+comb <- within(comb, rm(FSS_May05))
+
+# na.list <- apply((apply(comb, 2, is.na)),2,table)
+# na.df <- data.frame('col' = names(na.list))
+# na.df$na.count <- NA
+# for (i in 1:length(na.list)) {
+#   if(!is.na((na.list[i][[1]][2]))) {
+#     na.df$na.count[i] <- na.list[i][[1]][2]
+#   }
+# }
+# na.df$na.count <- ifelse(is.na(na.df$na.count),0,na.df$na.count)
+#write.csv(na.df, 'VarNACount.csv')
+rf.vars <- read.csv('VarNACount.csv')
+ncol(comb[,rf.vars[rf.vars$RF_Keep == 1,'col']])
