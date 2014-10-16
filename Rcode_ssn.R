@@ -3,14 +3,14 @@
 
 # library(raster)
 # # import the edge shapefile
-# edgepath <- "C:/WorkSpace/Biocriteria/WatershedCharaterization/SSN/LSN04/lsn.ssn/edges.shp"
+# edgepath <- "//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN04/lsn.ssn/edges.shp"
 # edge_shp <- shapefile(edgepath ,stringsAsFactors=FALSE)
 # edgedf <- data.frame(edge_shp)
 # rm(edge_shp, edgepath)
 
 library(RODBC)
 ## READ DATA FROM ACCESS 2007
-indb <- "C:/WorkSpace/Biocriteria/WatershedCharaterization/SSN/LSN04/Tables.mdb"
+indb <- "//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN04/Tables.mdb"
 tablename <- "edge_table_final"
 channel <-odbcConnectAccess2007(indb)
 edgedf <- sqlFetch(channel, tablename)
@@ -18,59 +18,35 @@ close(channel)
 rm(indb, tablename, channel)
 
 library(SSN)
-bugs <- importSSN("C:/WorkSpace/Biocriteria/WatershedCharaterization/SSN/LSN04/lsn.ssn", o.write=FALSE)
+bugs <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN04/lsn.ssn", o.write=FALSE)
 obs<- getSSNdata.frame(bugs, Name = "Obs")
 
 colnames(edgedf)
 colnames(obs)
 
-#obs <- siteaccum(edgedf, obs, "RCASQM", "ARCASQM", "ratio", "rid", "rid")
-
-dfx <- obs[,c("STATION_KE","rid", "ratio")]
-dfy <- edgedf[,c("rid", "RCASQM", "ARCASQM")]
-dfm <- merge(dfx, dfy, by.x="rid", by.y="rid", all.x=TRUE)
-dfm$accum <- dfm$ARCASQM - (dfm$ratio * dfm$RCASQM)
-dfm2 <- dfm[,c("STATION_KE","accum")]
-obs2 <- merge(obs, dfm2, by = 'STATION_KE', all.x =TRUE)
-
-# Function to calculate accumulated attributes at sites # THIS NEEDS WORK
-siteaccum <- function(Edgedf, Sitesdf, EdgeVar, AEdgeVar, upDist, station, by.site, by.edge) {
+# Function to calculate accumulated attributes at sites
+siteaccum <- function(Edgedf, Sitesdf, EdgeVar, AEdgeVar, upratio, station, by.site, by.edge) {
   # get the cols
-  dfx <- Sitesdf[,c(station, by.site, upDist)]
+  dfx <- Sitesdf[,c(station, by.site, upratio)]
   dfy <- Edgedf[,c(by.edge, EdgeVar, AEdgeVar)]
   dfm <- merge(dfx, dfy, by.x=by.site, by.y=by.edge, all.x=TRUE)
-  dfm$accum <- dfm[,AEdgeVar] - (dfm[,upDist] * dfm[,EdgeVar])
-  #dfm2 <- dfm[,c(station,'accum')]
-  #Sitesdf <- merge(Sitesdf, dfm2, by = station, all.x = TRUE)
-  #return(Sitesdf)
-  return(dfm$accum)
+  accum <- dfm[,AEdgeVar] - (dfm[,upratio] * dfm[,EdgeVar])
+  return(accum)
 }
-
-obs3 <- siteaccum(Edgedf = edgedf, 
-                  Sitesdf = obs,
-                  EdgeVar = "RCASQM", 
-                  AEdgeVar = "ARCASQM", 
-                  upDist = "ratio",
-                  station = "STATION_KE",
-                  by.site = "rid",
-                  by.edge = "rid")
-
-
 
 Aedgevars <- names(edgedf)[grep('^A',names(edgedf))]
 edgevars <- gsub('^A','',Aedgevars)
 
 obs2 <- obs
 for (i in 1:length(edgevars)) {
-  newcol <- siteaccum(Edgedf = edgedf, 
+  obs2[,Aedgevars[i]] <- siteaccum(Edgedf = edgedf, 
                       Sitesdf = obs,
                       EdgeVar = edgevars[i], 
                       AEdgeVar = Aedgevars[i], 
-                      upDist = "ratio",
+                      upratio = "ratio",
                       station = "STATION_KE",
                       by.site = "rid",
                       by.edge = "rid")
-  obs2 <- cbind(obs2, newcol)
 }
 
 ###################################
