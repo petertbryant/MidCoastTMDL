@@ -27,6 +27,8 @@ rm(indb, tablename1, tablename2, tablename3, tablename4, tablename5, channel)
 #rm(bugs)
 
 # -----------------------------------------------------------
+# FUNCTIONS
+
 # Function to calculate accumulated attributes at sites
 siteaccum <- function(Edgedf, Sitesdf, EdgeVar, AEdgeVar, upratio, station, by.site, by.edge) {
   # get the cols
@@ -37,6 +39,16 @@ siteaccum <- function(Edgedf, Sitesdf, EdgeVar, AEdgeVar, upratio, station, by.s
   return(accum)
 }
 
+# Make colums with similar data match (NEED TO BE FIXED
+makematch <- function(x, y){
+  if (!isTRUE(all.equal(x,y))){
+    mismatches <- paste(which(x != y), collapse = ",")
+    stop("error the A and B does not match at the following columns: ", mismatches )
+  } else {
+    message("All match")
+  }
+}
+
 # -----------------------------------------------------------
 
 colnames(obs)
@@ -45,7 +57,7 @@ colnames(edgedf)
 # These are edgedf col that we want to delete from obs after the merge
 edgedel <- c("OBJECTID", "arcid", "from_node", 
               "to_node","HydroID", "GridID","NextDownID",
-              "DrainID", "Shape_Length","upDist", "RCA_PI")
+              "DrainID", "Shape_Length", "RCA_PI")
 
 # we add the accumulated cols because they are going 
 # to be added again in the siteaccum function
@@ -204,7 +216,11 @@ for (i in 1:length(changecol)) {
 rm(haslidar, has.lidar.id, changecol, i)
 
 # -----------------------------------------------------------
-# Delete?
+# This generates a csv with each of the final col colnames. 
+# This file must be edited so 
+# RF_Keep = 1 for col that will go to RF
+# RF_KEEP = 0 = for col excluded from RF
+# Resave the file as VarNames_RF.csv
 
 na.list <- apply((apply(comb, 2, is.na)),2,table)
 na.df <- data.frame('col' = names(na.list))
@@ -215,11 +231,11 @@ for (i in 1:length(na.list)) {
   }
 }
 na.df$na.count <- ifelse(is.na(na.df$na.count),0,na.df$na.count)
-write.csv(na.df, 'VarNACount.csv')
+
+na.df$RF_Keep <- NA
 
 # -----------------------------------------------------------
-rf.vars <- read.csv('Var_RF.csv')
-ncol(comb[,rf.vars[rf.vars$RF_Keep == 1,'col']])
+# Write the files
 
-colnames(comb)
-
+write.csv(na.df, 'VarNACount.csv')
+write.csv(comb, 'ssn_RF_data.csv', row.names = FALSE)
