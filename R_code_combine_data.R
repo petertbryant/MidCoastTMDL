@@ -7,14 +7,16 @@ options(stringsAsFactors = FALSE)
 ## READ DATA FROM ACCESS 2007
 indb <- "//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN04/Tables.mdb"
 tablename1 <- "edge_table_final"
-tablename2 <- 'stations_table'
-tablename3 <- 'FSS_by_SVN'
+tablename2 <- "stations_table"
+tablename3 <- "FSS_by_SVN"
+tablename4 <- "tbl_HASLIDAR_Station_watershed"
 channel <-odbcConnectAccess2007(indb)
 edgedf <- sqlFetch(channel, tablename1)
 stations.df <- sqlFetch(channel, tablename2)
 fss <- sqlFetch(channel, tablename3)
+hasLidar <- sqlFetch(channel, tablename4)
 close(channel)
-rm(indb, tablename1, tablename2, tablename3, channel)
+rm(indb, tablename1, tablename2, tablename3, tablename4, channel)
 
 #read in the SSN object
 bugs <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN04/lsn.ssn", o.write=FALSE)
@@ -114,3 +116,6 @@ comb <- within(comb, rm(FSS_May05))
 #write.csv(na.df, 'VarNACount.csv')
 rf.vars <- read.csv('VarNACount.csv')
 ncol(comb[,rf.vars[rf.vars$RF_Keep == 1,'col']])
+
+colnames(comb)
+
