@@ -254,7 +254,11 @@ na.list <- colSums(is.na(comb))
 na.df <- t(as.data.frame(t(na.list),row.names = c("na.count")))
 na.df <- data.frame(rownames(na.df),na.df,row.names = NULL)
 colnames(na.df)[1]="var"
-na.df$RF_Keep <- NA
+na.df$fss.rf_keep <- NA
+na.df$pctfn.rf_keep <- NA
+na.df$pctsa.rf_keep <- NA
+na.df$pctsafn.rf_keep <- NA
+na.df$oe.rf_keep <- NA
 
 # -----------------------------------------------------------
 # Write the files
