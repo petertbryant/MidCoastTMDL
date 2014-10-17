@@ -8,50 +8,14 @@
 # edgedf <- data.frame(edge_shp)
 # rm(edge_shp, edgepath)
 
-library(RODBC)
-## READ DATA FROM ACCESS 2007
-indb <- "//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN04/Tables.mdb"
-tablename <- "edge_table_final"
-channel <-odbcConnectAccess2007(indb)
-edgedf <- sqlFetch(channel, tablename)
-close(channel)
-rm(indb, tablename, channel)
+options(stringsAsFactors = FALSE)
+vars <- read.csv("VarNames_RF.csv")
+bugs <- read.csv("ssn_RF_data.csv")
 
-library(SSN)
-bugs <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN04/lsn.ssn", o.write=FALSE)
-obs<- getSSNdata.frame(bugs, Name = "Obs")
+# -----------------------------------------------------------
+# Random forests
+library(party)
 
-colnames(edgedf)
-colnames(stations.df)
-
-# Function to calculate accumulated attributes at sites
-siteaccum <- function(Edgedf, Sitesdf, EdgeVar, AEdgeVar, upratio, station, by.site, by.edge) {
-  # get the cols
-  dfx <- Sitesdf[,c(station, by.site, upratio)]
-  dfy <- Edgedf[,c(by.edge, EdgeVar, AEdgeVar)]
-  dfm <- merge(dfx, dfy, by.x=by.site, by.y=by.edge, all.x=TRUE)
-  accum <- dfm[,AEdgeVar] - (dfm[,upratio] * dfm[,EdgeVar])
-  return(accum)
-}
-
-Aedgevars <- names(edgedf)[grep('^A',names(edgedf))]
-edgevars <- gsub('^A','',Aedgevars)
-
-obs2 <- obs
-for (i in 1:length(edgevars)) {
-  obs2[,Aedgevars[i]] <- siteaccum(Edgedf = edgedf, 
-                      Sitesdf = obs,
-                      EdgeVar = edgevars[i], 
-                      AEdgeVar = Aedgevars[i], 
-                      upratio = "ratio",
-                      station = "STATION_KE",
-                      by.site = "rid",
-                      by.edge = "rid")
-}
-
-###################################
-#######   random forests  ##########
-#######################################
 
 
 # -----------------------------------------------------------
@@ -134,3 +98,9 @@ RF_red.rmse
 #rmse = 0.301
 #in log10 scale--> untransform
 10^RF.rmse      # RMSE = 1.999,  or 2.0%
+
+# -----------------------------------------------------------
+# SSN
+library(SSN)
+bugs <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN04/lsn.ssn", o.write=FALSE)
+obs<- getSSNdata.frame(bugs, Name = "Obs")
