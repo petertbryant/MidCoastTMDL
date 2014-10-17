@@ -1,35 +1,42 @@
 
 
 
-# library(raster)
-# # import the edge shapefile
-# edgepath <- "//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN04/lsn.ssn/edges.shp"
-# edge_shp <- shapefile(edgepath ,stringsAsFactors=FALSE)
-# edgedf <- data.frame(edge_shp)
-# rm(edge_shp, edgepath)
+library(party)
 
 options(stringsAsFactors = FALSE)
 vars <- read.csv("VarNames_RF.csv")
 bugs <- read.csv("ssn_RF_data.csv")
 
 # -----------------------------------------------------------
-# Random forests
-library(party)
+# FSS - Random forests
+vars.fss <- vars[vars$fss.rf_keep == 1,]
+fss <- bugs[,colnames(bugs) %in% vars.fss$var]
 
+# remove NAs in response variable
+fss <- fss[(!is.na(fss$FSS_26Aug14)),]
+fss.na <- na.omit(fss)
+
+# factor chr vars
+fss$ECO3_NAME <- factor(fss$ECO3_NAME)
+fss$fishpres <- factor(fss$fishpres)
+fss$YEAR <- factor(fss$YEAR)
+
+set.seed(99998)
+
+fss.cf <- cforest(FSS_26Aug14 ~ ., data = fss,controls = cforest_unbiased(ntree = 50))
+
+fss.ct <- ctree(FSS_26Aug14 ~ ., data = fss, controls = ctree_control(maxsurrogate = 3))
+
+plot(fss.ct)
+
+
+set.seed(99998)
+varimp(fss.cf)
+
+plot(fss.cf)
 
 
 # -----------------------------------------------------------
-rf.vars <- read.csv('VarNames_RF.csv')
-ncol(comb[,rf.vars[rf.vars$RF_Keep == 1,'col']])
-
-rf.df <- (comb[,rf.vars[rf.vars$RF_Keep == 1,'col']])
-
-colnames(rf.df)
-
-# All the col left are the ones we want to accumulate, except the noaccum.
-
-
-
 library(randomForest)
 colnames(ref.cal) 
 dim(ref.cal)          
