@@ -24,6 +24,11 @@ replacena <- function(df, x, y){
   return(df)
   }
 
+propor<- function(df, numer, denom, newfield){
+  df[,newfield] <- (df[,numer] / df[,denom]) * 100
+  return(df)
+}
+
 # -----------------------------------------------------------
 # Read in data from access tables
 
@@ -33,6 +38,8 @@ tablename2 <- "ssn_sites_table_final"
 tablename3 <- "FSS_by_SVN"
 tablename4 <- "tbl_HASLIDAR_Station_watershed"
 tablename5 <- "tb_PPT_annual_avg_by_STATION_KEY"
+tablename6 <- "tbl_POPRCA2010_by_RID"
+tablename7 <- "var_proportion_table"
 channel <-odbcConnectAccess2007(indb)
 edgedf <- sqlFetch(channel, tablename1)
 obs <- sqlFetch(channel, tablename2)
@@ -40,18 +47,24 @@ obs <- sqlFetch(channel, tablename2)
 fss <- sqlFetch(channel, tablename3)
 haslidar <- sqlFetch(channel, tablename4)
 ppt <- sqlFetch(channel, tablename5)
+pop <- sqlFetch(channel, tablename6)
+pvar <- sqlFetch(channel, tablename7)
 close(channel)
-rm(indb, tablename1, tablename2, tablename3, tablename4, tablename5, channel)
+rm(indb, tablename1, tablename2, tablename3, tablename4, tablename5, tablename6, tablename7, channel)
 # -----------------------------------------------------------
 # Clean up the data and accumulate some of the variables
 
 colnames(obs)
 colnames(edgedf)
 
+ppt <- within(ppt, rm(OBJECTID))
+pop <- within(pop, rm(OBJECTID))
+
+edgedf <- merge(edgedf, pop, by="rid", all.x=TRUE)
+
 # remove all the NAs in the accumulated fields except fishpres
 edgedf[!(names(edgedf) %in%"fishpres")][is.na(edgedf[!(names(edgedf) %in%"fishpres")])] <- 0
 
-ppt <- within(ppt, rm(OBJECTID))
 
 # These are edgedf col that we want to delete from obs after the merge
 edge.rm <- c("OBJECTID", "arcid", "from_node", 
@@ -94,6 +107,7 @@ edgevars <- colnames(obs.a[, !colnames(obs.a) %in% noaccum])
 # This adds the A to get the accumulated counterpart
 Aedgevars <- paste("A",edgevars, sep="")
 
+# Run the loop to accumulate all the fields
 for (i in 1:length(edgevars)) {
   obs.a[,Aedgevars[i]] <- siteaccum(Edgedf = edgedf, 
                                     Sitesdf = obs.a,
@@ -229,6 +243,36 @@ for (i in 1:length(changecol)) {
   comb[,changecol[i]] <- ifelse(comb$STATION_KEY %in% has.lidar.id,NA,comb[,changecol[i]])
 }
 rm(haslidar, has.lidar.id, changecol, i)
+# -----------------------------------------------------------
+# Calculate Year specfic disturbance # FIX
+
+var <- paste0(disvar[i],"_",comb$YEAR[i])
+
+comb[,disvar[i]] <- comb[,grep(var,names(comb))]
+
+DISRCA_1YR <- 
+DISRCA_3YR
+DISRCA_10YR
+DISRSA_1YR
+DISRSA_3YR
+DISRSA_10YR
+ADISRCA_1YR
+ADISRCA_3YR
+ADISRCA_10YR
+ADISRSA_1YR
+ADISRSA_3YR
+ADISRSA_10YR
+
+
+
+
+
+# -----------------------------------------------------------
+# Run the loop to calculate percentages, means, or densities
+for (i in 1:nrow(pvar)) {
+  #obs.a[,pvar[i,2]] <- (pvar[i,3] / pvar[i,4]) * 100
+  obs.a <- propor(obs.a, pvar[i,3], pvar[i,4], pvar[i,2])
+}
 
 # -----------------------------------------------------------
 # Fix the NA sample dates and related cols
