@@ -5,28 +5,6 @@ library(foreign)
 options(stringsAsFactors = FALSE)
 
 # -----------------------------------------------------------
-# READ DATA FROM ACCESS 2007
-indb <- "//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN04/Tables.mdb"
-tablename1 <- "ssn_edges_table_final"
-tablename2 <- "ssn_sites_table_final"
-tablename3 <- "stations_table"
-tablename4 <- "FSS_by_SVN"
-tablename5 <- "tbl_HASLIDAR_Station_watershed"
-channel <-odbcConnectAccess2007(indb)
-edgedf <- sqlFetch(channel, tablename1)
-obs <- sqlFetch(channel, tablename2)
-stations.df <- sqlFetch(channel, tablename3)
-fss <- sqlFetch(channel, tablename4)
-haslidar <- sqlFetch(channel, tablename5)
-close(channel)
-rm(indb, tablename1, tablename2, tablename3, tablename4, tablename5, channel)
-
-#read in the SSN object in order to get the station data
-#bugs <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN04/lsn.ssn", o.write=FALSE)
-#obs<- getSSNdata.frame(bugs, Name = "Obs")
-#rm(bugs)
-
-# -----------------------------------------------------------
 # FUNCTIONS
 
 # Function to calculate accumulated attributes at sites
@@ -39,41 +17,63 @@ siteaccum <- function(Edgedf, Sitesdf, EdgeVar, AEdgeVar, upratio, station, by.s
   return(accum)
 }
 
-# Make colums with similar data match (NEED TO BE FIXED
-makematch <- function(x, y){
-  if (!isTRUE(all.equal(x,y))){
-    mismatches <- paste(which(x != y), collapse = ",")
-    stop("error the A and B does not match at the following columns: ", mismatches )
-  } else {
-    message("All match")
+# where NAs exist it will pull value from the other col, returns a df
+replacena <- function(df, x, y){
+  df[, x] <- ifelse(is.na(df[, x]), df[, y],df[, x])
+  df[, y] <- ifelse(is.na(df[, y]), df[, x],df[, y])
+  return(df)
   }
-}
 
 # -----------------------------------------------------------
+# Read in data from access tables
+
+indb <- "//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN04/Tables.mdb"
+tablename1 <- "ssn_edges_table_final"
+tablename2 <- "ssn_sites_table_final"
+tablename3 <- "FSS_by_SVN"
+tablename4 <- "tbl_HASLIDAR_Station_watershed"
+tablename5 <- "tb_PPT_annual_avg_by_STATION_KEY"
+channel <-odbcConnectAccess2007(indb)
+edgedf <- sqlFetch(channel, tablename1)
+obs <- sqlFetch(channel, tablename2)
+#stations.df <- sqlFetch(channel, tablename3)
+fss <- sqlFetch(channel, tablename3)
+haslidar <- sqlFetch(channel, tablename4)
+ppt <- sqlFetch(channel, tablename5)
+close(channel)
+rm(indb, tablename1, tablename2, tablename3, tablename4, tablename5, channel)
+# -----------------------------------------------------------
+# Clean up the data and accumulate some of the variables
 
 colnames(obs)
 colnames(edgedf)
 
+# remove all the NAs in the accumulated fields except fishpres
+edgedf[!(names(edgedf) %in%"fishpres")][is.na(edgedf[!(names(edgedf) %in%"fishpres")])] <- 0
+
+ppt <- within(ppt, rm(OBJECTID))
+
 # These are edgedf col that we want to delete from obs after the merge
-edgedel <- c("OBJECTID", "arcid", "from_node", 
-              "to_node","HydroID", "GridID","NextDownID",
-              "DrainID", "Shape_Length", "RCA_PI")
+edge.rm <- c("OBJECTID", "arcid", "from_node", 
+             "to_node","HydroID", "GridID","NextDownID",
+             "DrainID", "Shape_Length", "RCA_PI")
 
 # we add the accumulated cols because they are going 
 # to be added again in the siteaccum function
-edgedel <- c(edgedel,names(edgedf)[grep('^A',names(edgedf))])
+edge.rm <- c(edge.rm,names(edgedf)[grep('^A',names(edgedf))])
 
 # We want to keep these ones though since we don't accumulate them at the site
 edgekeep <- c("AROADX", "AROADLENRCAM", "AROADLENRSAM", "ASPLASH")
-edgedel <- edgedel[!(edgedel %in% edgekeep)]
+edge.rm <- edge.rm[!(edge.rm %in% edgekeep)]
 
 # merge edge accumulations with the station and clean up
 obs.a <- merge(obs, edgedf, by = 'rid', all.x = TRUE)
 obs.a <- rename(obs.a, c('upDist.x' = 'upDist'))
 obs.a <- within(obs.a, rm(OBJECTID.x,OBJECTID.y, upDist.y))
-obs.a <- obs.a[, !colnames(obs.a) %in% edgedel]
+obs.a <- obs.a[, !colnames(obs.a) %in% edge.rm]
 
 colnames(obs.a)
+
 
 # These are obs.a col that we want to exclude from the site accumulation function
 # all other col will be accumulated
@@ -81,7 +81,7 @@ noaccum <- c("rid", "OBJECTID",  "POURID", "STATION_KEY", "SITE_NAME",
              "HU_6_NAME", "HU_8_NAME", "HU_10_NAME", "HU_12_NAME",      
              "HU_08", "HU_10", "HU_12", "LONG_RAW",        
              "LAT_RAW", "NHDHigh", "NHDh_ReachCode", "NHDP21_ReachCode",
-             "NHDP12_COMID", "RESOLUTION", "ECO3_NAME", "VERSION",         
+             "NHDP12_COMID", "NHDP21_COMID", "RESOLUTION", "ECO3_NAME", "VERSION",         
              "ratio", "locID", "netID", "pid", "upDist", 
              "afvArea", "fishpres", "Shape_Length","fishpres", 
              "ROADX", "ROADLENRCAM","ROADLENRSAM",
@@ -96,25 +96,42 @@ Aedgevars <- paste("A",edgevars, sep="")
 
 for (i in 1:length(edgevars)) {
   obs.a[,Aedgevars[i]] <- siteaccum(Edgedf = edgedf, 
-                                   Sitesdf = obs.a,
-                                   EdgeVar = edgevars[i], 
-                                   AEdgeVar = Aedgevars[i], 
-                                   upratio = "ratio",
-                                   station = "STATION_KEY",
-                                   by.site = "rid",
-                                   by.edge = "rid")
+                                    Sitesdf = obs.a,
+                                    EdgeVar = edgevars[i], 
+                                    AEdgeVar = Aedgevars[i], 
+                                    upratio = "ratio",
+                                    station = "STATION_KEY",
+                                    by.site = "rid",
+                                    by.edge = "rid")
 }
 
 colnames(obs.a)
-rm(Aedgevars,edgevars, edgedel, edgekeep, noaccum, i)
+rm(Aedgevars,edgevars, edge.rm, edgekeep, noaccum, i)
+
 # -----------------------------------------------------------
+# Read in SVNs to remove per Shannon Hubler comments (see Dealing with Low Counts_SH_4 8 14_RM.xlsx)
+svn.rm <- read.csv('//deqhq1/TMDL/TMDL_WR/MidCoast/Data/BenthicMacros/Raw_From_Shannon/SVNs_to_Remove_2014_08_04.csv')
 
-# precip data
+# Read in precip data
 precip <- read.csv('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/Watershed_Characteristics/Precip/R_output_Precip_samples_2014-09-08.csv')
+rm.col <- c("EXCLUDE","NewSample","Bug_RefApril13", "TMDL",
+            "MIDCOAST", "Samples","Ref_Samples", "REF",
+            "FLAG", "FLAG_REASON","REF_shubler", "Bug_RefMay05",
+            "SVN2KEY", "Date", "Month_Sampled","Day_Sampled", 
+            "Year_Sampled", "HabitatSampled","SamplingAgency",
+            "SamplingProtocol", "Field_QAQC",
+            "Lab_QAQC", "Project_name", "TS_May05", "FSS_May05", 
+            "PREDATOR_Nov05_model", "PREDATOR_Nov05_score","PREDATOR_Nov05_Condition",
+            "PREDATOR_outlier","PREDATOR_Integrated_Rpt_2010", "Bug_Count_RIV",
+            "PREDATOR_reference_model", "EcoT20_FURR",
+            "EMAP_REF", "FURR_Score","HDI_FURR", "SITE_NAME", "Shannon_Original", 
+            "Shannon.First.Download")
+precip <- precip[, !colnames(precip) %in% rm.col]
 
-# physical habitat data
+# Read in physical habitat data
 phab.bugs <- read.csv('//Deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/Watershed_Characteristics/Station_Selection/Watershed_Char_phab_bugs_merge_SSN_FINAL.csv')
 
+rm(rm.col)
 # -----------------------------------------------------------
 # Pull in the slope data, fix the col names, and append it together
 
@@ -159,12 +176,16 @@ rm(slope, ryan.slope)
 # -----------------------------------------------------------
 # Put the dfs together without duplicating columns
 
-precip2 <- precip[,names(precip)[!names(precip) %in% names(phab.bugs)]]
-precip <- cbind(data.frame('SVN' = precip[,'SVN']),precip2)
+precip2 <- merge(precip, ppt, by = 'STATION_KEY', all.x = TRUE)
+rm(ppt)
+
+precip3 <- precip2[,names(precip2)[!names(precip2) %in% names(phab.bugs)]]
+precip <- cbind(data.frame('SVN' = precip2[,'SVN']),precip3)
 
 comb <- merge(phab.bugs, precip, by = 'SVN', all = TRUE)
-rm(precip, precip2)
+rm(precip, precip2, precip3)
 
+# remove the cols from comb that are in slope
 comb2 <- comb[,names(comb)[!names(comb) %in% names(slope.all)]]
 comb <- cbind(data.frame('STATION_KEY' = comb[,'STATION_KEY']),comb2)
 rm(comb2)
@@ -176,15 +197,8 @@ comb2 <- comb[,names(comb)[!names(comb) %in% names(obs.a)]]
 comb <- cbind(data.frame('STATION_KEY' = comb[,'STATION_KEY']),comb2)
 rm(comb2)
 
-comb <- merge(comb, obs.a, by = 'STATION_KEY', all.y = TRUE)
+comb <- merge(obs.a, comb, by = 'STATION_KEY', all.y = TRUE)
 rm(obs.a)
-
-comb2 <- comb[,names(comb)[!names(comb) %in% names(stations.df)]]
-comb <- cbind(data.frame('STATION_KEY' = comb[,'STATION_KEY']), comb2)
-rm(comb2)
-
-comb <- merge(comb, stations.df, by = 'STATION_KEY', all.x = TRUE)
-rm(stations.df)
 
 colnames(comb)
 # -----------------------------------------------------------
@@ -197,12 +211,13 @@ comb$STRMPWR <- comb$XSLOPE_MAP * comb$Q0001A
 
 rm(nhd.flow, nhd)
 # -----------------------------------------------------------
-#Pull in updated FSS values
+#Pull in updated FSS values and remove the SVNs that have low counts
 #names(comb)[grep('FSS',names(comb))] #FSS_May05
 comb <- merge(comb, fss[,c('SVN','FSS_26Aug14')], by = 'SVN', all.x = TRUE)
 comb <- within(comb, rm(FSS_May05))
-rm(fss)
 
+#comb <- comb[!(comb$SVN %in% svn.rm),] # These SVNs aren't in the file
+rm(fss, svn.rm)
 # -----------------------------------------------------------
 # Set SUSCEP_LI data to NA if there is less than 100% LiDAR coverage for that watershed
 has.lidar.id <- haslidar[haslidar$HASLIDAR =="No", ]
@@ -216,26 +231,33 @@ for (i in 1:length(changecol)) {
 rm(haslidar, has.lidar.id, changecol, i)
 
 # -----------------------------------------------------------
-# This generates a csv with each of the final col colnames. 
+# Fix the NA sample dates and related cols
+# use datestr values
+
+fix <- comb[c("DATE", "Date", "datestr", "Year_Sampled", "Month_Sampled", "YEAR")]
+
+comb <- within(comb, rm(DATE, Date, Year_Sampled, Month_Sampled, YEAR))
+comb$DATE <- as.POSIXlt(comb$datestr,format="%Y-%m-%d")
+comb$YEAR <-  comb$DATE$year+1990
+comb$MONTH <- comb$DATE$mon+1 # +1 because it is zero-indexed
+
+rm(fix)
+# -----------------------------------------------------------
+# This generates a csv with each of the final col colnames.
+# and number or NAs
 # This file must be edited so 
 # RF_Keep = 1 for col that will go to RF
 # RF_KEEP = 0 = for col excluded from RF
 # Resave the file as VarNames_RF.csv
 
-na.list <- apply((apply(comb, 2, is.na)),2,table)
-na.df <- data.frame('col' = names(na.list))
-na.df$na.count <- NA
-for (i in 1:length(na.list)) {
-  if(!is.na((na.list[i][[1]][2]))) {
-    na.df$na.count[i] <- na.list[i][[1]][2]
-  }
-}
-na.df$na.count <- ifelse(is.na(na.df$na.count),0,na.df$na.count)
-
+na.list <- colSums(is.na(comb))
+na.df <- t(as.data.frame(t(na.list),row.names = c("na.count")))
+na.df <- data.frame(rownames(na.df),na.df,row.names = NULL)
+colnames(na.df)[1]="var"
 na.df$RF_Keep <- NA
 
 # -----------------------------------------------------------
 # Write the files
 
-write.csv(na.df, 'VarNACount.csv')
+write.csv(na.df, 'VarNACount.csv',row.names = TRUE)
 write.csv(comb, 'ssn_RF_data.csv', row.names = FALSE)
