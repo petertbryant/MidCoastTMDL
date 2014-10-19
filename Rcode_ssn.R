@@ -9,62 +9,47 @@ bugs <- read.csv("ssn_RF_data.csv")
 
 # -----------------------------------------------------------
 # FSS - Random forests
-vars.fss <- vars[vars$fss.rf_keep == 1,]
+vars.fss <- vars[vars$fss2.rf_keep == 1,]
 fss <- bugs[,colnames(bugs) %in% vars.fss$var]
 
 # remove NAs in response variable
 fss <- fss[(!is.na(fss$FSS_26Aug14)),]
-fss.na <- na.omit(fss)
+fss.na <- data.frame(na.omit(fss))
+
+colnames(fss.na)
 
 # factor chr vars
-fss$ECO3_NAME <- factor(fss$ECO3_NAME)
-fss$fishpres <- factor(fss$fishpres)
-fss$YEAR <- factor(fss$YEAR)
+#fss.na$YEAR <- factor(fss.na$YEAR)
 
-set.seed(99998)
-
-fss.cf <- cforest(FSS_26Aug14 ~ ., data = fss,controls = cforest_unbiased(ntree = 50))
-
+set.seed(42)
+fss.cf <- cforest(FSS_26Aug14 ~ ., data = fss,controls = cforest_unbiased(ntree = 50, stump = TRUE))
 fss.ct <- ctree(FSS_26Aug14 ~ ., data = fss, controls = ctree_control(maxsurrogate = 3))
 
 plot(fss.ct)
 
+df <- data.frame(sort(varimp(fss.cf, conditional=FALSE),decreasing = TRUE))
 
 set.seed(99998)
-varimp(fss.cf)
 
 plot(fss.cf)
 
-
 # -----------------------------------------------------------
 library(randomForest)
-colnames(ref.cal) 
-dim(ref.cal)          
-
-#run with all predictors
-#ref.cal.2<-ref.cal[,c(7,8,11,13:18,22,28,46:49,51)]
-ref.cal.2<-ref.cal[,c(7,8,11,13,15,17,18,22,46:48,49,51)]        #reduce predictors--RF can't handle categorical with >32 categories
-
-#"LONG"           "LAT"           "ECO3_NAME"      "Elev_FT"        "Map_Slope"      "Precip_mm"      "Temp_CX10"     
-#"Strm_Power_NHD" "BASIN_NA_1"     "FSP_EROD_P"     "FSP_ER"        "MAFLOWU"        "SLOPE"          "AREAWTMAP"     
-#"FSP_ER_40"       "fss.trans"  
-
-colnames(ref.cal.2)
-head(ref.cal.2)
+         
 
 #random forests modeling
-ref.cal.rf <- randomForest(fss.trans ~ ., data=ref.cal.2, importance=TRUE,  keep.forest=TRUE)
-ref.cal.rf  #---15 preds = 34.4  % variance  
+fss.rf <- randomForest(FSS_26Aug14 ~ ., data=fss.na, importance=TRUE,  keep.forest=TRUE)
+fss.rf  #---15 preds = 34.4  % variance  
 
-save(ref.cal.rf,file = "ref.cal_ranfor.RData") 
+save(fss.rf = "fss.na.rf.RData") 
 print(ref.cal.rf) 
 
 #which variables are most influential on the RF model?                  
-ref.varimp <- importance(ref.cal.rf, conditional = TRUE)  
-ref.cal.rf$importance
-print(ref.cal.rf)
-plot(ref.cal.rf)
-varImpPlot(ref.cal.rf)   
+ref.varimp <- importance(fss.rf, conditional = TRUE)  
+fss.rf$importance
+print(fss.rf)
+plot(fss.rf)
+varImpPlot(fss.rf)   
 #Influential Predictors, in order of strength
 # 1) Stream Power, 
 # 2) Flow, 
