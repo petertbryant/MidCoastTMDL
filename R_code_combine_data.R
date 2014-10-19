@@ -1,8 +1,17 @@
+#############################################################
+# This script reads in various tables, cleans them, and
+# makes numerous calculations to preperae the data for the
+# random forest and ssn analysis.
+
+# Ryan Michie & Peter Bryant
+#############################################################
+
 library(plyr)
 library(RODBC)
 library(SSN)
 library(foreign)
 options(stringsAsFactors = FALSE)
+options("scipen"=100, "digits"=4)
 
 # -----------------------------------------------------------
 # FUNCTIONS
@@ -24,11 +33,6 @@ replacena <- function(df, x, y){
   return(df)
   }
 
-propor<- function(df, numer, denom, newfield){
-  df[,newfield] <- (df[,numer] / df[,denom]) * 100
-  return(df)
-}
-
 # -----------------------------------------------------------
 # Read in data from access tables
 
@@ -39,7 +43,6 @@ tablename3 <- "FSS_by_SVN"
 tablename4 <- "tbl_HASLIDAR_Station_watershed"
 tablename5 <- "tb_PPT_annual_avg_by_STATION_KEY"
 tablename6 <- "tbl_POPRCA2010_by_RID"
-tablename7 <- "var_proportion_table"
 channel <-odbcConnectAccess2007(indb)
 edgedf <- sqlFetch(channel, tablename1)
 obs <- sqlFetch(channel, tablename2)
@@ -48,9 +51,8 @@ fss <- sqlFetch(channel, tablename3)
 haslidar <- sqlFetch(channel, tablename4)
 ppt <- sqlFetch(channel, tablename5)
 pop <- sqlFetch(channel, tablename6)
-pvar <- sqlFetch(channel, tablename7)
 close(channel)
-rm(indb, tablename1, tablename2, tablename3, tablename4, tablename5, tablename6, tablename7, channel)
+rm(indb, tablename1, tablename2, tablename3, tablename4, tablename5, tablename6, channel)
 # -----------------------------------------------------------
 # Clean up the data and accumulate some of the variables
 
@@ -62,7 +64,7 @@ pop <- within(pop, rm(OBJECTID))
 
 edgedf <- merge(edgedf, pop, by="rid", all.x=TRUE)
 
-# remove all the NAs in the accumulated fields except fishpres
+# remove all the NAs in the accumulated fields except fishpres, replace with zero
 edgedf[!(names(edgedf) %in%"fishpres")][is.na(edgedf[!(names(edgedf) %in%"fishpres")])] <- 0
 
 
@@ -71,12 +73,14 @@ edge.rm <- c("OBJECTID", "arcid", "from_node",
              "to_node","HydroID", "GridID","NextDownID",
              "DrainID", "Shape_Length", "RCA_PI")
 
-# we add the accumulated cols because they are going 
+# we want to remove the accumulated cols because they are going 
 # to be added again in the siteaccum function
 edge.rm <- c(edge.rm,names(edgedf)[grep('^A',names(edgedf))])
 
 # We want to keep these ones though since we don't accumulate them at the site
-edgekeep <- c("AROADX", "AROADLENRCAM", "AROADLENRSAM", "ASPLASH")
+edgekeep <- c("ARCACOUNT","ARSACOUNT","ARCANACOUNT","ARSANACOUNT",
+              "AKFACTRCA","ACLAYRCA","ASANDRCA","ASILT_CLAYRCA","ASILTRCA",
+              "AROADX", "AROADLENRCAM", "AROADLENRSAM", "ASPLASH")
 edge.rm <- edge.rm[!(edge.rm %in% edgekeep)]
 
 # merge edge accumulations with the station and clean up
@@ -87,16 +91,19 @@ obs.a <- obs.a[, !colnames(obs.a) %in% edge.rm]
 
 colnames(obs.a)
 
-
 # These are obs.a col that we want to exclude from the site accumulation function
 # all other col will be accumulated
 noaccum <- c("rid", "OBJECTID",  "POURID", "STATION_KEY", "SITE_NAME",
              "HU_6_NAME", "HU_8_NAME", "HU_10_NAME", "HU_12_NAME",      
-             "HU_08", "HU_10", "HU_12", "LONG_RAW",        
-             "LAT_RAW", "NHDHigh", "NHDh_ReachCode", "NHDP21_ReachCode",
+             "HU_08", "HU_10", "HU_12", "LONG_RAW", "LAT_RAW", 
+             "NHDHigh", "NHDh_ReachCode", "NHDP21_ReachCode",
              "NHDP12_COMID", "NHDP21_COMID", "RESOLUTION", "ECO3_NAME", "VERSION",         
              "ratio", "locID", "netID", "pid", "upDist", 
-             "afvArea", "fishpres", "Shape_Length","fishpres", 
+             "afvArea", "fishpres", "Shape_Length",
+             "RCACOUNT", "RSACOUNT", "ARCACOUNT", "ARSACOUNT",
+             "RCANACOUNT","RSANACOUNT","ARCANACOUNT","ARSANACOUNT",
+             "KFACTRCA","CLAYRCA","SANDRCA","SILT_CLAYRCA", "SILTRCA",
+             "AKFACTRCA","ACLAYRCA","ASANDRCA","ASILT_CLAYRCA","ASILTRCA",
              "ROADX", "ROADLENRCAM","ROADLENRSAM",
              "AROADX", "AROADLENRCAM", "AROADLENRSAM",
              "SINUMAP","SPLASH", "ASPLASH")
@@ -121,8 +128,10 @@ for (i in 1:length(edgevars)) {
 
 colnames(obs.a)
 rm(Aedgevars,edgevars, edge.rm, edgekeep, noaccum, i)
-
 # -----------------------------------------------------------
+# Read in table describing how to calculate proportions
+pvar <- read.csv("//Deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/SSN/Variables/var_proportion_table.csv")
+
 # Read in SVNs to remove per Shannon Hubler comments (see Dealing with Low Counts_SH_4 8 14_RM.xlsx)
 svn.rm <- read.csv('//deqhq1/TMDL/TMDL_WR/MidCoast/Data/BenthicMacros/Raw_From_Shannon/SVNs_to_Remove_2014_08_04.csv')
 
@@ -142,10 +151,21 @@ rm.col <- c("EXCLUDE","NewSample","Bug_RefApril13", "TMDL",
             "Shannon.First.Download")
 precip <- precip[, !colnames(precip) %in% rm.col]
 
+# These are samples to remove because of low bug counts. 
+# They are only in the precip table.
+svns.precip.rm <- c("00054CSR","00105CSR","01006CSR","01014CSR",
+                    "01020CSR","01026CSR","02125CSR","03042CSR",
+                    "04017CSR","98086CSR","99020CSR","99051CSR",
+                    "H108328","H108330","H108331","H109844",
+                    "H109845","H109848","H109875","H109885",
+                    "H109887","H111024","H113071","H113082")
+
+precip <- precip[!(precip$SVN %in% svns.precip.rm),]
+
 # Read in physical habitat data
 phab.bugs <- read.csv('//Deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/Watershed_Characteristics/Station_Selection/Watershed_Char_phab_bugs_merge_SSN_FINAL.csv')
 
-rm(rm.col)
+rm(rm.col, svns.precip.rm)
 # -----------------------------------------------------------
 # Pull in the slope data, fix the col names, and append it together
 
@@ -162,7 +182,17 @@ ryan.slope <- within(ryan.slope, rm(OBJECTID, TYPE, Shape_Length))
 slope <- rename(slope, c("SLOPE_AVG" = 'XSLOPE', "SLOPE_AVG_MAP" = 'XSLOPE_MAP'))
 slope.all <- rbind(slope, ryan.slope)
 slope.all <- slope.all[!duplicated(slope.all$STATION_KEY),]
-rm(slope, ryan.slope)
+
+# Station 13121 is missing from the slopes table but it's ok because 
+# it's at the same location as 33298.
+# Station 13121 and 33298 should be merged but c'est la vie
+# it will cause problems with the other tables so 
+# we just duplicate the slope values from 33298 and give it to 13121
+X13121 <- slope.all[slope.all$STATION_KEY == "33298",]
+X13121$STATION_KEY <- "13121"
+slope.all <- rbind(slope.all, X13121)
+
+rm(slope, ryan.slope, X13121)
 
 # -----------------------------------------------------------
 # Delete?
@@ -230,7 +260,7 @@ rm(nhd.flow, nhd)
 comb <- merge(comb, fss[,c('SVN','FSS_26Aug14')], by = 'SVN', all.x = TRUE)
 comb <- within(comb, rm(FSS_May05))
 
-#comb <- comb[!(comb$SVN %in% svn.rm),] # These SVNs aren't in the file
+comb <- comb[!(comb$SVN %in% svn.rm),]
 rm(fss, svn.rm)
 # -----------------------------------------------------------
 # Set SUSCEP_LI data to NA if there is less than 100% LiDAR coverage for that watershed
@@ -244,37 +274,6 @@ for (i in 1:length(changecol)) {
 }
 rm(haslidar, has.lidar.id, changecol, i)
 # -----------------------------------------------------------
-# Calculate Year specfic disturbance # FIX
-
-var <- paste0(disvar[i],"_",comb$YEAR[i])
-
-comb[,disvar[i]] <- comb[,grep(var,names(comb))]
-
-DISRCA_1YR <- 
-DISRCA_3YR
-DISRCA_10YR
-DISRSA_1YR
-DISRSA_3YR
-DISRSA_10YR
-ADISRCA_1YR
-ADISRCA_3YR
-ADISRCA_10YR
-ADISRSA_1YR
-ADISRSA_3YR
-ADISRSA_10YR
-
-
-
-
-
-# -----------------------------------------------------------
-# Run the loop to calculate percentages, means, or densities
-for (i in 1:nrow(pvar)) {
-  #obs.a[,pvar[i,2]] <- (pvar[i,3] / pvar[i,4]) * 100
-  obs.a <- propor(obs.a, pvar[i,3], pvar[i,4], pvar[i,2])
-}
-
-# -----------------------------------------------------------
 # Fix the NA sample dates and related cols
 # use datestr values
 
@@ -282,10 +281,40 @@ fix <- comb[c("DATE", "Date", "datestr", "Year_Sampled", "Month_Sampled", "YEAR"
 
 comb <- within(comb, rm(DATE, Date, Year_Sampled, Month_Sampled, YEAR))
 comb$DATE <- as.POSIXlt(comb$datestr,format="%Y-%m-%d")
-comb$YEAR <-  comb$DATE$year+1990
+comb$YEAR <-  comb$DATE$year+1900
 comb$MONTH <- comb$DATE$mon+1 # +1 because it is zero-indexed
 
 rm(fix)
+# -----------------------------------------------------------
+# Calculate Year specfic disturbance
+
+disvar <- c("DISRCA_1YR","DISRCA_3YR","DISRCA_10YR",
+            "DISRSA_1YR","DISRSA_3YR","DISRSA_10YR",
+            "ADISRCA_1YR","ADISRCA_3YR","ADISRCA_10YR",
+            "ADISRSA_1YR","ADISRSA_3YR","ADISRSA_10YR")
+
+for (i in 1:nrow(comb)) {
+  for (d in 1:length(disvar)) {
+    if(!(is.na(comb[i,"YEAR"]))) {
+      y <- ifelse(comb[i,"YEAR"] >2008, 2008, comb[i,"YEAR"])
+      var <- paste0(disvar[d],"_",as.character(y))
+      comb[i,disvar[d]] <- ifelse(is.na(comb[i,var]),NA,comb[i,var])
+      } else 
+        {
+        comb[i,disvar[d]] <- NA
+      }
+  }
+}
+
+rm(i,d,y,disvar)
+# -----------------------------------------------------------
+# Run the loop to calculate percentages, means, or densities
+
+for (i in 1:nrow(pvar)) {
+  comb[,pvar[i,1]] <- (comb[,pvar[i,2]] / comb[,pvar[i,3]]) * pvar[i,4]
+  #comb <- propor(comb, pvar[i,3], pvar[i,4], pvar[i,2])
+}
+
 # -----------------------------------------------------------
 # This generates a csv with each of the final col colnames.
 # and number or NAs
@@ -298,7 +327,8 @@ na.list <- colSums(is.na(comb))
 na.df <- t(as.data.frame(t(na.list),row.names = c("na.count")))
 na.df <- data.frame(rownames(na.df),na.df,row.names = NULL)
 colnames(na.df)[1]="var"
-na.df$fss.rf_keep <- NA
+na.df$fss1.rf_keep <- NA
+na.df$fss2.rf_keep <- NA
 na.df$pctfn.rf_keep <- NA
 na.df$pctsa.rf_keep <- NA
 na.df$pctsafn.rf_keep <- NA
@@ -309,3 +339,6 @@ na.df$oe.rf_keep <- NA
 
 write.csv(na.df, 'VarNACount.csv',row.names = TRUE)
 write.csv(comb, 'ssn_RF_data.csv', row.names = FALSE)
+
+
+
