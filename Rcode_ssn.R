@@ -87,6 +87,8 @@ fss1.s1.vi[,52]<-c(1:length(fss.col))
 colnames(fss1.s1.vi)[51] <- "var_name"
 colnames(fss1.s1.vi)[52] <- "var_index"
 
+
+
 # ----------
 # Save the df with a timestamp so we don't accidently overwrite it.
 timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
@@ -142,6 +144,9 @@ for (i in 1:50) {
   fss2.s1.cf <- cforest(FSS_26Aug14 ~ ., data = fss2.s1, controls = cforest_unbiased(ntree = 2000, mtry = mtry.fss2.s1))
   fss2.s1.vi[,i]<- varimp(fss2.s1.cf, conditional=FALSE)
 }
+
+test <- ctree(FSS_26Aug14 ~ ., data = fss2.s1)
+plot(test)
 
 # Add var names and index
 fss2.s1.vi[,51]<- fss.col
@@ -203,6 +208,9 @@ pairs(fss2.s2[,c(11:13,20:26)],
 pairs(fss2.s2[,c(17:19,28:31)],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 
+# Disturb and ownership
+pairs(fss2.s2[,c(14:16,27,17:19,28:31)],
+      lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 
 
 # STEP 2. Here we follow reccomendations by Strobl et al (2008) and Strobl et al (2009) 
@@ -226,64 +234,6 @@ fss2.s2.cf <- cforest(FSS_26Aug14 ~ ., data = fss2.s2, controls = cforest_unbias
 #fss2.s2.vi[,1] <- varimp(fss2.s2.cf, conditional=TRUE, threshold = 0.8)
 test2 <- varimp(fss2.s2.cf, conditional=FALSE)
 
-
-# -----------------------------------------------------------
-library(randomForest)
-         
-
-#random forests modeling
-fss.rf <- randomForest(FSS_26Aug14 ~ ., data=fss.na, importance=TRUE,  keep.forest=TRUE)
-fss.rf  #---15 preds = 34.4  % variance  
-
-save(fss.rf = "fss.na.rf.RData") 
-print(ref.cal.rf) 
-
-#which variables are most influential on the RF model?                  
-ref.varimp <- importance(fss.rf, conditional = TRUE)  
-fss.rf$importance
-print(fss.rf)
-plot(fss.rf)
-varImpPlot(fss.rf)   
-#Influential Predictors, in order of strength
-# 1) Stream Power, 
-# 2) Flow, 
-# 3) Precip(areaW), 
-# 4) Elev, % Erod (watershed), Precip (point), Ecoregion
-
-
-#make predictions for Calibration sites
-ref.val.2 <- ref.val[,c(7,8,11,13:18,22,28,46:49,51)] # all predictors
-dim(ref.val.2)
-
-ref.val.pred<-predict(ref.cal.rf, newdata=ref.val.2)
-
-#RMSE
-library(hydroGOF)
-RF.rmse<-rmse(sim=ref.val.pred, obs=ref.val.2$fss.trans)  
-RF.rmse  
-#rmse = 0.288 ; rmse from original full ref dataset, reduced predictors = 0.281 ---> not a major loss of performance with smaller ref dataset
-#in log10 scale--> untransform
-10^RF.rmse      # RMSE = 1.94 FSS, or 1.9%
-
-
-###### RF down to key predictors
-ref.cal.2<-ref.cal[,c( 13, 17, 22, 48, 51)]	      #final predictors
-colnames(ref.cal.2)
-ref.cal.rf2 <- randomForest(fss.trans ~ ., data=ref.cal.2, importance=TRUE,  keep.forest=TRUE)
-ref.cal.rf2   
-
-#validation predictions
-ref.val.2red <- ref.val[,c( 13, 17, 22, 48, 51)]
-dim(ref.val.2red)
-
-ref.val.pred.red<-predict(ref.cal.rf2, newdata=ref.val.2red)
-
-#RMSE
-RF_red.rmse<-rmse(sim=ref.val.pred.red, obs=ref.val.2red$fss.trans)  
-RF_red.rmse  
-#rmse = 0.301
-#in log10 scale--> untransform
-10^RF.rmse      # RMSE = 1.999,  or 2.0%
 
 # -----------------------------------------------------------
 # SSN
