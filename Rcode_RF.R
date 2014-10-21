@@ -230,6 +230,6 @@ fss2.s2.col <- fss2.s2.col[!(fss2.s2.col == "FSS_26Aug14")]
 mtry.fss2.s2 <- as.integer(((ncol(fss2.s2)-1) / 3),0)
 
 set.seed(55)
-fss2.s2.cf <- cforest(FSS_26Aug14 ~ ., data = fss2.s2, controls = cforest_unbiased(mtry = mtry.fss2.s2))
+fss2.s2.cf <- cforest(FSS_26Aug14 ~ ., data = fss2.s2, controls = cforest_unbiased(mtry = mtry.fss2.s2, savesplitstats = TRUE))
 #fss2.s2.vi[,1] <- varimp(fss2.s2.cf, conditional=TRUE, threshold = 0.8)
 test2 <- varimp(fss2.s2.cf, conditional=FALSE)
