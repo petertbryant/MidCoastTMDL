@@ -166,10 +166,7 @@ row.names(obs.vars) <- obs.vars$pid
 ssn1 <- putSSNdata.frame(obs.vars, ssn1, Name = 'Obs')
 
 ###################################################
-### code chunk number 12: jss984_vignette1.1.Rnw:877-881
-# Creates a collection of (non-symmetric) matrices containing 
-# pairwise downstream hydrologic distances between sites in a 
-# SpatialStreamNetwork object
+### Create the Distance Matrix
 ###################################################
 createDistMat(ssn1, o.write = TRUE)
 
@@ -181,39 +178,40 @@ createDistMat(ssn1, o.write = TRUE)
 #      asp = 1)
 
 ###################################################
-### code chunk number 16: Torgegram
+### plot the Torgegram
 ###################################################
 # ssn1.Torg <- Torgegram(ssn1, "log10_FSS_26Aug14", nlag = 15, maxlag = 50000, nlagcutoff=5)
 # plot(ssn1.Torg)
 
 ###################################################
-### code chunk number 19: GauModel1
+### run the model
 ###################################################
 ssn1.glmssn1 <- glmssn(log10_FSS_26Aug14  ~ log10_sum_1095_days + 
                          sqrt_PADISRSA_1YR + bin_PALITHERODRCA + log10_XSLOPE_MAP + 
                          log10_PASILTRCA + log10_MIN_Z, 
                        ssn1,
+                       EstMeth = "REML",
                         CorModels = c("Exponential.tailup", "Exponential.taildown",
                                       "Exponential.Euclid"), addfunccol = "afvArea",family = "Gaussian")
 
 summary(ssn1.glmssn1)
 
 ###################################################
-### code chunk number 22: Model1
+### check the residuals
 ###################################################
 ssn1.resid1 <- residuals(ssn1.glmssn1)
 names( getSSNdata.frame(ssn1.resid1) )
 #plot(ssn1.resid1)
 
 ###################################################
-### code chunk number 23: ResidHist
+### plot the residuals
 ###################################################
 par(mfrow = c(1, 2))
 hist(ssn1.resid1)
 hist(ssn1, "log10_FSS_26Aug14")
 
 ###################################################
-### code chunk number 27: LOOCV
+### cross validation
 ###################################################
 cv.out <- CrossValidationSSN(ssn1.glmssn1)
 par(mfrow = c(1, 2))
@@ -226,65 +224,62 @@ plot( na.omit( getSSNdata.frame(ssn1)[, "log10_FSS_26Aug14"]),
       xlab = "Observed Data", ylab = "LOOCV Prediction SE")
 
 ###################################################
-### code chunk number 28: LOOCVSummary
+### cross validation stats
 ###################################################
 CrossValidationStatsSSN(ssn1.glmssn1)
 
 ###################################################
-### code chunk number 29: jss984_vignette1.1.Rnw:1228-1230
+### R2
 ###################################################
 GR2(ssn1.glmssn1)
 varcomp(ssn1.glmssn1)
 
-AIC(ssn1.glmssn1)
-
 ###################################################
-### code chunk number 19: GauModel1
+### run the model
+###########
+########### THIS IS WHERE IT BREAKS ###############
+###########
 ###################################################
-ssn1.glmssn2 <- glmssn(log10_FSS_26Aug14  ~ log10_sum_1095_days + 
-                         sqrt_PADISRSA_1YR + bin_PALITHERODRCA + log10_XSLOPE_MAP + 
-                         log10_PASILTRCA + log10_MIN_Z, 
+ssn1.glmssn2 <- glmssn(log10_FSS_26Aug14  ~ log10_sum_1095_days, 
                        ssn1,
-                       CorModels = c("LinearSill.tailup", "Mariah.taildown"), addfunccol = "afvArea",family = "Gaussian")
+                       CorModels = c("Spherical.tailup", "Spherical.taildown"), addfunccol = "afvArea",family = "Gaussian")
 
 summary(ssn1.glmssn2)
 
 ###################################################
-### code chunk number 22: Model1
+### check the residuals
 ###################################################
-ssn1.resid1 <- residuals(ssn1.glmssn2)
-names( getSSNdata.frame(ssn1.resid1) )
+ssn1.resid2 <- residuals(ssn1.glmssn2)
+names( getSSNdata.frame(ssn1.resid2) )
 #plot(ssn1.resid1)
 
 ###################################################
-### code chunk number 23: ResidHist
+### plot the residuals
 ###################################################
 par(mfrow = c(1, 2))
-hist(ssn1.resid1)
+hist(ssn1.resid2)
 hist(ssn1, "log10_FSS_26Aug14")
 
 ###################################################
-### code chunk number 27: LOOCV
+### cross validation
 ###################################################
-cv.out <- CrossValidationSSN(ssn1.glmssn2)
+cv.out2 <- CrossValidationSSN(ssn1.glmssn2)
 par(mfrow = c(1, 2))
 plot(ssn1.glmssn2$sampinfo$z,
-     cv.out[, "cv.pred"], pch = 19,
+     cv.out2[, "cv.pred"], pch = 19,
      xlab = "Observed Data", ylab = "LOOCV Prediction")
 abline(0, 1)
 plot( na.omit( getSSNdata.frame(ssn1)[, "log10_FSS_26Aug14"]),
-      cv.out[, "cv.se"], pch = 19,
+      cv.out2[, "cv.se"], pch = 19,
       xlab = "Observed Data", ylab = "LOOCV Prediction SE")
 
 ###################################################
-### code chunk number 28: LOOCVSummary
+### cross validation stats
 ###################################################
 CrossValidationStatsSSN(ssn1.glmssn2)
 
 ###################################################
-### code chunk number 29: jss984_vignette1.1.Rnw:1228-1230
+### R2
 ###################################################
 GR2(ssn1.glmssn2)
 varcomp(ssn1.glmssn2)
-
-AIC(ssn1.glmssn2)
