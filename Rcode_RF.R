@@ -230,6 +230,29 @@ fss2.s2.col <- fss2.s2.col[!(fss2.s2.col == "FSS_26Aug14")]
 mtry.fss2.s2 <- as.integer(((ncol(fss2.s2)-1) / 3),0)
 
 set.seed(55)
-fss2.s2.cf <- cforest(FSS_26Aug14 ~ ., data = fss2.s2, controls = cforest_unbiased(mtry = mtry.fss2.s2, savesplitstats = TRUE))
+fss2.s2.cf <- cforest(FSS_26Aug14 ~ ., data = fss2.s2, controls = cforest_unbiased(mtry = mtry.fss2.s2))
 #fss2.s2.vi[,1] <- varimp(fss2.s2.cf, conditional=TRUE, threshold = 0.8)
 test2 <- varimp(fss2.s2.cf, conditional=FALSE)
+
+fss2.s2.rf <- randomForest(FSS_26Aug14 ~ ., 
+                           data = fss2.s2, 
+                           ntree = 2000, 
+                           keep.forest = TRUE, 
+                           importance = TRUE)
+
+partialPlot(fss2.s2.rf, fss2.s2, x.var = 'sum_1095_days')
+partialPlot(fss2.s2.rf, fss2.s2, x.var = 'PALITHERODRCA')
+partialPlot(fss2.s2.rf, fss2.s2, x.var = 'PADISRSA_1YR')
+partialPlot(fss2.s2.rf, fss2.s2, x.var = 'PDISRSA_1YR')
+partialPlot(fss2.s2.rf, fss2.s2, x.var = 'XSLOPE_MAP')
+partialPlot(fss2.s2.rf, fss2.s2, x.var = "MIN_Z")
+partialPlot(fss2.s2.rf, fss2.s2, x.var = "STRMPWR")
+partialPlot(fss2.s2.rf, fss2.s2, x.var = "PASILTRCA")
+partialPlot(fss2.s2.rf, fss2.s2, x.var = "POWNRCA_PRI")
+partialPlot(fss2.s2.rf, fss2.s2, x.var = "PAOWNRCA_FED")
+
+ref.varimp <- importance(fss2.s2.rf, conditional = TRUE)  
+fss2.s2.rf$importance
+print(fss2.s2.rf)
+plot(fss2.s2.rf)
+varImpPlot(fss2.s2.rf)   
