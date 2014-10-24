@@ -59,9 +59,9 @@ createDistMat(ssn1, o.write = TRUE)
 ###################################################
 ### run the model
 ###################################################
-ssn1.glmssn1 <- glmssn(log10_FSS_26Aug14  ~ log10_sum_1095_days + 
-                         sqrt_PADISRSA_1YR + bin_PALITHERODRCA + log10_XSLOPE_MAP + 
-                         log10_PASILTRCA + log10_MIN_Z, 
+ssn1.glmssn1 <- glmssn(FSS_26Aug14  ~ sum_1095_days + 
+                         PADISRSA_1YR + PALITHERODRCA + XSLOPE_MAP + 
+                         PASILTRCA + MIN_Z, 
                        ssn1,
                        EstMeth = "REML",
                         CorModels = c("Exponential.tailup", "Exponential.taildown",
@@ -113,9 +113,13 @@ varcomp(ssn1.glmssn1)
 ########### THIS IS WHERE IT BREAKS ###############
 ###########
 ###################################################
-ssn1.glmssn2 <- glmssn(log10_FSS_26Aug14  ~ log10_sum_1095_days, 
+ssn1.glmssn2 <- glmssn(FSS_26Aug14  ~ sum_1095_days + 
+                         PADISRSA_1YR + PALITHERODRCA + XSLOPE_MAP + 
+                         PASILTRCA + MIN_Z, 
                        ssn1,
-                       CorModels = c("Spherical.tailup", "Spherical.taildown"), addfunccol = "afvArea",family = "Gaussian")
+                       CorModels = c("Exponential.tailup", "Exponential.taildown"), 
+                       addfunccol = "afvArea",
+                       family = "Poisson")
 
 summary(ssn1.glmssn2)
 

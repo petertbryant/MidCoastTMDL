@@ -5,6 +5,9 @@ options(stringsAsFactors = FALSE)
 vars <- read.csv("VarNames_RF.csv")
 bugs <- read.csv("ssn_RF_data.csv")
 
+bugs <- arrange(bugs, STATION_KEY, desc(YEAR))
+bugs <- bugs[!duplicated(bugs$STATION_KEY),]
+
 # -----------------------------------------------------------
 # Correlation Matrix Functions
 # source
@@ -51,7 +54,7 @@ panel.hist <- function(x, ...)
 # Removal is based on these distributions. We keep the variables with the highest scores.
 
 vars.fss1.s1 <- vars[vars$fss1.rf_keep == 1,]
-fss1.s1 <- bugs[,colnames(bugs) %in% vars.fss1.s1$var]
+fss1.s1 <- bugs[,colnames(bugs) %in% c(vars.fss1.s1$var)]
 
 # remove NAs in response variable
 fss1.s1 <- fss1.s1[(!is.na(fss1.s1$FSS_26Aug14)),]
@@ -183,8 +186,18 @@ fss2.s2.col <- fss2.s1.vi.median[fss2.s1.vi.median$median > 0.5,][,1]
 fss2.s2.col <- c("FSS_26Aug14",fss2.s2.col)
 fss2.s2 <- fss2.s1[,colnames(fss2.s1) %in% fss2.s2.col]
 
+#since the variables are mostly station specific and not sample specific we should 
+#subset the data frame
+fss2.s2 <- bugs[,colnames(bugs) %in% fss2.s2.col]
+
+#Further remove variables to reduce the influence of correlation on raising variable importance
+fss2.s2.rm <- within(fss2.s2, rm('PALITHERODRSA','PPT_1981_2010','sum_365_days','sum_60_days','sum_180_days',
+                                 'PDISRSA_1YR','PDISRCA_1YR','PDISRCA_3YR','PASILT_CLAYRCA','PASANDRCA',
+                                 'PSILTRCA','PLITHERODRSA','PAOWNRSA_FED','POWNRCA_PRI','POWNRSA_FED',
+                                 'PAOWNRCA_FED','PAOWNRCA_AGR','MAKFACTRCA','PLITHERODRCA'))
+
 # remove any NAs
-fss2.s2 <- data.frame(na.omit(fss2.s2))
+fss2.s2.rm <- data.frame(na.omit(fss2.s2.rm))
 
 #write.csv(fss2.s2, 'fss2_s2_data.csv')
 
@@ -193,7 +206,7 @@ fss2.s2 <- data.frame(na.omit(fss2.s2))
 colnames(fss2.s2)
 
 # Precip
-pairs(fss2.s2[,c(2:6)],
+pairs(fss2.s2[,c(2:9)],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 
 # Disturb
@@ -212,6 +225,60 @@ pairs(fss2.s2[,c(17:19,28:31)],
 pairs(fss2.s2[,c(14:16,27,17:19,28:31)],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 
+#Re-run the Random Forest on the subset of variables
+
+#This is for cforest from party but since we can't get the partial dependencies we 
+#aren't using this here now
+# mtry and ntree values 
+# mtry.fss2.s2.rm <- as.integer(((ncol(fss2.s2.rm)-1) / 3),0)
+# set.seed(42)
+# for (i in 1:50) {
+#   print(i)
+#   fss2.s2.rm.cf <- cforest(FSS_26Aug14 ~ ., data = fss2.s2.rm, controls = cforest_unbiased(ntree = 2000, mtry = mtry.fss2.s2.rm))
+#   fss2.s2.rm.vi[,i]<- varimp(fss2.s2.rm.cf, conditional=FALSE)
+# }
+# 
+# fss2.s2.rm.rf.vi <- data.frame(matrix(, ncol = 11, nrow = 50))
+# names(fss2.s2.rm.rf.vi) <- names(fss2.s2.rm)[-6]
+
+#Here we use randomForest so that we can use the object for the partial dependencies
+
+library(randomForest)
+# initialize the variable importance df
+fss2.s2.rm.vi <- data.frame(matrix(, nrow = ncol(fss2.s2.rm)-1, ncol = 50))
+set.seed(100)
+for (i in 1:50) {
+  fss2.s2.rm.rf <- randomForest(FSS_26Aug14 ~ ., 
+                                data = fss2.s2.rm, 
+                                ntree = 2000, 
+                                keep.forest = TRUE, 
+                                importance = TRUE)
+  fss2.s2.rm.rf.vi[i,] <- importance(fss2.s2.rm.rf, conditional = TRUE)
+}
+
+View(fss2.s2.rm.rf.vi)
+bymedian <- sort(sapply(fss2.s2.rm.rf.vi, median))
+index.merge <- data.frame('variable' = names(bymedian), 'index' = 1:11)
+fm <- melt(fss2.s2.rm.rf.vi)
+fm <- merge(fm, index.merge, by = 'variable', all.x = TRUE)
+png('varImp.png', width = 960, height = 960)
+par(yaxt="n",mar=c(5, 8, 4, 5))
+boxplot(value ~ index, data = fm,
+        xlab = "Importance",
+        varwidth = TRUE,
+        col = "lightgray",
+        horizontal = TRUE)
+lablist.y<-names(bymedian)
+axis(2, labels = FALSE)
+text(y = 1:11, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
+dev.off()
+
+
+# ref.varimp <- importance(fss2.s2.rm.rf, conditional = TRUE)  
+# fss2.s2.rm.rf$importance
+# print(fss2.s2.rm.rf)
+# plot(fss2.s2.rm.rf)
+# varImpPlot(fss2.s2.rm.rf, main = "Variable Importance", pch = 19)
 
 # STEP 2. Here we follow reccomendations by Strobl et al (2008) and Strobl et al (2009) 
 # and calculate conditional variable importance. This reduces importance scores on 
@@ -234,25 +301,95 @@ fss2.s2.cf <- cforest(FSS_26Aug14 ~ ., data = fss2.s2, controls = cforest_unbias
 #fss2.s2.vi[,1] <- varimp(fss2.s2.cf, conditional=TRUE, threshold = 0.8)
 test2 <- varimp(fss2.s2.cf, conditional=FALSE)
 
+library(randomForest)
 fss2.s2.rf <- randomForest(FSS_26Aug14 ~ ., 
                            data = fss2.s2, 
                            ntree = 2000, 
                            keep.forest = TRUE, 
                            importance = TRUE)
 
-partialPlot(fss2.s2.rf, fss2.s2, x.var = 'sum_1095_days')
-partialPlot(fss2.s2.rf, fss2.s2, x.var = 'PALITHERODRCA')
-partialPlot(fss2.s2.rf, fss2.s2, x.var = 'PADISRSA_1YR')
-partialPlot(fss2.s2.rf, fss2.s2, x.var = 'PDISRSA_1YR')
-partialPlot(fss2.s2.rf, fss2.s2, x.var = 'XSLOPE_MAP')
-partialPlot(fss2.s2.rf, fss2.s2, x.var = "MIN_Z")
-partialPlot(fss2.s2.rf, fss2.s2, x.var = "STRMPWR")
-partialPlot(fss2.s2.rf, fss2.s2, x.var = "PASILTRCA")
-partialPlot(fss2.s2.rf, fss2.s2, x.var = "POWNRCA_PRI")
-partialPlot(fss2.s2.rf, fss2.s2, x.var = "PAOWNRCA_FED")
+SedImpairedSites <- c(21792, 21842, 25297, 26816, 26818, 26822, 26964, 
+                      29906, 30403, 33320, 33327, 33329, 33333, 33361,
+                      33417, 33417, 33418, 34660, 34665, 34695, 37165)
+
+mean.data <- data.frame('Imp' = c('Sed Impaired', 
+                                       'Reference'),
+                        'mean_FSS' = c(mean(bugs[bugs$STATION_KEY %in% SedImpairedSites, 'FSS_26Aug14']),
+                                            mean(bugs[bugs$REF == 'Y','FSS_26Aug14'])),
+                        'mean_sum1095days' = c(mean(bugs[bugs$STATION_KEY %in% SedImpairedSites, 'sum_1095_days']),
+                                                    mean(bugs[bugs$REF == 'Y','sum_1095_days'])),
+                        'mean_PALITHERODRCA' = c(mean(bugs[bugs$STATION_KEY %in% SedImpairedSites, 'PALITHERODRCA']),
+                                                 mean(bugs[bugs$REF == 'Y','PALITHERODRCA'])),
+                        'mean_PADISRSA_1YR' = c(mean(bugs[bugs$STATION_KEY %in% SedImpairedSites, 'PADISRSA_1YR']),
+                                                 mean(bugs[bugs$REF == 'Y','PADISRSA_1YR'])),
+                        'mean_PDISRSA_1YR' = c(mean(bugs[bugs$STATION_KEY %in% SedImpairedSites, 'PDISRSA_1YR']),
+                                                mean(bugs[bugs$REF == 'Y','PDISRSA_1YR'])),
+                        'mean_XSLOPE_MAP' = c(mean(bugs[bugs$STATION_KEY %in% SedImpairedSites, 'XSLOPE_MAP']),
+                                               mean(bugs[bugs$REF == 'Y','XSLOPE_MAP'])),
+                        'mean_MIN_Z' = c(mean(bugs[bugs$STATION_KEY %in% SedImpairedSites, 'MIN_Z']),
+                                              mean(bugs[bugs$REF == 'Y','MIN_Z'])),
+                        'mean_STRMPWR' = c(mean(bugs[bugs$STATION_KEY %in% SedImpairedSites, 'STRMPWR'],na.rm = TRUE),
+                                         mean(bugs[bugs$REF == 'Y','STRMPWR'])),
+                        'mean_PASILTRCA' = c(mean(bugs[bugs$STATION_KEY %in% SedImpairedSites, 'PASILTRCA']),
+                                           mean(bugs[bugs$REF == 'Y','PASILTRCA'])),
+                        'mean_POWNRCA_PRI' = c(mean(bugs[bugs$STATION_KEY %in% SedImpairedSites, 'POWNRCA_PRI']),
+                                             mean(bugs[bugs$REF == 'Y','POWNRCA_PRI'])),
+                        'mean_PAOWNRCA_FED' = c(mean(bugs[bugs$STATION_KEY %in% SedImpairedSites, 'PAOWNRCA_FED']),
+                                               mean(bugs[bugs$REF == 'Y','PAOWNRCA_FED']))
+                        )
+
+png('pardep_sum1095days.png', width = 1200, height = 800)
+nf <- layout(mat = matrix(c(1,2,0,3),2,2, byrow=TRUE),  width = c(0.5,3), height = c(2,0.5))
+par(mar = c(2,4,2,2), cex = 1.5)
+boxplot(fss2.s2$FSS_26Aug14, ylim = c(0,20), outline = TRUE, frame = FALSE, bxp = 0.5, axes = FALSE)
+partialPlot(fss2.s2.rm.rf, fss2.s2, x.var = 'sum_1095_days', ylab = 'Mean FSS', ylim = c(0,20), xlim = c(4000,9000))
+boxplot(fss2.s2$sum_1095_days, ylim = c(4000,9000), bxp = 0.5, outline = TRUE, frame = FALSE, axes = FALSE, horizontal = TRUE)
+legend(7900,25,mean.data$Imp,pch = c(19,17))
+dev.off()
+#Interesting
+
+partialPlot(fss2.s2.rm.rf, fss2.s2, x.var = 'PALITHERODRCA', ylab = 'Mean FSS', ylim = c(7,25), xlim = c(30,100))
+points(mean.data$mean_PALITHERODRCA, mean.data$mean_FSS, pch = c(19, 17))
+#Interesting
+
+partialPlot(fss2.s2.rf, fss2.s2, x.var = 'PADISRSA_1YR', ylab = 'Mean FSS', ylim = c(7,25), xlim = c(0,15))
+points(mean.data$mean_PADISRSA_1YR, mean.data$mean_FSS, pch = c(19, 17))
+#not interesting
+
+partialPlot(fss2.s2.rf, fss2.s2, x.var = 'PDISRSA_1YR', ylab = 'Mean FSS', ylim = c(7,25), xlim = c(0, 40))
+points(mean.data$mean_PDISRSA_1YR, mean.data$mean_FSS, pch = c(19, 17))
+#Subtle
+
+partialPlot(fss2.s2.rf, fss2.s2, x.var = 'XSLOPE_MAP', ylab = 'Mean FSS', ylim = c(7,25), xlim = c(0,10))
+points(mean.data$mean_XSLOPE_MAP, mean.data$mean_FSS, pch = c(19, 17))
+#ref and impaired have about the same mean xslope_map
+
+partialPlot(fss2.s2.rf, fss2.s2, x.var = "MIN_Z", ylab = 'Mean FSS', ylim = c(7, 25), xlim = c(0,600))
+points(mz$mean_MIN_Z, mz$mean_FSS, pch = c(19, 17))
+#kind of interesting
+
+partialPlot(fss2.s2.rf, fss2.s2, x.var = "STRMPWR", ylab = 'Mean FSS', ylim = c(7,25), xlim = c(0,400))
+points(mean.data$mean_STRMPWR, mean.data$mean_FSS, pch = c(19, 17))
+#interesting
+
+partialPlot(fss2.s2.rf, fss2.s2, x.var = "PASILTRCA", ylab = 'Mean FSS', ylim = c(7,25))
+points(mean.data$mean_PASILTRCA, mean.data$mean_FSS, pch = c(19, 17))
+#line is interesting but ref and impaired plot in straight line section
+
+partialPlot(fss2.s2.rf, fss2.s2, x.var = "POWNRCA_PRI", ylab = 'Mean FSS', ylim = c(7,25))
+points(mean.data$mean_POWNRCA_PRI, mean.data$mean_FSS, pch = c(19, 17))
+#boring - straight line
+
+partialPlot(fss2.s2.rf, fss2.s2, x.var = "PAOWNRCA_FED", ylab = 'Mean FSS', ylim = c(7,25))
+points(mean.data$mean_PAOWNRCA_FED, mean.data$mean_FSS, pch = c(19, 17))
+#boring - straight line
 
 ref.varimp <- importance(fss2.s2.rf, conditional = TRUE)  
 fss2.s2.rf$importance
 print(fss2.s2.rf)
 plot(fss2.s2.rf)
-varImpPlot(fss2.s2.rf)   
+
+png('varImp.png', width = 1200, height = 960)
+par(cex = 2)
+varImpPlot(fss2.s2.rf, main = "Variable Importance", pch = 19)
+dev.off()

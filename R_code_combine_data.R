@@ -316,6 +316,12 @@ for (i in 1:nrow(pvar)) {
 }
 
 # -----------------------------------------------------------
+# Remove duplicate samples 
+comb$code <- paste(comb$STATION_KEY, comb$DATE)
+comb <- comb[!duplicated(comb$code),]
+comb <- within(comb, rm(code))
+
+# -----------------------------------------------------------
 # This generates a csv with each of the final col colnames.
 # and number or NAs
 # This file must be edited so 
