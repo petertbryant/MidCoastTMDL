@@ -271,12 +271,6 @@ colnames(fss2.s1)
 set.seed(111)
 fss2.s1.imputed <- rfImpute(FSS_26Aug14 ~ ., fss2.s1, ntree=2000, iter=3)
 
-colnames(fss2.s1)
-
-# impute the NAs
-set.seed(111)
-fss1.s1.imputed <- rfImpute(FSS_26Aug14 ~ ., fss1.s1, ntree=2000, iter=3)
-
 colnames(fss1.s1.imputed)
 
 # initialize the variable importance df
