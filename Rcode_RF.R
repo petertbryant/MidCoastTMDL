@@ -64,6 +64,13 @@ fss1.s1 <- fss1.s1[(!is.na(fss1.s1$FSS_26Aug14)),]
 
 colnames(fss1.s1)
 
+#Output for inclusion in chart for presentation
+#write.csv(data.frame(variable = colnames(fss1.s1)),'fss1_s1_variable_categories.csv')
+var.cat <- read.csv('fss1_s1_variable_categories.csv')
+var.cat <- var.cat[!is.na(var.cat$Category),]
+hbp <- barplot(summary(var.cat$Category), cex.names = 0.7, ylab = 'Variable Count', main = 'Count of Variable Categories')
+text(x= hbp, y= summary(var.cat$Category)+3, labels=as.character(summary(var.cat$Category)), xpd=TRUE)
+
 # mtry and ntree values 
 mtry.fss1.s1 <- as.integer(((ncol(fss1.s1)-1) / 3),0)
 
@@ -100,9 +107,9 @@ save(fss1.s1.vi, file=paste0("fss1_vi_s1_",timestamp,".RData"))
 
 fss1.s1.vi.l <- melt(fss1.s1.vi, id=c("var_name","var_index"))
 
-bymedian <- with(fss1.s1.vi.l, reorder(var_index, -value, median))
+bymedian <- with(fss1.s1.vi.l, reorder(var_index, value, median))
 boxplot(value ~ bymedian, data = fss1.s1.vi.l,
-        xlab = "Variable index", ylab = "Importance", 
+        ylab = "Variable index", xlab = "Importance", 
         varwidth = TRUE,
         col = "lightgray")
 
@@ -165,11 +172,13 @@ load("fss2_vi_s1_20141019_1451.RData")
 
 fss2.s1.vi.l <- melt(fss2.s1.vi, id=c("var_name","var_index"))
 
-bymedian <- with(fss2.s1.vi.l, reorder(var_index, -value, median))
+png('varImpALL.png', width = 960, height = 960)
+bymedian <- with(fss2.s1.vi.l, reorder(var_index, value, median))
 boxplot(value ~ bymedian, data = fss2.s1.vi.l,
-        xlab = "Variable index", ylab = "Importance", 
+        ylab = "Variable index", xlab = "Importance", 
         varwidth = TRUE,
-        col = "lightgray")
+        col = "lightgray", horizontal = TRUE)
+dev.off()
 
 fss2.s1.vi.median <- cast(fss2.s1.vi.l,var_name + var_index ~ ., value ='value', median)
 colnames(fss2.s1.vi.median )[3] <- "median"
@@ -206,8 +215,10 @@ fss2.s2.rm <- data.frame(na.omit(fss2.s2.rm))
 colnames(fss2.s2)
 
 # Precip
-pairs(fss2.s2[,c(2:9)],
+png('precip_cor.png')
+pairs(fss2.s2[,c(4:6)],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
+dev.off()
 
 # Disturb
 pairs(fss2.s2[,c(14:16,27)],
@@ -342,8 +353,8 @@ png('pardep_sum1095days.png', width = 1200, height = 800)
 nf <- layout(mat = matrix(c(1,2,0,3),2,2, byrow=TRUE),  width = c(0.5,3), height = c(2,0.5))
 par(mar = c(2,4,2,2), cex = 1.5)
 boxplot(fss2.s2$FSS_26Aug14, ylim = c(0,20), outline = TRUE, frame = FALSE, bxp = 0.5, axes = FALSE)
-partialPlot(fss2.s2.rm.rf, fss2.s2, x.var = 'sum_1095_days', ylab = 'Mean FSS', ylim = c(0,20), xlim = c(4000,9000))
-boxplot(fss2.s2$sum_1095_days, ylim = c(4000,9000), bxp = 0.5, outline = TRUE, frame = FALSE, axes = FALSE, horizontal = TRUE)
+partialPlot(fss2.s2.rm.rf, fss2.s2, x.var = 'sum_1095_days', ylab = 'Mean FSS', ylim = c(0,20), xlim = c(3000,10000))
+boxplot(fss2.s2$sum_1095_days, ylim = c(3000,10000), bxp = 0.5, outline = TRUE, frame = FALSE, axes = FALSE, horizontal = TRUE)
 legend(7900,25,mean.data$Imp,pch = c(19,17))
 dev.off()
 #Interesting
