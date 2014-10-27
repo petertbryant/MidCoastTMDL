@@ -67,6 +67,7 @@ fss1.s1 <- fss1.s1[(!is.na(fss1.s1$FSS_26Aug14)),]
 set.seed(111)
 fss1.s1.imputed <- rfImpute(FSS_26Aug14 ~ ., fss1.s1, ntree=2000, iter=3)
 
+
 #Output for inclusion in chart for presentation
 #write.csv(data.frame(variable = colnames(fss1.s1)),'fss1_s1_variable_categories.csv')
 var.cat <- read.csv('fss1_s1_variable_categories.csv')
@@ -76,8 +77,9 @@ text(x= hbp, y= summary(var.cat$Category)+3, labels=as.character(summary(var.cat
 
 # mtry and ntree values 
 mtry.fss1.s1 <- as.integer(((ncol(fss1.s1)-1) / 3),0)
-=======
+
 colnames(fss1.s1.imputed)
+
 
 # initialize the variable importance df
 fss1.s1.vi <- data.frame(matrix(, nrow = ncol(fss1.s1)-1, ncol = 50))
@@ -125,14 +127,17 @@ save(fss1.s1.visd, file=paste0("fss1_s1_visd_",timestamp,".RData"))
 fss1.s1.vi.l <- melt(fss1.s1.vi, id=c("var_name","var_index"))
 fss1.s1.visd.l <- melt(fss1.s1.visd, id=c("var_name","var_index"))
 
+
 bymedian <- with(fss1.s1.vi.l, reorder(var_index, value, median))
 boxplot(value ~ bymedian, data = fss1.s1.vi.l,
         ylab = "Variable index", xlab = "Importance", 
         varwidth = TRUE,
         col = "lightgray")
 
+
 bymedian_vi <- with(fss1.s1.vi.l, reorder(var_index, -value, median))
 bymedian_visd <- with(fss1.s1.visd.l, reorder(var_index, -value, median))
+
 
 fss1.s1.vi.median <- cast(fss1.s1.vi.l,var_name + var_index ~ ., value ='value', median)
 colnames(fss1.s1.vi.median )[3] <- "median"
