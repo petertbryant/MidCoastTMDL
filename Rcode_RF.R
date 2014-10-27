@@ -1,4 +1,5 @@
 library(party)
+library(randomForest)
 library(reshape)
 
 options(stringsAsFactors = FALSE)
@@ -46,7 +47,7 @@ panel.hist <- function(x, ...)
 }
 
 # ----------------------------------------------------------- #
-# FSS1 - Random forests including the physical habitat data
+# FSS1 - Random forests including some of the physical habitat data
 # ----------------------------------------------------------- #
 # Step 1, per Genuer et al (2000), use brute force to identify important variables. 
 # Since we have a large amount of variables random forest is run 50 times with a 
@@ -59,11 +60,14 @@ fss1.s1 <- bugs[,colnames(bugs) %in% c(vars.fss1.s1$var)]
 # remove NAs in response variable
 fss1.s1 <- fss1.s1[(!is.na(fss1.s1$FSS_26Aug14)),]
 
-# remove any NAs
+#remove NAs
 #fss1.s1 <- data.frame(na.omit(fss1.s1))
 
-colnames(fss1.s1)
+# impute the NAs
+set.seed(111)
+fss1.s1.imputed <- rfImpute(FSS_26Aug14 ~ ., fss1.s1, ntree=2000, iter=3)
 
+<<<<<<< HEAD
 #Output for inclusion in chart for presentation
 #write.csv(data.frame(variable = colnames(fss1.s1)),'fss1_s1_variable_categories.csv')
 var.cat <- read.csv('fss1_s1_variable_categories.csv')
@@ -73,53 +77,82 @@ text(x= hbp, y= summary(var.cat$Category)+3, labels=as.character(summary(var.cat
 
 # mtry and ntree values 
 mtry.fss1.s1 <- as.integer(((ncol(fss1.s1)-1) / 3),0)
+=======
+colnames(fss1.s1.imputed)
+>>>>>>> eafa5faff8b3944e6a4a022a8913b8256b296c7c
 
 # initialize the variable importance df
 fss1.s1.vi <- data.frame(matrix(, nrow = ncol(fss1.s1)-1, ncol = 50))
+fss1.s1.visd <- data.frame(matrix(, nrow = ncol(fss1.s1)-1, ncol = 50))
+
 fss1.s1.col <- colnames(fss1.s1)
 fss1.s1.col <- fss1.s1.col[!(fss1.s1.col == "FSS_26Aug14")]
 
-# WARNING - Takes a long time to run.
-print(Sys.time())
+# WARNING - Takes about 1 hour
+beg <- Sys.time()
 set.seed(42)
 for (i in 1:50) {
-  print(i)
-  fss1.s1.cf <- cforest(FSS_26Aug14 ~ ., data = fss1.s1, controls = cforest_unbiased(ntree = 2000, mtry = mtry.fss1.s1))
-  fss1.s1.vi[,i]<- varimp(fss1.s1.cf, conditional=FALSE)
+  fss1.s1.rf <- randomForest(FSS_26Aug14 ~ ., 
+                                data = fss1.s1.imputed, 
+                                ntree = 2000, 
+                                keep.forest = TRUE, 
+                                importance = TRUE)
+  fss1.s1.vi[,i] <- fss1.s1.rf$importance[,1]
+  fss1.s1.visd[,i] <- fss1.s1.rf$importanceSD
 }
-print(Sys.time())
+print(Sys.time() - beg)
 
 # Add var names and index
-fss1.s1.vi[,51]<- fss.col
-fss1.s1.vi[,52]<-c(1:length(fss.col))
+fss1.s1.vi[,51]<- fss1.s1.col
+fss1.s1.vi[,52]<-c(1:length(fss1.s1.col))
 colnames(fss1.s1.vi)[51] <- "var_name"
 colnames(fss1.s1.vi)[52] <- "var_index"
+fss1.s1.visd[,51]<- fss1.s1.col
+fss1.s1.visd[,52]<-c(1:length(fss1.s1.col))
+colnames(fss1.s1.visd)[51] <- "var_name"
+colnames(fss1.s1.visd)[52] <- "var_index"
 
 
 
 # ----------
 # Save the df with a timestamp so we don't accidently overwrite it.
 timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
-save(fss1.s1.vi, file=paste0("fss1_vi_s1_",timestamp,".RData"))
+save(fss1.s1.vi, file=paste0("fss1_s1_vi_",timestamp,".RData"))
+save(fss1.s1.visd, file=paste0("fss1_s1_visd_",timestamp,".RData"))
 
-#load("fss1_vi_s1_20141019_1451.RData")
+#load("fss1_s1_v1_20141024_0542.RData")
+#load("fss1_s1_v1sd_20141024_0542.RData")
 # ----------
 
 fss1.s1.vi.l <- melt(fss1.s1.vi, id=c("var_name","var_index"))
+fss1.s1.visd.l <- melt(fss1.s1.visd, id=c("var_name","var_index"))
 
+<<<<<<< HEAD
 bymedian <- with(fss1.s1.vi.l, reorder(var_index, value, median))
 boxplot(value ~ bymedian, data = fss1.s1.vi.l,
         ylab = "Variable index", xlab = "Importance", 
         varwidth = TRUE,
         col = "lightgray")
+=======
+bymedian_vi <- with(fss1.s1.vi.l, reorder(var_index, -value, median))
+bymedian_visd <- with(fss1.s1.visd.l, reorder(var_index, -value, median))
+>>>>>>> eafa5faff8b3944e6a4a022a8913b8256b296c7c
 
 fss1.s1.vi.median <- cast(fss1.s1.vi.l,var_name + var_index ~ ., value ='value', median)
 colnames(fss1.s1.vi.median )[3] <- "median"
 
+fss1.s1.visd.median <- cast(fss1.s1.visd.l,var_name + var_index ~ ., value ='value', median)
+colnames(fss1.s1.visd.median )[3] <- "mediansd"
+
 # sort the data so largest at the top
 fss1.s1.vi.median <- fss1.s1.vi.median[with(fss1.s1.vi.median, order(-median)), ]
+fss1.s1.visd.median <- fss1.s1.visd.median[with(fss1.s1.visd.median, order(-mediansd)), ]
 
-
+# plot the vi
+boxplot(value ~ bymedian_vi, data = fss1.s1.vi.l,
+        xlab = "Variable index", ylab = "Importance", 
+        varwidth = TRUE,
+        col = "lightgray")
 
 # ----------------------------------------------------------- #
 # FSS2 - Random forests excluding the physical habitat data
