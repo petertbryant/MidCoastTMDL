@@ -248,87 +248,85 @@ fss2.s1 <- bugs[,colnames(bugs) %in% vars.fss2.s1$var]
 
 colnames(fss2.s1)
 
-fss2.s1$PSUSCEP_DE <- fss2.s1$PSUSCEP4_DE + fss2.s1$PSUSCEP5_DE
-fss2.s1$PSUSCEP_LI <- fss2.s1$PSUSCEP4_LI + fss2.s1$PSUSCEP5_LI
-fss2.s1$PASUSCEP_DE <- fss2.s1$PASUSCEP4_DE + fss2.s1$PASUSCEP5_DE
-fss2.s1$PASUSCEP_LI <- fss2.s1$PASUSCEP4_LI + fss2.s1$PASUSCEP5_LI
+fss2.s1 <- fss2.s1[,!(colnames(fss2.s1) %in% c("PSUSCEP4_LI","PSUSCEP5_LI",
+                                               "PASUSCEP4_LI", "PASUSCEP5_LI"))]
 
-fss2.s1$PSUSCEP4_DE <- NULL
-fss2.s1$PSUSCEP5_DE <- NULL
-fss2.s1$PSUSCEP4_LI <- NULL
-fss2.s1$PSUSCEP5_LI <- NULL
-fss2.s1$PASUSCEP4_DE <- NULL
-fss2.s1$PASUSCEP5_DE <- NULL
-fss2.s1$PASUSCEP4_LI <- NULL
-fss2.s1$PASUSCEP5_LI <- NULL
 
 # remove NAs in response variable
 fss2.s1 <- fss2.s1[(!is.na(fss2.s1$FSS_26Aug14)),]
+# remove any NAs
+fss2.s1 <- data.frame(na.omit(fss2.s1))
 
 colnames(fss2.s1)
 
-# impute the NAs
-set.seed(111)
-fss2.s1.imputed <- rfImpute(FSS_26Aug14 ~ ., fss2.s1, ntree=2000, iter=3)
-
-colnames(fss1.s1.imputed)
-
-# initialize the variable importance df
-fss2.s1.vi <- data.frame(matrix(, nrow = ncol(fss2.s1.imputed)-1, ncol = 50))
-fss2.s1.visd <- data.frame(matrix(, nrow = ncol(fss2.s1.imputed)-1, ncol = 50))
-
-fss2.s1.col <- colnames(fss2.s1.imputed)
-fss2.s1.col <- fss2.s1.col[!(fss2.s1.col == "FSS_26Aug14")]
-
-# WARNING - Takes about 1 hour
-beg <- Sys.time()
-set.seed(42)
-for (i in 1:50) {
-  fss2.s1.rf <- randomForest(FSS_26Aug14 ~ ., 
-                             data = fss2.s1.imputed, 
-                             ntree = 2000, 
-                             keep.forest = TRUE, 
-                             importance = TRUE)
-  fss2.s1.vi[,i] <- fss2.s1.rf$importance[,1]
-  fss2.s1.visd[,i] <- fss2.s1.rf$importanceSD
-}
-print(Sys.time() - beg)
-
-# Add var names and index
-fss1.s1.vi[,51]<- fss1.s1.col
-fss1.s1.vi[,52]<-c(1:length(fss1.s1.col))
-colnames(fss1.s1.vi)[51] <- "var_name"
-colnames(fss1.s1.vi)[52] <- "var_index"
-fss1.s1.visd[,51]<- fss1.s1.col
-fss1.s1.visd[,52]<-c(1:length(fss1.s1.col))
-colnames(fss1.s1.visd)[51] <- "var_name"
-colnames(fss1.s1.visd)[52] <- "var_index"
-
-# ----------
-# Save the df with a timestamp so we don't accidently overwrite it.
-timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
-save(fss2.s1.vi, file=paste0("fss2_s1_vi_",timestamp,".RData"))
-save(fss2.s1.visd, file=paste0("fss2_s1_visd_",timestamp,".RData"))
-
-#-----------
+# # impute the NAs
+# set.seed(111)
+# fss2.s1.imputed <- rfImpute(FSS_26Aug14 ~ ., fss2.s1, ntree=2000, iter=3)
+# 
+# colnames(fss1.s1.imputed)
+# 
+# # initialize the variable importance df
+# fss2.s1.vi <- data.frame(matrix(, nrow = ncol(fss2.s1.imputed)-1, ncol = 50))
+# fss2.s1.visd <- data.frame(matrix(, nrow = ncol(fss2.s1.imputed)-1, ncol = 50))
+# 
+# fss2.s1.col <- colnames(fss2.s1.imputed)
+# fss2.s1.col <- fss2.s1.col[!(fss2.s1.col == "FSS_26Aug14")]
+# 
+# # WARNING - Takes about 1 hour
+# beg <- Sys.time()
+# set.seed(42)
+# for (i in 1:50) {
+#   fss2.s1.rf <- randomForest(FSS_26Aug14 ~ ., 
+#                              data = fss2.s1.imputed, 
+#                              ntree = 2000, 
+#                              keep.forest = TRUE, 
+#                              importance = TRUE)
+#   fss2.s1.vi[,i] <- fss2.s1.rf$importance[,1]
+#   fss2.s1.visd[,i] <- fss2.s1.rf$importanceSD
+# }
+# print(Sys.time() - beg)
+# 
+# # Add var names and index
+# fss1.s1.vi[,51]<- fss1.s1.col
+# fss1.s1.vi[,52]<-c(1:length(fss1.s1.col))
+# colnames(fss1.s1.vi)[51] <- "var_name"
+# colnames(fss1.s1.vi)[52] <- "var_index"
+# fss1.s1.visd[,51]<- fss1.s1.col
+# fss1.s1.visd[,52]<-c(1:length(fss1.s1.col))
+# colnames(fss1.s1.visd)[51] <- "var_name"
+# colnames(fss1.s1.visd)[52] <- "var_index"
+# 
+# # ----------
+# # Save the df with a timestamp so we don't accidently overwrite it.
+# timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
+# save(fss2.s1.vi, file=paste0("fss2_s1_vi_",timestamp,".RData"))
+# save(fss2.s1.visd, file=paste0("fss2_s1_visd_",timestamp,".RData"))
+# 
+# #-----------
 # Test for multicolinearity, remove them
-cl <- MultiColinear(fss2.s1.imputed[,c(1:49,51:ncol(fss2.s1.imputed))], p=0.05)
-xdata <- fss2.s1.imputed[,c(1:49,51:ncol(fss2.s1.imputed))] 
+
+
+cl <- MultiColinear(fss2.s1[,c(1:49,51:ncol(fss2.s1))], p=0.05)
+xdata <- fss2.s1[,c(1:49,51:ncol(fss2.s1))] 
 for(l in cl) {
   cl.test <- xdata[,-which(names(xdata)==l)]
   print(paste("REMOVE VARIABLE", l, sep=": "))
   MultiColinear(cl.test, p=0.05) 
 }
-for(l in cl) { fss2.s1.imputed <- fss2.s1.imputed[,-which(names(fss2.s1.imputed)==l)] }
+for(l in cl) { fss2.s1 <- fss2.s1[,-which(names(fss2.s1)==l)] }
+#Further remove variables to reduce the influence of correlation on raising variable importance
+rmc <- c("PPT_1981_2010","sum_365_days","sum_60_days","sum_180_days")
+fss2.s1 <- fss2.s1[,-which(names(fss2.s1) %in% rmc)]
+
 
 #-----------
-colnames(fss2.s1.imputed)
+colnames(fss2.s1)
 
 set.seed(42)
-fss2.s1.rf <- rf.modelSel(xdata=fss2.s1.imputed[,2:ncol(fss2.s1.imputed)], 
-                        ydata=fss2.s1.imputed[,"FSS_26Aug14"], 
-                        imp.scale="se", r=c(0.1,0.25, 0.50, 0.75, 0.9),  
-                        final=TRUE, plot.imp=TRUE, parsimony=NULL, ntree=2000) 
+fss2.s1.rf <- rf.modelSel(xdata=fss2.s1[,c(1:34,36:ncol(fss2.s1))], 
+                        ydata=fss2.s1[,"FSS_26Aug14"], 
+                        imp.scale="mir", r=c(0.20,0.40,0.60,0.75,0.80,0.85,0.90, 0.95),  
+                        final=TRUE, plot.imp=TRUE, parsimony=0.03, ntree=2000) 
 
 
 #-----------

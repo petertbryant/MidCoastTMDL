@@ -1,26 +1,32 @@
-library(party)
+#library(party)
 library(randomForest)
 library(reshape)
+library(plyr)
 
 options(stringsAsFactors = FALSE)
 vars <- read.csv("VarNames_RF.csv")
 bugs <- read.csv("ssn_RF_data.csv")
 
 bugs <- arrange(bugs, STATION_KEY, desc(YEAR))
-bugs <- bugs[!duplicated(bugs$STATION_KEY),]
+#bugs <- bugs[!duplicated(bugs$STATION_KEY),]
+
+
 
 # -----------------------------------------------------------
 # Correlation Matrix Functions
-# source
+# sources
 # http://stackoverflow.com/questions/15271103/how-to-modify-this-correlation-matrix-plot
+# https://gist.github.com/anonymous/9355924#file-multicolinear-r
+# Becker, R. A., Chambers, J. M. and Wilks, A. R. (1988) The New S Language. Wadsworth & Brooks/Cole.  
+# Dongarra, J. J., Bunch, J. R., Moler, C. B. and Stewart, G. W. (1978) LINPACK Users Guide. Philadelphia: SIAM Publications.
 # -----------------------------------------------------------
 panel.cor <- function(x, y, digits=2, cex.cor)
 {
   usr <- par("usr"); on.exit(par(usr))
   par(usr = c(0, 1, 0, 1))
-  r <- abs(cor(x, y))
+  r <- abs(cor(x, y, method="spearman"))
   txt <- format(c(r, 0.123456789), digits=digits)[1]
-  test <- cor.test(x,y)
+  test <- cor.test(x,y,method="spearman")
   Signif <- ifelse(round(test$p.value,3)<0.001,"p<0.001",paste("p=",round(test$p.value,3)))  
   text(0.5, 0.25, paste("r=",txt))
   text(.5, .75, Signif)
@@ -112,8 +118,6 @@ fss1.s1.visd[,52]<-c(1:length(fss1.s1.col))
 colnames(fss1.s1.visd)[51] <- "var_name"
 colnames(fss1.s1.visd)[52] <- "var_index"
 
-
-
 # ----------
 # Save the df with a timestamp so we don't accidently overwrite it.
 timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
@@ -166,50 +170,66 @@ boxplot(value ~ bymedian_vi, data = fss1.s1.vi.l,
 vars.fss2.s1 <- vars[vars$fss2.rf_keep == 1,]
 fss2.s1 <- bugs[,colnames(bugs) %in% vars.fss2.s1$var]
 
+# keep a copy with all the data
+fss2.s1.na <- fss2.s1
+
+fss2.s1 <- fss2.s1[,!(colnames(fss2.s1) %in% c("PSUSCEP4_LI","PSUSCEP5_LI",
+                                            "PASUSCEP4_LI", "PASUSCEP5_LI"))]
+colnames(fss2.s1)
+
 # remove NAs in response variable
 fss2.s1 <- fss2.s1[(!is.na(fss2.s1$FSS_26Aug14)),]
-
-colnames(fss2.s1)
+# remove any NAs
+fss2.s1 <- data.frame(na.omit(fss2.s1))
 
 # mtry and ntree values 
 mtry.fss2.s1 <- as.integer(((ncol(fss2.s1)-1) / 3),0)
 
 # initialize the variable importance df
 fss2.s1.vi <- data.frame(matrix(, nrow = ncol(fss2.s1)-1, ncol = 50))
+fss2.s1.visd <- data.frame(matrix(, nrow = ncol(fss2.s1)-1, ncol = 50))
+
 fss2.s1.col <- colnames(fss2.s1)
 fss2.s1.col <- fss2.s1.col[!(fss2.s1.col == "FSS_26Aug14")]
 
-# WARNING - Takes a long time to run.
+# WARNING - Takes about 30 min
+beg <- Sys.time()
 set.seed(42)
 for (i in 1:50) {
-  print(i)
-  fss2.s1.cf <- cforest(FSS_26Aug14 ~ ., data = fss2.s1, controls = cforest_unbiased(ntree = 2000, mtry = mtry.fss2.s1))
-  fss2.s1.vi[,i]<- varimp(fss2.s1.cf, conditional=FALSE)
+  fss2.s1.rf <- randomForest(FSS_26Aug14 ~ ., 
+                             data = fss2.s1, 
+                             ntree = 2000, 
+                             keep.forest = TRUE, 
+                             importance = TRUE)
+  fss2.s1.vi[,i] <- fss2.s1.rf$importance[,1]
+  fss2.s1.visd[,i] <- fss2.s1.rf$importanceSD
 }
-
-test <- ctree(FSS_26Aug14 ~ ., data = fss2.s1)
-plot(test)
+print(Sys.time() - beg)
 
 # Add var names and index
-fss2.s1.vi[,51]<- fss.col
-fss2.s1.vi[,52]<-c(1:length(fss.col))
+fss2.s1.vi[,51]<- fss2.s1.col
+fss2.s1.vi[,52]<-c(1:length(fss2.s1.col))
 colnames(fss2.s1.vi)[51] <- "var_name"
 colnames(fss2.s1.vi)[52] <- "var_index"
+fss2.s1.visd[,51]<- fss2.s1.col
+fss2.s1.visd[,52]<-c(1:length(fss2.s1.col))
+colnames(fss2.s1.visd)[51] <- "var_name"
+colnames(fss2.s1.visd)[52] <- "var_index"
 
 # ----------
 # Save the df with a timestamp so we don't accidently overwrite it.
 timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
-save(fss2.s1.vi, file=paste0("fss2_vi_s1_",timestamp,".RData"))
+save(fss2.s1.vi, file=paste0("fss2_s1_vi_",timestamp,".RData"))
+save(fss2.s1.visd, file=paste0("fss2_s1_visd_",timestamp,".RData"))
 
-load("fss2_vi_s1_20141019_1451.RData")
-# ----------
+#-----------
 
 fss2.s1.vi.l <- melt(fss2.s1.vi, id=c("var_name","var_index"))
 
 png('varImpALL.png', width = 960, height = 960)
 bymedian <- with(fss2.s1.vi.l, reorder(var_index, value, median))
 boxplot(value ~ bymedian, data = fss2.s1.vi.l,
-        ylab = "Variable index", xlab = "Importance", 
+        ylab = "Variable index", xlab = "%InMSE", 
         varwidth = TRUE,
         col = "lightgray", horizontal = TRUE)
 dev.off()
@@ -221,11 +241,11 @@ colnames(fss2.s1.vi.median )[3] <- "median"
 fss2.s1.vi.median <- fss2.s1.vi.median[with(fss2.s1.vi.median, order(-median)), ]
 
 # Variable removal
-# After the first 15 largest median values starts to flatten out so 
-# we will take the top 30 to step 2.
+# After the first 24 largest median values starts to flatten out so 
+# we will take the top 37 to step 2. (33%)
 
 # grab all variable names with median values > 0.5
-fss2.s2.col <- fss2.s1.vi.median[fss2.s1.vi.median$median > 0.5,][,1]
+fss2.s2.col <- fss2.s1.vi.median[fss2.s1.vi.median$median > 0.95,][,1]
 fss2.s2.col <- c("FSS_26Aug14",fss2.s2.col)
 fss2.s2 <- fss2.s1[,colnames(fss2.s1) %in% fss2.s2.col]
 
@@ -238,10 +258,11 @@ fss2.s2.rm <- within(fss2.s2, rm('PALITHERODRSA','PPT_1981_2010','sum_365_days',
                                  'PDISRSA_1YR','PDISRCA_1YR','PDISRCA_3YR','PASILT_CLAYRCA','PASANDRCA',
                                  'PSILTRCA','PLITHERODRSA','PAOWNRSA_FED','POWNRCA_PRI','POWNRSA_FED',
                                  'PAOWNRCA_FED','PAOWNRCA_AGR','MAKFACTRCA','PLITHERODRCA'))
+colnames(fss2.s2)
+
 
 # remove any NAs
-fss2.s2.rm <- data.frame(na.omit(fss2.s2.rm))
-
+fss2.s2 <- data.frame(na.omit(fss2.s2))
 #write.csv(fss2.s2, 'fss2_s2_data.csv')
 
 # -----------------------------------------------------------
@@ -250,16 +271,16 @@ colnames(fss2.s2)
 
 # Precip
 png('precip_cor.png')
-pairs(fss2.s2[,c(4:6)],
+pairs(fss2.s2[,c(7:11)],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 dev.off()
 
 # Disturb
-pairs(fss2.s2[,c(14:16,27)],
+pairs(fss2.s2[,c(24:27,38)],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 
 # Lithology/soils
-pairs(fss2.s2[,c(11:13,20:26)],
+pairs(fss2.s2[,c(16:13,20:26)],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 
 # Ownership
@@ -327,7 +348,7 @@ dev.off()
 
 # STEP 2. Here we follow reccomendations by Strobl et al (2008) and Strobl et al (2009) 
 # and calculate conditional variable importance. This reduces importance scores on 
-# variables that get hight socres from step 1 becuase they highly correlated to 
+# variables that get high socres from step 1 becuase they highly correlated to 
 # to other ones. Probably applies to some of the climate variables.
 # We couldn't do this in step 1 becuase we had too many variables and NAs.
 # Not enough computer memory. A smaller dataset is ideal.
