@@ -346,7 +346,7 @@ pairs(fss2.s2[,fss2.s2.col[c(5,7,10,11,16,18,20,21,24,27,28,37)]],
 # "PAOWNRSA_AGR"   "POPRCA2010"     "POWNRCA_FED"
 pairs(fss2.s2[,fss2.s2.col[c(13,29,30,33,34,35,35)]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
-# Keep"APOPRCA2010"  "PAOWNRCA_AGR" "POWNRCA_PRI"  "POWNRSA_FED", "POPRCA2010"
+# Keep"APOPRCA2010"  "PAOWNRCA_AGR" "POWNRCA_PRI"  "POWNRSA_FED"
 
 # Others
 # [1] "STRMPWR"      "MIN_Z"        "XSLOPE_MAP"   "PASUSCEP5_DE" "upDist"       "LAT_RAW"     
@@ -359,7 +359,7 @@ pairs(fss2.s2[,fss2.s2.col[c(3,8,14,15,17,25,26,31,38)]],
 keeps.s2 <- c("FSS_26Aug14",
               "sum_1095_days", 
               "PADISRSA_1YR","PALITHERODRCA", "PASILTRCA",
-              "APOPRCA2010","PAOWNRCA_AGR","POWNRCA_PRI","POWNRSA_FED", "POPRCA2010",
+              "APOPRCA2010","PAOWNRCA_AGR","POWNRCA_PRI","POWNRSA_FED", 
               "STRMPWR", "MIN_Z", "XSLOPE_MAP","PASUSCEP5_DE", "upDist", "LAT_RAW")
 
 #Further remove variables to reduce the influence of correlation on raising variable importance
@@ -430,13 +430,59 @@ load("fss2_s2_visd_20141027_2010.RData")
 
 fss2.s2.vi.l <- melt(fss2.s2.vi, id=c("var_name","var_index"))
 
+bymedian <- sort(sapply(fss2.s2.rm.rf.vi, median))
+index.merge <- data.frame('variable' = names(bymedian), 'index' = 1:11)
+fm <- melt(fss2.s2.rm.rf.vi)
+fm <- merge(fm, index.merge, by = 'variable', all.x = TRUE)
+
 png('varImpALL_s2.png', width = 960, height = 960)
 bymedian <- with(fss2.s2.vi.l, reorder(var_name, value, median))
+par(yaxt="n",mar=c(5, 8, 4, 5))
 boxplot(value ~ bymedian, data = fss2.s2.vi.l,
         ylab = "var name", xlab = "%InMSE", 
         varwidth = TRUE,
         col = "lightgray", horizontal = TRUE)
+lablist.y<-names(bymedian)
+axis(2, labels = FALSE)
+text(y = 1:11, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
 dev.off()
+
+##############
+fss2.s2.rm.rf.vi <- data.frame(matrix(, ncol = 15, nrow = 50))
+names(fss2.s2.rm.rf.vi) <- names(fss2.s2)[-8]
+
+library(randomForest)
+# initialize the variable importance df
+fss2.s2.rm.vi <- data.frame(matrix(, nrow = ncol(fss2.s2)-1, ncol = 50))
+set.seed(100)
+for (i in 1:50) {
+  fss2.s2.rm.rf <- randomForest(FSS_26Aug14 ~ ., 
+                                data = fss2.s2, 
+                                ntree = 2000, 
+                                keep.forest = TRUE, 
+                                importance = TRUE)
+  fss2.s2.rm.rf.vi[i,] <- importance(fss2.s2.rm.rf, conditional = TRUE)
+}
+
+View(fss2.s2.rm.rf.vi)
+fss2.s2.rm.rf.vi <- (fss2.s2.rm.rf.vi[,-15])
+bymedian <- sort(sapply(fss2.s2.rm.rf.vi, median))
+index.merge <- data.frame('variable' = names(bymedian), 'index' = 1:14)
+fm <- melt(fss2.s2.rm.rf.vi)
+fm <- merge(fm, index.merge, by = 'variable', all.x = TRUE)
+png('varImp_s2.png', width = 960, height = 960)
+par(yaxt="n",mar=c(5, 8, 4, 5))
+boxplot(value ~ index, data = fm,
+        xlab = "Importance",
+        varwidth = TRUE,
+        col = "lightgray",
+        horizontal = TRUE)
+lablist.y<-names(bymedian)
+axis(2, labels = FALSE)
+text(y = 1:14, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
+dev.off()
+
+#################
 
 fss2.s2.vi.median <- cast(fss2.s2.vi.l,var_name + var_index ~ ., value ='value', median)
 colnames(fss2.s2.vi.median )[3] <- "median"
