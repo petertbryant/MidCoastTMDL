@@ -296,7 +296,7 @@ fss2.s1.vi.l <- melt(fss2.s1.vi, id=c("var_name","var_index"))
 png('varImpALL.png', width = 960, height = 960)
 bymedian <- with(fss2.s1.vi.l, reorder(var_index, value, median))
 boxplot(value ~ bymedian, data = fss2.s1.vi.l,
-        ylab = "Variable index", xlab = "%InMSE", 
+        ylab = "Variable index", xlab = "% Increase MSE", 
         varwidth = TRUE,
         col = "lightgray", horizontal = TRUE)
 dev.off()
@@ -337,7 +337,7 @@ pairs(fss2.s2[,fss2.s2.col[c(9,12,19,22)]],
 # [1] "PALITHERODRCA"  "PALITHERODRSA"  "PASILTRCA"      "PSILTRCA"       "PASILT_CLAYRCA"
 # [6] "PACLAYRCA"      "MAKFACTRCA"     "PASANDRCA"      "PCLAYRCA"       "PSILT_CLAYRCA" 
 # [11] "PSANDRCA"      "PLITHERODRCA"
-pairs(fss2.s2[,fss2.s2.col[c(5,7,10,11,16,18,20,21,24,27,28,37)]],
+pairs(fss2.s2[,fss2.s2.col[c(5,7,10,11,16,18,20,21,24,27,28,37,31,38)]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 # almost everything is coorelated
 # Keep "PALITHERODRCA", "PASILTRCA"
@@ -346,7 +346,7 @@ pairs(fss2.s2[,fss2.s2.col[c(5,7,10,11,16,18,20,21,24,27,28,37)]],
 # "PAOWNRSA_AGR"   "POPRCA2010"     "POWNRCA_FED"
 pairs(fss2.s2[,fss2.s2.col[c(13,29,30,33,34,35,35)]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
-# Keep"APOPRCA2010"  "PAOWNRCA_AGR" "POWNRCA_PRI"  "POWNRSA_FED", "POPRCA2010"
+# Keep"APOPRCA2010"  "PAOWNRCA_AGR" "POWNRCA_PRI"  "POWNRSA_FED"
 
 # Others
 # [1] "STRMPWR"      "MIN_Z"        "XSLOPE_MAP"   "PASUSCEP5_DE" "upDist"       "LAT_RAW"     
@@ -359,7 +359,7 @@ pairs(fss2.s2[,fss2.s2.col[c(3,8,14,15,17,25,26,31,38)]],
 keeps.s2 <- c("FSS_26Aug14",
               "sum_1095_days", 
               "PADISRSA_1YR","PALITHERODRCA", "PASILTRCA",
-              "APOPRCA2010","PAOWNRCA_AGR","POWNRCA_PRI","POWNRSA_FED", "POPRCA2010",
+              "APOPRCA2010","PAOWNRCA_AGR","POWNRCA_PRI","POWNRSA_FED",
               "STRMPWR", "MIN_Z", "XSLOPE_MAP","PASUSCEP5_DE", "upDist", "LAT_RAW")
 
 #Further remove variables to reduce the influence of correlation on raising variable importance
@@ -376,7 +376,7 @@ fss2.s2 <- data.frame(na.omit(fss2.s2))
 colnames(fss2.s2)
 
 set.seed(42)
-fss2.s2.rf <- rf.modelSel(xdata=fss2.s2[,c(1:8,10:ncol(fss2.s2))], 
+fss2.s2.rf <- rf.modelSel(xdata=fss2.s2[,c(1:7,9:ncol(fss2.s2))], 
                           ydata=fss2.s2[,"FSS_26Aug14"], 
                           imp.scale="mir", r=c(0.5,0.10, 0.15,0.20,0.25,0.30,0.35,0.40,0.45, 0.5,0.55,0.60,0.75,0.80,0.85,0.90, 0.95),  
                           final=TRUE, plot.imp=TRUE, parsimony=0.03, ntree=2000) 
