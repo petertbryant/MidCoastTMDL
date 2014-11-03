@@ -471,15 +471,15 @@ index.merge <- data.frame('variable' = names(bymedian), 'index' = 1:14)
 fm <- melt(fss2.s2.rm.rf.vi)
 fm <- merge(fm, index.merge, by = 'variable', all.x = TRUE)
 png('varImp_s2.png', width = 960, height = 960)
-par(yaxt="n",mar=c(5, 8, 4, 5))
+par(yaxt="n",mar=c(5, 16, 4, 4))
 boxplot(value ~ index, data = fm,
-        xlab = "Importance",
+        xlab = "% Increase MSE",
         varwidth = TRUE,
         col = "lightgray",
         horizontal = TRUE)
 lablist.y<-names(bymedian)
 axis(2, labels = FALSE)
-text(y = 1:14, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
+text(y = 1:14, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE, cex = 2)
 dev.off()
 
 #################
