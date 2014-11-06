@@ -286,8 +286,8 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
 save(fss2.s1.vi, file=paste0("fss2_s1_vi_",timestamp,".RData"))
 save(fss2.s1.visd, file=paste0("fss2_s1_visd_",timestamp,".RData"))
 timestamp
-load("fss2_s1_vi_20141027_1853.RData")
-load("fss2_s1_visd_20141027_1853.RData")
+load("fss2_s1_vi_20141105_1138.RData")
+load("fss2_s1_visd_20141105_1138.RData")
 
 #-----------
 
@@ -309,10 +309,10 @@ fss2.s1.vi.median <- fss2.s1.vi.median[with(fss2.s1.vi.median, order(-median)), 
 
 # Variable removal
 # After the first 24 largest median values starts to flatten out so 
-# we will take the top 37 to step 2. (33%)
+# we will take the top 40 to step 2. (33%)
 
-# grab all variable names with median values > 0.5 = 33% of the data
-fss2.s2.col <- fss2.s1.vi.median[fss2.s1.vi.median$median >= 5.477664e-01,][,1]
+# grab all variable names with median values > 0.8 = 33% of the data
+fss2.s2.col <- fss2.s1.vi.median[fss2.s1.vi.median$median >= 0.85272628,][,1]
 fss2.s2.col <- c("FSS_26Aug14",fss2.s2.col)
 fss2.s2 <- fss2.s1[,colnames(fss2.s1) %in% fss2.s2.col]
 
@@ -322,45 +322,51 @@ fss2.s2.col
 
 # Precip "sum_1095_days","PPT_1981_2010","sum_365_days","sum_60_days","sum_180_days"
 png('precip_cor.png')
-pairs(fss2.s2[,fss2.s2.col[c(2,4,6,32)]],
+pairs(fss2.s2[,fss2.s2.col[c(3,4,7,36)]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 dev.off()
 # keep "sum_1095_days"
 
 # Disturb [1] "PADISRSA_1YR" "PDISRCA_1YR"  "PDISRSA_1YR"  "PDISRCA_3YR"
-pairs(fss2.s2[,fss2.s2.col[c(9,12,19,22)]],
+pairs(fss2.s2[,fss2.s2.col[c(8,11,12,17)]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 # everything is coorelated
-# keep "PADISRSA_1YR",
+# keep "PDISRSA_1YR",
 
 # Lithology/soils
-# [1] "PALITHERODRCA"  "PALITHERODRSA"  "PASILTRCA"      "PSILTRCA"       "PASILT_CLAYRCA"
-# [6] "PACLAYRCA"      "MAKFACTRCA"     "PASANDRCA"      "PCLAYRCA"       "PSILT_CLAYRCA" 
-# [11] "PSANDRCA"      "PLITHERODRCA"
-pairs(fss2.s2[,fss2.s2.col[c(5,7,10,11,16,18,20,21,24,27,28,37,31,38)]],
+# [1] "PALITHERODRCA"  "PALITHERODRSA"  "PASILTRCA"      "PACLAYRCA"      "PASILT_CLAYRCA" "PASANDRCA"      "MAKFACTRCA"     "PSILTRCA"      
+# [9] "PCLAYRCA"       "PLITHERODRSA"   "PSANDRCA"
+pairs(fss2.s2[,fss2.s2.col[c(2,5,14,15,18,20,21,23,24,31,41)]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 # almost everything is coorelated
 # Keep "PALITHERODRCA", "PASILTRCA"
 
-# Ownership "APOPRCA2010"  "PAOWNRCA_AGR" "POWNRCA_PRI"  "POWNRSA_FED"
-# "PAOWNRSA_AGR"   "POPRCA2010"     "POWNRCA_FED"
-pairs(fss2.s2[,fss2.s2.col[c(13,29,30,33,34,35,35)]],
+# Ownership "APOPRCA2010"  "POWNRCA_PRI"  
+pairs(fss2.s2[,fss2.s2.col[c(13,35)]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
-# Keep"APOPRCA2010"  "PAOWNRCA_AGR" "POWNRCA_PRI"  "POWNRSA_FED"
+#When including the susceptibility breakouts we only get "POWNRCA_PRI" as a top variable
+
+#Susceptibility
+#[1] "PCONVEXRSA"   "PASLOPERCA"   "PACONVEXRCA"  "PASUSCEP4_DE" "PSUSCEP5_DE"  "PCONVEXRCA"
+pairs(fss2.s2[,fss2.s2.col[c(10,16,25,26,28,30)]],
+      lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
+#almost everything is correlated
+#Keep "PCONVEXRSA"
 
 # Others
-# [1] "STRMPWR"      "MIN_Z"        "XSLOPE_MAP"   "PASUSCEP5_DE" "upDist"       "LAT_RAW"     
-# [7] "LONG_RAW"     "PSUSCEP5_DE"   "PSUSCEP4_DE"
-pairs(fss2.s2[,fss2.s2.col[c(3,8,14,15,17,25,26,31,38)]],
+#  [1] "STRMPWR"     "XSLOPE_MAP"  "MIN_Z"       "upDist"      "LAT_RAW"     "afvArea"     "LONG_RAW"    "ARCASQM"     "ARSASQM"    
+# [11] "PATYPEF"   
+pairs(fss2.s2[,fss2.s2.col[c(6,9,22,29,32,33,34,38,39,40)]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
-# udist and Long coorelated
-# keeep [1] "STRMPWR", "MIN_Z", "PASUSCEP5_DE", "upDist", "LAT_RAW",
+# udist and Long coorelated. arca and arsa correlated with each other.
+# keeep "STRMPWR", "XSLOPE_MAP", "MIN_Z", "upDist", "LAT_RAW", "afvArea", "ARCASQM","PATYPEF"
 
 keeps.s2 <- c("FSS_26Aug14",
               "sum_1095_days", 
-              "PADISRSA_1YR","PALITHERODRCA", "PASILTRCA",
-              "APOPRCA2010","PAOWNRCA_AGR","POWNRCA_PRI","POWNRSA_FED",
-              "STRMPWR", "MIN_Z", "XSLOPE_MAP","PASUSCEP5_DE", "upDist", "LAT_RAW")
+              "PDISRSA_1YR","PALITHERODRCA", "PASILTRCA",
+              "APOPRCA2010","POWNRCA_PRI",
+              "PCONVEXRSA",
+              "STRMPWR", "XSLOPE_MAP", "MIN_Z", "upDist", "LAT_RAW", "afvArea", "ARCASQM","PATYPEF")
 
 #Further remove variables to reduce the influence of correlation on raising variable importance
 fss2.s2 <- fss2.s2[,colnames(fss2.s2) %in% keeps.s2]
@@ -375,11 +381,12 @@ fss2.s2 <- data.frame(na.omit(fss2.s2))
 #Random Forest Step 2
 colnames(fss2.s2)
 
-set.seed(42)
-fss2.s2.rf <- rf.modelSel(xdata=fss2.s2[,c(1:7,9:ncol(fss2.s2))], 
-                          ydata=fss2.s2[,"FSS_26Aug14"], 
-                          imp.scale="mir", r=c(0.5,0.10, 0.15,0.20,0.25,0.30,0.35,0.40,0.45, 0.5,0.55,0.60,0.75,0.80,0.85,0.90, 0.95),  
-                          final=TRUE, plot.imp=TRUE, parsimony=0.03, ntree=2000) 
+#DO we want to run this here?
+# set.seed(42)
+# fss2.s2.rf <- rf.modelSel(xdata=fss2.s2[,c(1:7,9:ncol(fss2.s2))], 
+#                           ydata=fss2.s2[,"FSS_26Aug14"], 
+#                           imp.scale="mir", r=c(0.5,0.10, 0.15,0.20,0.25,0.30,0.35,0.40,0.45, 0.5,0.55,0.60,0.75,0.80,0.85,0.90, 0.95),  
+#                           final=TRUE, plot.imp=TRUE, parsimony=0.03, ntree=2000) 
 
 
 
@@ -423,17 +430,17 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
 save(fss2.s2.vi, file=paste0("fss2_s2_vi_",timestamp,".RData"))
 save(fss2.s2.visd, file=paste0("fss2_s2_visd_",timestamp,".RData"))
 timestamp
-load("fss2_s2_vi_20141027_2010.RData")
-load("fss2_s2_visd_20141027_2010.RData")
+load("fss2_s2_vi_20141105_1646.RData")
+load("fss2_s2_visd_20141105_1646.RData")
 
 #-----------
 
 fss2.s2.vi.l <- melt(fss2.s2.vi, id=c("var_name","var_index"))
 
-bymedian <- sort(sapply(fss2.s2.rm.rf.vi, median))
-index.merge <- data.frame('variable' = names(bymedian), 'index' = 1:11)
-fm <- melt(fss2.s2.rm.rf.vi)
-fm <- merge(fm, index.merge, by = 'variable', all.x = TRUE)
+# bymedian <- sort(sapply(fss2.s2.vi, median))
+# index.merge <- data.frame('variable' = names(bymedian), 'index' = 1:50)
+# fm <- melt(fss2.s2.vi)
+# fm <- merge(fm, index.merge, by = 'variable', all.x = TRUE)
 
 png('varImpALL_s2.png', width = 960, height = 960)
 bymedian <- with(fss2.s2.vi.l, reorder(var_name, value, median))
@@ -442,9 +449,9 @@ boxplot(value ~ bymedian, data = fss2.s2.vi.l,
         ylab = "var name", xlab = "%InMSE", 
         varwidth = TRUE,
         col = "lightgray", horizontal = TRUE)
-lablist.y<-names(bymedian)
+lablist.y<-levels(bymedian)
 axis(2, labels = FALSE)
-text(y = 1:11, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
+text(y = 1:15, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
 dev.off()
 
 ##############
@@ -491,6 +498,27 @@ colnames(fss2.s2.vi.median )[3] <- "median"
 fss2.s2.vi.median <- fss2.s2.vi.median[with(fss2.s2.vi.median, order(-median)), ]
 
 ##############################
+
+#Partial dependence plots
+partialPlot(fss2.s2.rm.rf, fss2.s2, x.var = 'sum_1095_days', ylab = 'Mean FSS', ylim = c(9,18))
+partialPlot(fss2.s2.rm.rf, fss2.s2, x.var = 'PALITHERODRCA', ylab = 'Mean FSS', ylim = c(9,18))
+partialPlot(fss2.s2.rm.rf, fss2.s2, x.var = 'STRMPWR', ylab = 'Mean FSS', ylim = c(9,18))
+partialPlot(fss2.s2.rm.rf, fss2.s2, x.var = 'MIN_Z', ylab = 'Mean FSS', ylim = c(9,18))
+partialPlot(fss2.s2.rm.rf, fss2.s2, x.var = 'PASILTRCA', ylab = 'Mean FSS', ylim = c(9,18))
+partialPlot(fss2.s2.rm.rf, fss2.s2, x.var = 'XSLOPE_MAP', ylab = 'Mean FSS', ylim = c(9,18))
+partialPlot(fss2.s2.rm.rf, fss2.s2, x.var = 'PASUSCEP5_DE', ylab = 'Mean FSS', ylim = c(9,18))
+partialPlot(fss2.s2.rm.rf, fss2.s2, x.var = 'APOPRCA2010', ylab = 'Mean FSS', ylim = c(9,18))
+partialPlot(fss2.s2.rm.rf, fss2.s2, x.var = 'LAT_RAW', ylab = 'Mean FSS', ylim = c(9,18))
+partialPlot(fss2.s2.rm.rf, fss2.s2, x.var = 'POWNRCA_PRI', ylab = 'Mean FSS', ylim = c(9,18))
+partialPlot(fss2.s2.rm.rf, fss2.s2, x.var = 'PADISRSA_1YR', ylab = 'Mean FSS', ylim = c(9,18))
+partialPlot(fss2.s2.rm.rf, fss2.s2, x.var = 'upDist', ylab = 'Mean FSS', ylim = c(9,18))
+partialPlot(fss2.s2.rm.rf, fss2.s2, x.var = 'POWNRSA_FED', ylab = 'Mean FSS', ylim = c(9,18))
+partialPlot(fss2.s2.rm.rf, fss2.s2, x.var = 'PAOWNRCA_AGR', ylab = 'Mean FSS', ylim = c(9,18))
+
+
+
+##############################
+
 # cforest version
 
 library(party)
