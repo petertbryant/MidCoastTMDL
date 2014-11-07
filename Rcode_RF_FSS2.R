@@ -1,5 +1,3 @@
-
-
 library(randomForest)
 library(reshape)
 library(plyr)
@@ -11,11 +9,10 @@ bugs <- read.csv("ssn_RF_data.csv")
 #bugs <- arrange(bugs, STATION_KEY, desc(YEAR))
 #bugs <- bugs[!duplicated(bugs$STATION_KEY),]
 
-# -----------------------------------------------------------
-# Correlation Matrix Functions
+#### Correlation Matrix Functions ####
 # source
 # http://stackoverflow.com/questions/15271103/how-to-modify-this-correlation-matrix-plot
-# -----------------------------------------------------------
+#
 panel.cor <- function(x, y, digits=2, cex.cor)
 {
   usr <- par("usr"); on.exit(par(usr))
@@ -48,183 +45,8 @@ panel.hist <- function(x, ...)
   rect(breaks[-nB], 0, breaks[-1], y, col="gray", ...)
 }
 
-################################################################################################
-#http://evansmurphy.wix.com/evansspatial#!random‐forests‐model‐select/cksm
-
-rf.modelSel <- function(xdata, ydata, imp.scale="mir", r=c(0.25, 0.50, 0.75),  
-                        final=FALSE, plot.imp=TRUE, parsimony=NULL, ...) 
-{
-  if (!require (randomForest)) stop("randomForest PACKAGE MISSING")
-  rf.ImpScale <- function (x, scale="mir") { 
-    if (!inherits(x, "randomForest")) 
-      stop(deparse(substitute(x)), " Must be a randomForest object")
-    if (x$type == "regression") {
-      if (is.null(x$importanceSD) == TRUE | "%IncMSE" %in% 
-            names(as.data.frame(x$importance)) == FALSE)
-        stop("OBJECT DOES NOT CONTAIN PERMUTATED IMPORTANCE, PLEASE RUN 
-             randomForest WITH importance=TRUE")   
-      rf.imp <- x$importance[,"%IncMSE"]
-      rf.impSD <- x$importanceSD
-      rf.impSD[rf.impSD == 0] <- 0.000000001  
-      if (scale == "mir") {
-        i <- rf.imp / max(rf.imp) 
-      }    
-      if (scale == "se") {
-        i <- ( rf.imp / rf.impSD ) / sum(rf.imp / rf.impSD, na.rm=TRUE)			 
-      }
-    }
-    if (x$type == "classification" | x$type == "unsupervised") {
-      if (is.null(x$importanceSD) == TRUE | "MeanDecreaseAccuracy" %in% 
-            names(as.data.frame(x$importance)) == FALSE)
-        stop("OBJECT DOES NOT CONTAIN PERMUTATED IMPORTANCE, PLEASE RUN 
-             randomForest WITH importance=TRUE") 
-      rf.imp <- x$importance[,"MeanDecreaseAccuracy"]
-      rf.impSD <- x$importanceSD[,"MeanDecreaseAccuracy"]
-      rf.impSD[rf.impSD == 0] <- 0.000000001	
-      if (scale == "mir") {
-        i <- rf.imp / max(rf.imp) 
-      }	  
-      if (scale == "se") {
-        i <- ( rf.imp / rf.impSD ) / sum(rf.imp / rf.impSD, na.rm=TRUE)			 
-      }
-    }
-    i <- as.data.frame(i)
-    names(i) <- "importance" 
-    row.names(i) <- names(rf.imp)	
-    return( i )            
-  }
-  
-  RFtype <- is.factor(ydata) #TEST FOR FACTOR IN Y 
-  ##CLASSIFICATION##
-  if (RFtype == "TRUE") {
-    model.vars <- list()
-    ln <- 0
-    rf.all <- randomForest(x=xdata, y=ydata, importance=TRUE, ...) 
-    model.vars[[ln <- ln + 1]] <- rownames(rf.all$importance)  
-    class.errors <- as.data.frame(rf.all$err.rate)
-    class.errors <- na.omit(class.errors)  
-    class.errors[class.errors == NaN] <- 0
-    class.errors[class.errors == Inf] <- 1         
-    i <- vector()
-    for ( l in 2:nlevels(as.factor(names(class.errors))) ) {              
-      i <- append(i, median(class.errors[,l]))
-    }        
-    max.error = max(i) 
-    imp <- rf.ImpScale(rf.all, scale=imp.scale) 
-    results <- as.data.frame(array(0, dim=c( 0, 4 )))
-    x <- c(0, (median(rf.all$err.rate[,"OOB"]) * 100), max.error * 100, dim(xdata)[2] )
-    results <- rbind(results, x) 	 	 
-    for (p in 1:length(r) ) {
-      t = quantile(imp[,1], probs=r[p])
-      sel.imp <- subset(imp, importance >= t)
-      sel.vars <- rownames(sel.imp)
-      if (length( sel.vars ) > 1) {                             
-        xdata.sub <- xdata[,sel.vars]       
-        rf.model <- randomForest(x=xdata.sub, y=ydata, importance=TRUE)          
-        class.errors <- as.data.frame(rf.model$err.rate)
-        class.errors <- na.omit(class.errors)  
-        class.errors[class.errors == NaN] <- 0
-        class.errors[class.errors == Inf] <- 1      
-        i <- as.vector(array(0, dim=c((0),(1))))
-        for ( l in 2:nlevels(as.factor(names(class.errors))) )
-        {
-          x.bar <- mean(class.errors[,l])              
-          i <- as.vector(append(i, x.bar, after=length(i) ))
-        }        
-        max.error = max(i[2:length(i)] )     
-        x <- c(t, median(rf.model$err.rate[,1]) * 100, max.error * 100, length(sel.vars) )
-        results <- rbind(results, x)
-        model.vars[[ln <- ln + 1]] <- rownames(rf.model$importance)
-      }
-    }
-    names(results) <- c("THRESHOLD", "OOBERROR", "CLASS.ERROR", "NPARAMETERS")
-    results <- results[order(results$CLASS.ERROR, results$OOBERROR, results$NPARAMETERS),]
-    if (is.null(parsimony) == FALSE) { 
-      if(parsimony < 0.00000001 | parsimony > 0.9) stop( "parsomony MUST RANGE 0-1")
-      oob <- "TRUE"
-      for(i in 2:nrow(results)) {
-        if( abs((results[i,][2] - results[1,][2] ) / results[1,][2]) <= parsimony  &
-              abs( (results[i,][3] - results[1,][3] ) / results[1,][3] ) <= parsimony ) {
-          oob <- append(oob, "TRUE")
-        } else {
-          oob <- append(oob, "FALSE")
-        }
-        final <- results[which( oob == "TRUE" ),]
-        final <- final[final$NPARAMETERS == min(final$NPARAMETERS) ,]$THRESHOLD
-      }
-    } else {		
-      final <- as.vector(results[,"THRESHOLD"])[1]
-    }	
-    sel.imp <- subset(imp, importance >= final)    
-    sel.vars <- rownames(sel.imp)
-    sel.post=which( results$NPARAMETERS == length(sel.vars) ) 
-    results <- rbind(results[sel.post,],results[-sel.post,]) 	
-  } # END OF CLASSIFICATION
-  
-  ##REGRESSION## 
-  if (RFtype == "FALSE") {
-    model.vars <- list()
-    ln <- 0      
-    rf.all <- randomForest(x=xdata, y=ydata, importance=TRUE, ...) 
-    model.vars[[ln <- ln + 1]] <- rownames(rf.all$importance)  
-    imp <- rf.ImpScale(rf.all, scale=imp.scale) 
-    results <- as.data.frame(array(0, dim=c( 0, 4 )))
-    x <- c(0, (median(rf.all$rsq)), mean(rf.all$mse), dim(xdata)[2] )
-    results <- rbind(results, x)     
-    for (p in 1:length(r) ) {
-      t = quantile(imp[,1], probs=r[p])		 
-      sel.vars <- rownames(subset(imp, importance >= t))  
-      if (length( sel.vars ) > 1) {                             
-        xdata.sub <- as.data.frame(xdata[,sel.vars]) 
-        rf.model <- randomForest(x=xdata.sub, y=ydata, importance=TRUE, ...)          
-        x <- c(t, (median(rf.model$rsq)), mean(rf.model$mse), length(sel.vars) )
-        results <- rbind(results, x)
-        model.vars[[ln <- ln + 1]] <- rownames(rf.model$importance)
-      }
-    }
-    names(results) <- c("THRESHOLD", "VAREXP", "MSE", "NPARAMETERS")
-    results <- results[order(-results$VAREXP, results$MSE, results$NPARAMETERS),]  
-    if (!is.null(parsimony)) {
-      if(parsimony < 0.00000001 | parsimony > 0.9) stop( "parsomony MUST RANGE 0-1")	
-      oob <- "TRUE"
-      for(i in 2:nrow(results)) {
-        if( abs((results[i,][2] - results[1,][2] ) / results[1,][2]) <= parsimony  &
-              abs( (results[i,][3] - results[1,][3] ) / results[1,][3] ) <= parsimony ) {
-          oob <- append(oob, "TRUE")
-        } else {
-          oob <- append(oob, "FALSE")
-        }
-        final <- results[which( oob == "TRUE" ),]
-        final <- final[final$NPARAMETERS == min(final$NPARAMETERS) ,]$THRESHOLD
-      }
-    } else {		
-      final <- as.vector(results[,"THRESHOLD"])[1]
-    }	
-    sel.imp <- subset(imp, importance >= final)    
-    sel.vars <- rownames(sel.imp)
-    sel.post=which( results$NPARAMETERS == length(sel.vars) ) 
-    results <- rbind(results[sel.post,],results[-sel.post,]) 			
-  } # END OF REGRESSION 
-  
-  if (plot.imp == TRUE) {
-    if (imp.scale=="mir") {lable="Row Standardization Variable Importance"} 	
-    if (imp.scale=="se") {lable="Standardized Error Variable Importance"}
-    p <- as.matrix(subset(imp, importance >= final))    
-    ord <- rev(order(p[,1], decreasing=TRUE)[1:dim(p)[1]])  
-    dotchart(p[ord,1], main=lable, pch=19)
-  }
-  
-  if (final == TRUE) {
-    sub.xdata <- xdata[,sel.vars]  #SUBSET VARIABLES
-    rf.final <- randomForest(x=sub.xdata, y=ydata, importance=TRUE, ...)           
-    ( list(MODEL=rf.final, SELVARS=sel.vars, TEST=results, IMPORTANCE=sel.imp, PARAMETERS=model.vars) )      
-  } else {
-    ( list(SELVARS=sel.vars, TEST=results, IMPORTANCE=sel.imp, PARAMETERS=model.vars) ) 
-  }     
-}
-
 # ----------------------------------------------------------- #
-# FSS2 - Random forests excluding the physical habitat data
+# FSS2 - Random forests excluding the physical habitat data ####
 # ----------------------------------------------------------- #
 # Step 1, per Genuer et al (2000), use brute force to identify important variables. 
 # Since we have a large amount of variables random forest is run 50 times with a 
@@ -280,7 +102,7 @@ fss2.s1.visd[,52]<-c(1:length(fss2.s1.col))
 colnames(fss2.s1.visd)[51] <- "var_name"
 colnames(fss2.s1.visd)[52] <- "var_index"
 
-# ----------
+# ---
 # Save the df with a timestamp so we don't accidently overwrite it.
 timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
 save(fss2.s1.vi, file=paste0("fss2_s1_vi_",timestamp,".RData"))
@@ -289,7 +111,8 @@ timestamp
 load("fss2_s1_vi_20141027_1853.RData")
 load("fss2_s1_visd_20141027_1853.RData")
 
-#-----------
+# --- #
+#### s1 boxplot ####
 
 fss2.s1.vi.l <- melt(fss2.s1.vi, id=c("var_name","var_index"))
 
@@ -311,13 +134,21 @@ fss2.s1.vi.median <- fss2.s1.vi.median[with(fss2.s1.vi.median, order(-median)), 
 # After the first 24 largest median values starts to flatten out so 
 # we will take the top 37 to step 2. (33%)
 
+## Save the precursors to s2 with a timestamp so we don't accidently overwrite it.
+timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
+save(fss2.s1.vi.median, file=paste0("fss2_s1_vi_median_",timestamp,".RData"))
+save(fss2.s1, file=paste0("fss2_s1_",timestamp,".RData"))
+timestamp
+load("fss2_s1_vi_median_20141106_1626.RData")
+load("fss2_s1_20141106_1626.RData")
+
 # grab all variable names with median values > 0.5 = 33% of the data
 fss2.s2.col <- fss2.s1.vi.median[fss2.s1.vi.median$median >= 5.477664e-01,][,1]
 fss2.s2.col <- c("FSS_26Aug14",fss2.s2.col)
 fss2.s2 <- fss2.s1[,colnames(fss2.s1) %in% fss2.s2.col]
 
-# -----------------------------------------------------------
-# Correlation plots
+# --- #
+#### Correlation plots ####
 fss2.s2.col
 
 # Precip "sum_1095_days","PPT_1981_2010","sum_365_days","sum_60_days","sum_180_days"
@@ -371,17 +202,9 @@ colnames(fss2.s2)
 fss2.s2 <- data.frame(na.omit(fss2.s2))
 #write.csv(fss2.s2, 'fss2_s2_data.csv')
 
-# -----------------------------------------------------------
-#Random Forest Step 2
+# --- #
+##### Random Forest Step 2 ####
 colnames(fss2.s2)
-
-set.seed(42)
-fss2.s2.rf <- rf.modelSel(xdata=fss2.s2[,c(1:7,9:ncol(fss2.s2))], 
-                          ydata=fss2.s2[,"FSS_26Aug14"], 
-                          imp.scale="mir", r=c(0.5,0.10, 0.15,0.20,0.25,0.30,0.35,0.40,0.45, 0.5,0.55,0.60,0.75,0.80,0.85,0.90, 0.95),  
-                          final=TRUE, plot.imp=TRUE, parsimony=0.03, ntree=2000) 
-
-
 
 # mtry and ntree values 
 mtry.fss2.s2 <- as.integer(((ncol(fss2.s2)-1) / 3),0)
@@ -393,16 +216,15 @@ fss2.s2.visd <- data.frame(matrix(, nrow = ncol(fss2.s2)-1, ncol = 50))
 fss2.s2.col <- colnames(fss2.s2)
 fss2.s2.col <- fss2.s2.col[!(fss2.s2.col == "FSS_26Aug14")]
 
-
 beg <- Sys.time()
-set.seed(42)
+set.seed(100)
 for (i in 1:50) {
   fss2.s2.rf <- randomForest(FSS_26Aug14 ~ ., 
                              data = fss2.s2, 
                              ntree = 1000, 
                              keep.forest = TRUE, 
                              importance = TRUE)
-  fss2.s2.vi[,i] <- fss2.s2.rf$importance[,1]
+  fss2.s2.vi[,i] <- importance(fss2.s2.rf, type = 1, conditional = TRUE)
   fss2.s2.visd[,i] <- fss2.s2.rf$importanceSD
 }
 print(Sys.time() - beg)
@@ -417,7 +239,7 @@ fss2.s2.visd[,52]<-c(1:length(fss2.s2.col))
 colnames(fss2.s2.visd)[51] <- "var_name"
 colnames(fss2.s2.visd)[52] <- "var_index"
 
-# ----------
+# --- #
 # Save the df with a timestamp so we don't accidently overwrite it.
 timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
 save(fss2.s2.vi, file=paste0("fss2_s2_vi_",timestamp,".RData"))
@@ -426,63 +248,28 @@ timestamp
 load("fss2_s2_vi_20141027_2010.RData")
 load("fss2_s2_visd_20141027_2010.RData")
 
-#-----------
+#### s2 boxplot ####
 
 fss2.s2.vi.l <- melt(fss2.s2.vi, id=c("var_name","var_index"))
 
-bymedian <- sort(sapply(fss2.s2.rm.rf.vi, median))
-index.merge <- data.frame('variable' = names(bymedian), 'index' = 1:11)
-fm <- melt(fss2.s2.rm.rf.vi)
-fm <- merge(fm, index.merge, by = 'variable', all.x = TRUE)
+# bymedian <- sort(sapply(fss2.s2.rm.rf.vi, median))
+# index.merge <- data.frame('variable' = names(bymedian), 'index' = 1:11)
+# fm <- melt(fss2.s2.rm.rf.vi)
+# fm <- merge(fm, index.merge, by = 'variable', all.x = TRUE)
 
-png('varImpALL_s2.png', width = 960, height = 960)
+#png('varImpALL_s2.png', width = 960, height = 960)
 bymedian <- with(fss2.s2.vi.l, reorder(var_name, value, median))
 par(yaxt="n",mar=c(5, 8, 4, 5))
 boxplot(value ~ bymedian, data = fss2.s2.vi.l,
-        ylab = "var name", xlab = "%InMSE", 
+        xlab = "% Increase MSE", 
         varwidth = TRUE,
         col = "lightgray", horizontal = TRUE)
-lablist.y<-names(bymedian)
-axis(2, labels = FALSE)
-text(y = 1:11, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
-dev.off()
-
-##############
-fss2.s2.rm.rf.vi <- data.frame(matrix(, ncol = 15, nrow = 50))
-names(fss2.s2.rm.rf.vi) <- names(fss2.s2)[-8]
-
-library(randomForest)
-# initialize the variable importance df
-fss2.s2.rm.vi <- data.frame(matrix(, nrow = ncol(fss2.s2)-1, ncol = 50))
-set.seed(100)
-for (i in 1:50) {
-  fss2.s2.rm.rf <- randomForest(FSS_26Aug14 ~ ., 
-                                data = fss2.s2, 
-                                ntree = 2000, 
-                                keep.forest = TRUE, 
-                                importance = TRUE)
-  fss2.s2.rm.rf.vi[i,] <- importance(fss2.s2.rm.rf, conditional = TRUE)
-}
-
-View(fss2.s2.rm.rf.vi)
-fss2.s2.rm.rf.vi <- (fss2.s2.rm.rf.vi[,-15])
-bymedian <- sort(sapply(fss2.s2.rm.rf.vi, median))
-index.merge <- data.frame('variable' = names(bymedian), 'index' = 1:14)
-fm <- melt(fss2.s2.rm.rf.vi)
-fm <- merge(fm, index.merge, by = 'variable', all.x = TRUE)
-png('varImp_s2.png', width = 960, height = 960)
-par(yaxt="n",mar=c(5, 8, 4, 5))
-boxplot(value ~ index, data = fm,
-        xlab = "Importance",
-        varwidth = TRUE,
-        col = "lightgray",
-        horizontal = TRUE)
-lablist.y<-names(bymedian)
+lablist.y<-levels(bymedian)
 axis(2, labels = FALSE)
 text(y = 1:14, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
-dev.off()
+#dev.off()
 
-#################
+#### Median df creation ####
 
 fss2.s2.vi.median <- cast(fss2.s2.vi.l,var_name + var_index ~ ., value ='value', median)
 colnames(fss2.s2.vi.median )[3] <- "median"
@@ -490,83 +277,14 @@ colnames(fss2.s2.vi.median )[3] <- "median"
 # sort the data so largest at the top
 fss2.s2.vi.median <- fss2.s2.vi.median[with(fss2.s2.vi.median, order(-median)), ]
 
-##############################
-# cforest version
-
-library(party)
-# initialize the variable importance df
-fss2.s2.vi.cf <- data.frame(matrix(, nrow = ncol(fss2.s2)-1, ncol = 50))
-
-# WARNING - Takes about 30 min
-beg <- Sys.time()
-set.seed(42)
-for (i in 1:50) {
-  print(i)
-  fss2.s2.cf <- cforest(FSS_26Aug14 ~ .,
-                        data = fss2.s2, 
-                        controls = cforest_unbiased(ntree = 1000,
-                                                    mtry = mtry.fss2.s2))
-  fss2.s2.vi.cf[,i]<- varimp(fss2.s2.cf, conditional=FALSE)
+#### Partial Dependence Plots ####
+for (i in 1:length(fss2.s2.vi$var_name)) {
+  filename <- paste("partialPlot_", fss2.s2.vi$var_name[i], ".png",sep = "")
+  png(filename, width = 960, height = 960)
+  partialPlot(fss2.s2.rf, 
+              fss2.s2, 
+              x.var = fss2.s2.vi$var_name[i], 
+              ylab = 'Mean FSS', 
+              ylim = c(9,18))
+  dev.off()  
 }
-print(Sys.time() - beg)
-
-# Add var names and index
-fss2.s2.vi.cf[,51]<- fss2.s2.col
-fss2.s2.vi.cf[,52]<-c(1:length(fss2.s2.col))
-colnames(fss2.s2.vi.cf)[51] <- "var_name"
-colnames(fss2.s2.vi.cf)[52] <- "var_index"
-
-fss2.s2.vi.cf.l <- melt(fss2.s2.vi.cf, id=c("var_name","var_index"))
-
-png('varImpALL_s2cf.png', width = 960, height = 960)
-bymedian.cf <- with(fss2.s2.vi.cf.l, reorder(var_name, value, median))
-boxplot(value ~ bymedian.cf, data = fss2.s2.vi.cf.l,
-        ylab = "var name", xlab = "%Increase MSE", 
-        varwidth = TRUE,
-        col = "lightgray", horizontal = TRUE)
-dev.off()
-
-fss2.s2.vi.cf.median <- cast(fss2.s2.vi.cf.l,var_name + var_index ~ ., value ='value', median)
-colnames(fss2.s2.vi.cf.median)[3] <- "median"
-
-# sort the data so largest at the top
-fss2.s2.vi.cf.median <- fss2.s2.vi.cf.median[with(fss2.s2.vi.cf.median, order(-median)), ]
-
-
-# ----------
-# Save the df with a timestamp so we don't accidently overwrite it.
-timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
-save(fss2.s2.vi.cf, file=paste0("fss2_s2_vi_cf",timestamp,".RData"))
-timestamp
-load("fss2_s2_vi_cf20141027_2010.RData")
-
-#-----------
-#################################
-
-
-
-
-
-
-
-
-
-# sort the data so largest at the top
-fss2.s2.vi.median <- fss2.s2.vi.median[with(fss2.s2.vi.median, order(-median)), ]
-
-bymedian <- sort(sapply(fss2.s2.vi.median, median))
-index.merge <- data.frame('variable' = names(bymedian), 'index' = 1:15)
-fm <- melt(fss2.s2.vi)
-fm <- merge(fm, index.merge, by = 'variable', all.x = TRUE)
-png('varImp.png', width = 960, height = 960)
-par(yaxt="n",mar=c(5, 8, 4, 5))
-boxplot(value ~ bymedian, data = fss2.s2.vi.l,
-        xlab = "Importance",
-        varwidth = TRUE,
-        col = "lightgray",
-        horizontal = TRUE)
-lablist.y<-names(bymedian)
-axis(2, labels = FALSE)
-text(y = 1:11, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
-dev.off()
-
