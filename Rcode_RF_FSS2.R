@@ -1,5 +1,3 @@
-
-
 library(randomForest)
 library(reshape)
 library(plyr)
@@ -8,14 +6,10 @@ options(stringsAsFactors = FALSE)
 vars <- read.csv("VarNames_RF.csv")
 bugs <- read.csv("ssn_RF_data.csv")
 
-#bugs <- arrange(bugs, STATION_KEY, desc(YEAR))
-#bugs <- bugs[!duplicated(bugs$STATION_KEY),]
-
-# -----------------------------------------------------------
-# Correlation Matrix Functions
+#### Correlation Matrix Functions ####
 # source
 # http://stackoverflow.com/questions/15271103/how-to-modify-this-correlation-matrix-plot
-# -----------------------------------------------------------
+
 panel.cor <- function(x, y, digits=2, cex.cor)
 {
   usr <- par("usr"); on.exit(par(usr))
@@ -222,7 +216,7 @@ rf.modelSel <- function(xdata, ydata, imp.scale="mir", r=c(0.25, 0.50, 0.75),
     ( list(SELVARS=sel.vars, TEST=results, IMPORTANCE=sel.imp, PARAMETERS=model.vars) ) 
   }     
 }
-
+#### Random forest step 1 #### 
 # ----------------------------------------------------------- #
 # FSS2 - Random forests excluding the physical habitat data
 # ----------------------------------------------------------- #
@@ -280,7 +274,6 @@ fss2.s1.visd[,52]<-c(1:length(fss2.s1.col))
 colnames(fss2.s1.visd)[51] <- "var_name"
 colnames(fss2.s1.visd)[52] <- "var_index"
 
-# ----------
 # Save the df with a timestamp so we don't accidently overwrite it.
 timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
 save(fss2.s1.vi, file=paste0("fss2_s1_vi_",timestamp,".RData"))
@@ -289,7 +282,7 @@ timestamp
 load("fss2_s1_vi_20141105_1138.RData")
 load("fss2_s1_visd_20141105_1138.RData")
 
-#-----------
+#### s1 Boxplots ####
 
 fss2.s1.vi.l <- melt(fss2.s1.vi, id=c("var_name","var_index"))
 
@@ -307,6 +300,14 @@ colnames(fss2.s1.vi.median )[3] <- "median"
 # sort the data so largest at the top
 fss2.s1.vi.median <- fss2.s1.vi.median[with(fss2.s1.vi.median, order(-median)), ]
 
+# save the interim dataframes so re-rerunning is easier
+timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
+save(fss2.s1.vi.median, file=paste0("fss2_s1_vi_median_",timestamp,".RData"))
+save(fss2.s1, file=paste0("fss2_s1_",timestamp,".RData"))
+timestamp
+load("fss2_s1_vi_median_20141105_1138.RData")
+load("fss2_s1_20141105_1138.RData")
+
 # Variable removal
 # After the first 24 largest median values starts to flatten out so 
 # we will take the top 40 to step 2. (33%)
@@ -316,8 +317,7 @@ fss2.s2.col <- fss2.s1.vi.median[fss2.s1.vi.median$median >= 0.85272628,][,1]
 fss2.s2.col <- c("FSS_26Aug14",fss2.s2.col)
 fss2.s2 <- fss2.s1[,colnames(fss2.s1) %in% fss2.s2.col]
 
-# -----------------------------------------------------------
-# Correlation plots
+#### Correlation plots ####
 fss2.s2.col
 
 # Precip "sum_1095_days","PPT_1981_2010","sum_365_days","sum_60_days","sum_180_days"
@@ -372,13 +372,11 @@ keeps.s2 <- c("FSS_26Aug14",
 fss2.s2 <- fss2.s2[,colnames(fss2.s2) %in% keeps.s2]
 colnames(fss2.s2)
 
-
 # remove any NAs
 fss2.s2 <- data.frame(na.omit(fss2.s2))
 #write.csv(fss2.s2, 'fss2_s2_data.csv')
 
-# -----------------------------------------------------------
-#Random Forest Step 2
+#### Random Forest Step 2 ####
 colnames(fss2.s2)
 
 #DO we want to run this here?
@@ -388,9 +386,7 @@ colnames(fss2.s2)
 #                           imp.scale="mir", r=c(0.5,0.10, 0.15,0.20,0.25,0.30,0.35,0.40,0.45, 0.5,0.55,0.60,0.75,0.80,0.85,0.90, 0.95),  
 #                           final=TRUE, plot.imp=TRUE, parsimony=0.03, ntree=2000) 
 
-
-
-# mtry and ntree values 
+# mtry value for use in the random forest function
 mtry.fss2.s2 <- as.integer(((ncol(fss2.s2)-1) / 3),0)
 
 # initialize the variable importance df
@@ -400,7 +396,7 @@ fss2.s2.visd <- data.frame(matrix(, nrow = ncol(fss2.s2)-1, ncol = 50))
 fss2.s2.col <- colnames(fss2.s2)
 fss2.s2.col <- fss2.s2.col[!(fss2.s2.col == "FSS_26Aug14")]
 
-
+#Run the random forest on the reduced set of variables
 beg <- Sys.time()
 set.seed(100)
 for (i in 1:50) {
@@ -409,7 +405,7 @@ for (i in 1:50) {
                              ntree = 1000, 
                              keep.forest = TRUE, 
                              importance = TRUE)
-  fss2.s2.vi[,i] <- fss2.s2.rf$importance[,1]
+  fss2.s2.vi[i,] <- importance(fss2.s2.rf, conditional = TRUE)
   fss2.s2.visd[,i] <- fss2.s2.rf$importanceSD
 }
 print(Sys.time() - beg)
@@ -424,8 +420,7 @@ fss2.s2.visd[,52]<-c(1:length(fss2.s2.col))
 colnames(fss2.s2.visd)[51] <- "var_name"
 colnames(fss2.s2.visd)[52] <- "var_index"
 
-# ----------
-# Save the df with a timestamp so we don't accidently overwrite it.
+#Save the dfs with a timestamp so we don't accidentally overwrite them
 timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
 save(fss2.s2.vi, file=paste0("fss2_s2_vi_",timestamp,".RData"))
 save(fss2.s2.visd, file=paste0("fss2_s2_visd_",timestamp,".RData"))
@@ -433,14 +428,9 @@ timestamp
 load("fss2_s2_vi_20141106_0858.RData")
 load("fss2_s2_visd_20141106_0858.RData")
 
-#-----------
+#### s2 Boxplot ####
 
 fss2.s2.vi.l <- melt(fss2.s2.vi, id=c("var_name","var_index"))
-
-# bymedian <- sort(sapply(fss2.s2.vi, median))
-# index.merge <- data.frame('variable' = names(bymedian), 'index' = 1:50)
-# fm <- melt(fss2.s2.vi)
-# fm <- merge(fm, index.merge, by = 'variable', all.x = TRUE)
 
 png('varImpALL_s2.png', width = 960, height = 960)
 bymedian <- with(fss2.s2.vi.l, reorder(var_name, value, median))
@@ -454,141 +444,16 @@ axis(2, labels = FALSE)
 text(y = 1:15, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
 dev.off()
 
-##############
-# fss2.s2.rm.rf.vi <- data.frame(matrix(, ncol = 15, nrow = 50))
-# names(fss2.s2.rm.rf.vi) <- names(fss2.s2)[-8]
-# 
-# library(randomForest)
-# # initialize the variable importance df
-# fss2.s2.rm.vi <- data.frame(matrix(, nrow = ncol(fss2.s2)-1, ncol = 50))
-# set.seed(100)
-# for (i in 1:50) {
-#   fss2.s2.rm.rf <- randomForest(FSS_26Aug14 ~ ., 
-#                                 data = fss2.s2, 
-#                                 ntree = 2000, 
-#                                 keep.forest = TRUE, 
-#                                 importance = TRUE)
-#   fss2.s2.rm.rf.vi[i,] <- importance(fss2.s2.rm.rf, conditional = TRUE)
-# }
-# 
-# View(fss2.s2.rm.rf.vi)
-# fss2.s2.rm.rf.vi <- (fss2.s2.rm.rf.vi[,-15])
-# bymedian <- sort(sapply(fss2.s2.rm.rf.vi, median))
-# index.merge <- data.frame('variable' = names(bymedian), 'index' = 1:14)
-# fm <- melt(fss2.s2.rm.rf.vi)
-# fm <- merge(fm, index.merge, by = 'variable', all.x = TRUE)
-# png('varImp_s2.png', width = 960, height = 960)
-# par(yaxt="n",mar=c(5, 16, 4, 4))
-# boxplot(value ~ index, data = fm,
-#         xlab = "% Increase MSE",
-#         varwidth = TRUE,
-#         col = "lightgray",
-#         horizontal = TRUE)
-# lablist.y<-names(bymedian)
-# axis(2, labels = FALSE)
-# text(y = 1:14, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE, cex = 2)
-# dev.off()
-
-#################
-
-fss2.s2.vi.median <- cast(fss2.s2.vi.l,var_name + var_index ~ ., value ='value', median)
-colnames(fss2.s2.vi.median )[3] <- "median"
-
-# sort the data so largest at the top
-fss2.s2.vi.median <- fss2.s2.vi.median[with(fss2.s2.vi.median, order(-median)), ]
-
-##############################
+#### Partial dependence plots ####
 
 #Partial dependence plots
-for (i in 1:length(fss2.s2.vi.median$var_name)) {
-  filename <- paste("partialPlot_", fss2.s2.vi.median$var_name[i], ".png",sep = "")
+for (i in 1:length(fss2.s2.vi$var_name)) {
+  filename <- paste("partialPlot_", fss2.s2.vi$var_name[i], ".png",sep = "")
   png(filename, width = 960, height = 960)
   partialPlot(fss2.s2.rf, 
               fss2.s2, 
-              x.var = fss2.s2.vi.median$var_name[i], 
+              x.var = fss2.s2.vi$var_name[i], 
               ylab = 'Mean FSS', 
               ylim = c(9,18))
   dev.off()  
 }
-
-##############################
-
-# cforest version
-
-library(party)
-# initialize the variable importance df
-fss2.s2.vi.cf <- data.frame(matrix(, nrow = ncol(fss2.s2)-1, ncol = 50))
-
-# WARNING - Takes about 30 min
-beg <- Sys.time()
-set.seed(42)
-for (i in 1:50) {
-  print(i)
-  fss2.s2.cf <- cforest(FSS_26Aug14 ~ .,
-                        data = fss2.s2, 
-                        controls = cforest_unbiased(ntree = 1000,
-                                                    mtry = mtry.fss2.s2))
-  fss2.s2.vi.cf[,i]<- varimp(fss2.s2.cf, conditional=FALSE)
-}
-print(Sys.time() - beg)
-
-# Add var names and index
-fss2.s2.vi.cf[,51]<- fss2.s2.col
-fss2.s2.vi.cf[,52]<-c(1:length(fss2.s2.col))
-colnames(fss2.s2.vi.cf)[51] <- "var_name"
-colnames(fss2.s2.vi.cf)[52] <- "var_index"
-
-fss2.s2.vi.cf.l <- melt(fss2.s2.vi.cf, id=c("var_name","var_index"))
-
-png('varImpALL_s2cf.png', width = 960, height = 960)
-bymedian.cf <- with(fss2.s2.vi.cf.l, reorder(var_name, value, median))
-boxplot(value ~ bymedian.cf, data = fss2.s2.vi.cf.l,
-        ylab = "var name", xlab = "%Increase MSE", 
-        varwidth = TRUE,
-        col = "lightgray", horizontal = TRUE)
-dev.off()
-
-fss2.s2.vi.cf.median <- cast(fss2.s2.vi.cf.l,var_name + var_index ~ ., value ='value', median)
-colnames(fss2.s2.vi.cf.median)[3] <- "median"
-
-# sort the data so largest at the top
-fss2.s2.vi.cf.median <- fss2.s2.vi.cf.median[with(fss2.s2.vi.cf.median, order(-median)), ]
-
-
-# ----------
-# Save the df with a timestamp so we don't accidently overwrite it.
-timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
-save(fss2.s2.vi.cf, file=paste0("fss2_s2_vi_cf",timestamp,".RData"))
-timestamp
-load("fss2_s2_vi_cf20141027_2010.RData")
-
-#-----------
-#################################
-
-
-
-
-
-
-
-
-
-# sort the data so largest at the top
-fss2.s2.vi.median <- fss2.s2.vi.median[with(fss2.s2.vi.median, order(-median)), ]
-
-bymedian <- sort(sapply(fss2.s2.vi.median, median))
-index.merge <- data.frame('variable' = names(bymedian), 'index' = 1:15)
-fm <- melt(fss2.s2.vi)
-fm <- merge(fm, index.merge, by = 'variable', all.x = TRUE)
-png('varImp.png', width = 960, height = 960)
-par(yaxt="n",mar=c(5, 8, 4, 5))
-boxplot(value ~ bymedian, data = fss2.s2.vi.l,
-        xlab = "Importance",
-        varwidth = TRUE,
-        col = "lightgray",
-        horizontal = TRUE)
-lablist.y<-names(bymedian)
-axis(2, labels = FALSE)
-text(y = 1:11, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
-dev.off()
-

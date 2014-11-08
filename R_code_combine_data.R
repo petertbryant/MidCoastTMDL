@@ -43,7 +43,8 @@ tablename3 <- "FSS_by_SVN"
 tablename4 <- "tbl_HASLIDAR_Station_watershed"
 tablename5 <- "tb_PPT_annual_avg_by_STATION_KEY"
 tablename6 <- "tbl_POPRCA2010_by_RID"
-tablename7 <- "tbl_SuscepBreakout_by_RID"
+tablename7 <- "tbl_LF_Class_by_RID_sqm"
+tablename8 <- "tbl_SLOPEU_DE_by_RID"
 channel <-odbcConnectAccess2007(indb)
 edgedf <- sqlFetch(channel, tablename1)
 obs <- sqlFetch(channel, tablename2)
@@ -52,9 +53,10 @@ fss <- sqlFetch(channel, tablename3)
 haslidar <- sqlFetch(channel, tablename4)
 ppt <- sqlFetch(channel, tablename5)
 pop <- sqlFetch(channel, tablename6)
-sb <- sqlFetch(channel, tablename7)
+lf <- sqlFetch(channel, tablename7)
+slope <- sqlFetch(channel, tablename8)
 close(channel)
-rm(indb, tablename1, tablename2, tablename3, tablename4, tablename5, tablename6, tablename7, channel)
+rm(indb, tablename1, tablename2, tablename3, tablename4, tablename5, tablename6, tablename7, tablename8, channel)
 # -----------------------------------------------------------
 # Clean up the data and accumulate some of the variables
 
@@ -63,10 +65,12 @@ colnames(edgedf)
 
 ppt <- within(ppt, rm(OBJECTID))
 pop <- within(pop, rm(OBJECTID))
-sb <- within(sb, rm(OBJECTID))
+lf <- within(lf, rm(OBJECTID))
+slope <- within(slope, rm(OBJECTID))
 
 edgedf <- merge(edgedf, pop, by="rid", all.x=TRUE)
-edgedf <- merge(edgedf, sb, by="rid", all.x=TRUE)
+edgedf <- merge(edgedf, lf, by="rid", all.x=TRUE)
+edgedf <- merge(edgedf, slope[,c('rid','SLOPE80RCA','SLOPE80RSA','ASLOPE80RCA','ASLOPE80RSA')], by="rid", all.x=TRUE)
 
 # remove all the NAs in the accumulated fields except fishpres, replace with zero
 edgedf[!(names(edgedf) %in%"fishpres")][is.na(edgedf[!(names(edgedf) %in%"fishpres")])] <- 0
