@@ -279,8 +279,8 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
 save(fss2.s1.vi, file=paste0("fss2_s1_vi_",timestamp,".RData"))
 save(fss2.s1.visd, file=paste0("fss2_s1_visd_",timestamp,".RData"))
 timestamp
-load("fss2_s1_vi_20141105_1138.RData")
-load("fss2_s1_visd_20141105_1138.RData")
+load("fss2_s1_vi_20141110_1034.RData")
+load("fss2_s1_visd_20141110_1034.RData")
 
 #### s1 Boxplots ####
 
@@ -305,68 +305,80 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
 save(fss2.s1.vi.median, file=paste0("fss2_s1_vi_median_",timestamp,".RData"))
 save(fss2.s1, file=paste0("fss2_s1_",timestamp,".RData"))
 timestamp
-load("fss2_s1_vi_median_20141105_1138.RData")
-load("fss2_s1_20141105_1138.RData")
+load("fss2_s1_vi_median_20141110_1035.RData")
+load("fss2_s1_20141110_1035.RData")
 
 # Variable removal
 # After the first 24 largest median values starts to flatten out so 
 # we will take the top 40 to step 2. (33%)
 
-# grab all variable names with median values > 0.8 = 33% of the data
-fss2.s2.col <- fss2.s1.vi.median[fss2.s1.vi.median$median >= 0.85272628,][,1]
+# grab all variable names with median values > 0.65, which appears to be a relative break
+fss2.s2.col <- fss2.s1.vi.median[fss2.s1.vi.median$median >= 0.65,][,1]
 fss2.s2.col <- c("FSS_26Aug14",fss2.s2.col)
 fss2.s2 <- fss2.s1[,colnames(fss2.s1) %in% fss2.s2.col]
 
 #### Correlation plots ####
+names(fss2.s2.col) <- fss2.s2.col
 fss2.s2.col
 
-# Precip "sum_1095_days","PPT_1981_2010","sum_365_days","sum_60_days","sum_180_days"
+#Determined that if r was above 0.5 they were sufficiently correlated to select
+#only the variable with the highest importance
+
+# Precip 
 png('precip_cor.png')
-pairs(fss2.s2[,fss2.s2.col[c(3,4,7,36)]],
+pairs(fss2.s2[,fss2.s2.col[c("sum_1095_days","PPT_1981_2010","sum_365_days","sum_60_days","sum_180_days")]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 dev.off()
 # keep "sum_1095_days"
 
-# Disturb [1] "PADISRSA_1YR" "PDISRCA_1YR"  "PDISRSA_1YR"  "PDISRCA_3YR"
-pairs(fss2.s2[,fss2.s2.col[c(8,11,12,17)]],
+# Disturb [1] 
+pairs(fss2.s2[,fss2.s2.col[c("PDISRSA_1YR", "PDISRCA_1YR",  "PDISRCA_3YR",  "PADISRSA_1YR", "PDISRCA_10YR")]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 # everything is coorelated
-# keep "PDISRSA_1YR",
+# keep "PDISRSA_1YR"
 
-# Lithology/soils
-# [1] "PALITHERODRCA"  "PALITHERODRSA"  "PASILTRCA"      "PACLAYRCA"      "PASILT_CLAYRCA" "PASANDRCA"      "MAKFACTRCA"     "PSILTRCA"      
-# [9] "PCLAYRCA"       "PLITHERODRSA"   "PSANDRCA"
-pairs(fss2.s2[,fss2.s2.col[c(2,5,14,15,18,20,21,23,24,31,41)]],
+# Lithology
+pairs(fss2.s2[,fss2.s2.col[c("PALITHERODRCA", "PALITHERODRSA", "MAKFACTRCA", 
+                             "PLITHERODRCA", "PLITHERODRSA", "PALITHCOMPRCA")]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
-# almost everything is coorelated
-# Keep "PALITHERODRCA", "PASILTRCA"
+#Keep PALITHERODRCA
 
-# Ownership "APOPRCA2010"  "POWNRCA_PRI"  
-pairs(fss2.s2[,fss2.s2.col[c(13,35)]],
+#soils
+pairs(fss2.s2[,fss2.s2.col[c("PASILTRCA", "PACLAYRCA",
+                             "PSILTRCA", "MAKFACTRCA", "PASILT_CLAYRCA", "PASANDRCA",
+                             "PCLAYRCA", "PSILT_CLAYRCA", "PSANDRCA" )]],
+      lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
+#KEEP PASILTRCA, PACLAYRCA
+
+# Ownership   
+pairs(fss2.s2[,fss2.s2.col[c("APOPRCA2010", "POWNRCA_PRI")]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 #When including the susceptibility breakouts we only get "POWNRCA_PRI" as a top variable
 
 #Susceptibility
-#[1] "PCONVEXRSA"   "PASLOPERCA"   "PACONVEXRCA"  "PASUSCEP4_DE" "PSUSCEP5_DE"  "PCONVEXRCA"
-pairs(fss2.s2[,fss2.s2.col[c(10,16,25,26,28,30)]],
+pairs(fss2.s2[,fss2.s2.col[c("PALFCVRSA", "PLFUNRSA",  "PLFUNRCA",  "PALFUNRSA", "PLFCVRSA",
+                             "PLFCXRSA",  "PALFCXRCA", "PALFUNRCA", "PALFCXRSA", "PLFCXRCA",
+                             "PASUSCEP5_DE", "PSUSCEP4_DE",  "PASUSCEP4_DE","PASLOPE80RCA",
+                             "PASLOPE80XRSA", "PSLOPE80RCA")]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 #almost everything is correlated
-#Keep "PCONVEXRSA"
+#Keep "PALFCVRSA", "PLFUNRSA"
 
 # Others
-#  [1] "STRMPWR"     "XSLOPE_MAP"  "MIN_Z"       "upDist"      "LAT_RAW"     "afvArea"     "LONG_RAW"    "ARCASQM"     "ARSASQM"    
-# [11] "PATYPEF"   
-pairs(fss2.s2[,fss2.s2.col[c(6,9,22,29,32,33,34,38,39,40)]],
+pairs(fss2.s2[,fss2.s2.col[c("STRMPWR","MIN_Z","XSLOPE_MAP","LAT_RAW","APOPRCA2010",
+                             "LONG_RAW","ARSASQM","upDist","ARCASQM")]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
-# udist and Long coorelated. arca and arsa correlated with each other.
-# keeep "STRMPWR", "XSLOPE_MAP", "MIN_Z", "upDist", "LAT_RAW", "ARCASQM","PATYPEF"
+# udist and Long coorelated. arca and arsa correlated with each other and with apop.
+# keeep "STRMPWR", "XSLOPE_MAP", "MIN_Z", "upDist", "LAT_RAW", "APOPRCA2010"
 
 keeps.s2 <- c("FSS_26Aug14",
               "sum_1095_days", 
-              "PDISRSA_1YR","PALITHERODRCA", "PASILTRCA",
-              "APOPRCA2010","POWNRCA_PRI",
-              "PCONVEXRSA",
-              "STRMPWR", "XSLOPE_MAP", "MIN_Z", "upDist", "LAT_RAW", "ARCASQM","PATYPEF")
+              "PDISRSA_1YR",
+              "PALITHERODRCA", 
+              "PASILTRCA", "PACLAYRCA",
+              "POWNRCA_PRI",
+              "PALFCVRSA", "PLFUNRSA",
+              "STRMPWR", "XSLOPE_MAP", "MIN_Z", "upDist", "LAT_RAW", "APOPRCA2010")
 
 #Further remove variables to reduce the influence of correlation on raising variable importance
 fss2.s2 <- fss2.s2[,colnames(fss2.s2) %in% keeps.s2]
@@ -405,7 +417,7 @@ for (i in 1:50) {
                              ntree = 1000, 
                              keep.forest = TRUE, 
                              importance = TRUE)
-  fss2.s2.vi[i,] <- importance(fss2.s2.rf, conditional = TRUE)
+  fss2.s2.vi[,i] <- importance(fss2.s2.rf, conditional = TRUE)
   fss2.s2.visd[,i] <- fss2.s2.rf$importanceSD
 }
 print(Sys.time() - beg)
@@ -425,8 +437,8 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
 save(fss2.s2.vi, file=paste0("fss2_s2_vi_",timestamp,".RData"))
 save(fss2.s2.visd, file=paste0("fss2_s2_visd_",timestamp,".RData"))
 timestamp
-load("fss2_s2_vi_20141106_0858.RData")
-load("fss2_s2_visd_20141106_0858.RData")
+load("fss2_s2_vi_20141110_1331.RData")
+load("fss2_s2_visd_20141110_1331.RData")
 
 #### s2 Boxplot ####
 
@@ -436,12 +448,12 @@ png('varImpALL_s2.png', width = 960, height = 960)
 bymedian <- with(fss2.s2.vi.l, reorder(var_name, value, median))
 par(yaxt="n",mar=c(5, 8, 4, 5))
 boxplot(value ~ bymedian, data = fss2.s2.vi.l,
-        ylab = "var name", xlab = "%InMSE", 
+        xlab = "%InMSE", 
         varwidth = TRUE,
         col = "lightgray", horizontal = TRUE)
 lablist.y<-levels(bymedian)
 axis(2, labels = FALSE)
-text(y = 1:15, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
+text(y = 1:14, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
 dev.off()
 
 #### Partial dependence plots ####
