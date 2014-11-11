@@ -310,8 +310,10 @@ rm(i,d,y,disvar)
 # -----------------------------------------------------------
 # Run the loop to calculate percentages, means, or densities
 
-for (i in 1:nrow(pvar)) {
-  comb[,pvar[i,1]] <- (comb[,pvar[i,2]] / comb[,pvar[i,3]]) * pvar[i,4]
+pvar2 <- pvar[pvar$numerator %in% names(comb),]
+
+for (i in 1:nrow(pvar2)) {
+  comb[,pvar2[i,1]] <- (comb[,pvar2[i,2]] / comb[,pvar2[i,3]]) * pvar2[i,4]
   #comb <- propor(comb, pvar[i,3], pvar[i,4], pvar[i,2])
 }
 

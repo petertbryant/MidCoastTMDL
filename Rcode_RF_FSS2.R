@@ -45,6 +45,8 @@ panel.hist <- function(x, ...)
   rect(breaks[-nB], 0, breaks[-1], y, col="gray", ...)
 }
 
+source('FUN_rfModelSel.R')
+
 # ----------------------------------------------------------- #
 # FSS2 - Random forests excluding the physical habitat data ####
 # ----------------------------------------------------------- #
@@ -78,6 +80,13 @@ fss2.s1.visd <- data.frame(matrix(, nrow = ncol(fss2.s1)-1, ncol = 50))
 fss2.s1.col <- colnames(fss2.s1)
 fss2.s1.col <- fss2.s1.col[!(fss2.s1.col == "FSS_26Aug14")]
 
+
+set.seed(42)
+fss2.s2.rf <- rf.modelSel(xdata=fss2.s1[,setdiff(names(fss2.s1), 'FSS_26Aug14')], 
+                          ydata=fss2.s1[,"FSS_26Aug14"], 
+                          imp.scale="mir", r=c(0.5,0.10, 0.15,0.20,0.25,0.30,0.35,0.40,0.45, 0.5,0.55,0.60,0.75,0.80,0.85,0.90, 0.95),  
+                          final=TRUE, plot.imp=TRUE, parsimony=0.03, ntree=2000) 
+
 # WARNING - Takes about 30 min
 beg <- Sys.time()
 set.seed(42)
@@ -91,6 +100,17 @@ for (i in 1:50) {
   fss2.s1.visd[,i] <- fss2.s1.rf$importanceSD
 }
 print(Sys.time() - beg)
+
+#RFE
+for (i in 1:50) {
+  fss2.s1.rf <- randomForest(FSS_26Aug14 ~ ., 
+                             data = fss2.s1, 
+                             ntree = 2000, 
+                             keep.forest = TRUE, 
+                             importance = TRUE)
+  fss2.s1.vi[,i] <- fss2.s1.rf$importance[,1]
+  fss2.s1.visd[,i] <- fss2.s1.rf$importanceSD
+}
 
 # Add var names and index
 fss2.s1.vi[,51]<- fss2.s1.col
@@ -108,8 +128,8 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
 save(fss2.s1.vi, file=paste0("fss2_s1_vi_",timestamp,".RData"))
 save(fss2.s1.visd, file=paste0("fss2_s1_visd_",timestamp,".RData"))
 timestamp
-load("fss2_s1_vi_20141027_1853.RData")
-load("fss2_s1_visd_20141027_1853.RData")
+load("fss2_s1_vi_20141110_1517.RData")
+load("fss2_s1_visd_20141110_1517.RData")
 
 # --- #
 #### s1 boxplot ####
@@ -139,8 +159,8 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
 save(fss2.s1.vi.median, file=paste0("fss2_s1_vi_median_",timestamp,".RData"))
 save(fss2.s1, file=paste0("fss2_s1_",timestamp,".RData"))
 timestamp
-load("fss2_s1_vi_median_20141106_1626.RData")
-load("fss2_s1_20141106_1626.RData")
+load("fss2_s1_vi_median_20141110_1517.RData")
+load("fss2_s1_20141110_1517.RData")
 
 # grab all variable names with median values > 0.5 = 33% of the data
 fss2.s2.col <- fss2.s1.vi.median[fss2.s1.vi.median$median >= 5.477664e-01,][,1]
