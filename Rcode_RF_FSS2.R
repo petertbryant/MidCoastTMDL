@@ -54,8 +54,9 @@ source('FUN_rfModelSel.R')
 # Since we have a large amount of variables random forest is run 50 times with a 
 # very high number of trees per forest (ntree). This yields a distribution of importance scores.
 # Removal is based on these distributions. We keep the variables with the highest scores.
-
+vars[vars$var == 'STATION_KEY','fss2.rf_keep'] <- 1
 vars.fss2.s1 <- vars[vars$fss2.rf_keep == 1,]
+
 fss2.s1 <- bugs[,colnames(bugs) %in% vars.fss2.s1$var]
 
 # keep a copy with all the data
@@ -86,6 +87,15 @@ fss2.s2.rf <- rf.modelSel(xdata=fss2.s1[,setdiff(names(fss2.s1), 'FSS_26Aug14')]
                           ydata=fss2.s1[,"FSS_26Aug14"], 
                           imp.scale="mir", r=c(0.5,0.10, 0.15,0.20,0.25,0.30,0.35,0.40,0.45, 0.5,0.55,0.60,0.75,0.80,0.85,0.90, 0.95),  
                           final=TRUE, plot.imp=TRUE, parsimony=0.03, ntree=2000) 
+
+fss2.s2 <- fss2.s1[,c(fss2.s2.rf$SELVARS,"FSS_26Aug14")]
+
+fss2.s3.rf <- rf.modelSel(xdata=fss2.s2[,setdiff(names(fss2.s2), 'FSS_26Aug14')], 
+                          ydata=fss2.s2[,"FSS_26Aug14"], 
+                          imp.scale="mir", r=c(0.5,0.10, 0.15,0.20,0.25,0.30,0.35,0.40,0.45, 0.5,0.55,0.60,0.75,0.80,0.85,0.90, 0.95),  
+                          final=TRUE, plot.imp=TRUE, parsimony=0.03, ntree=2000) 
+
+fss2.s3 <- fss2.s1[,c(fss2.s3.rf$SELVARS,"FSS_26Aug14")]
 
 # WARNING - Takes about 30 min
 beg <- Sys.time()
@@ -210,7 +220,7 @@ pairs(fss2.s2[,fss2.s2.col[c(3,8,14,15,17,25,26,31,38)]],
 keeps.s2 <- c("FSS_26Aug14",
               "sum_1095_days", 
               "PADISRSA_1YR","PALITHERODRCA", "PASILTRCA",
-              "APOPRCA2010","PAOWNRCA_AGR","POWNRCA_PRI","POWNRSA_FED",
+              "APOPRCA2010","PAOWNRCA_AGR","POWNRCA_PRI","POWNRCA_FED",
               "STRMPWR", "MIN_Z", "XSLOPE_MAP","PASUSCEP5_DE", "upDist", "LAT_RAW")
 
 #Further remove variables to reduce the influence of correlation on raising variable importance
@@ -286,7 +296,7 @@ boxplot(value ~ bymedian, data = fss2.s2.vi.l,
         col = "lightgray", horizontal = TRUE)
 lablist.y<-levels(bymedian)
 axis(2, labels = FALSE)
-text(y = 1:14, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
+text(y = 1:15, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
 #dev.off()
 
 #### Median df creation ####

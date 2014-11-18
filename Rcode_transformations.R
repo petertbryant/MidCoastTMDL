@@ -14,12 +14,13 @@ vars <- c("STATION_KEY", "SITE_NAME", "SVN", "YEAR",names(obs.fss2))
 
 obs.vars <- obs.complete[,vars]
 
-obs.vars <- merge(obs[,c("SVN","rid", "ratio", "locID", "netID", "pid", "upDist",  "afvArea",
-                         "HU_6_NAME", "HU_8_NAME", "HU_10_NAME", "HU_12_NAME", "HU_08", "LONG_RAW", "LAT_RAW", "NHDHigh",
+obs.vars <- merge(obs[,c("SVN","rid", "ratio", "locID", "netID", "pid", "afvArea",
+                         "HU_6_NAME", "HU_8_NAME", "HU_10_NAME", "HU_12_NAME", "HU_08", "LONG_RAW", "NHDHigh",
                          "NHDh_Reach", "NHDP21_Rea", "NHDP12_COM", "HU_10", "HU_12")],
                   obs.vars, 
                   by = "SVN",
                   all.x = TRUE)
+#obs.vars <- obs.vars[!is.na(obs.vars$STRMPWR),]
 
 #don't run when going through. only for data exploration
 #obs.vars <- arrange(obs.vars, STATION_KEY, desc(YEAR))
@@ -32,7 +33,8 @@ model4 <- c("FSS_26Aug14","sum_1095_days","PADISRSA_1YR","PALITHERODRCA","XSLOPE
 model5 <- c("FSS_26Aug14","sum_1095_days","PADISRSA_1YR","PALITHERODRCA","XSLOPE_MAP","PASILTRCA","MIN_Z","PAOWNRSA_AGR")
 
 ####TRANSFORMATIONS####
-#FSS_26Aug14
+names(obs.vars)
+####FSS_26Aug14####
 # hist(obs.vars.sub$FSS_26Aug14)
 # plot(density(obs.vars.sub$FSS_26Aug14))
 # hist(log10(obs.vars.sub$FSS_26Aug14))
@@ -42,7 +44,7 @@ model5 <- c("FSS_26Aug14","sum_1095_days","PADISRSA_1YR","PALITHERODRCA","XSLOPE
 #log should be just fine
 obs.vars$log10_FSS_26Aug14 <- log10(obs.vars$FSS_26Aug14)
 
-#sum_1095_days
+#sum_1095_days####
 # qqnorm(log(obs.vars.sub$sum_1095_days), pch = 16)
 # qqline(log(obs.vars.sub$sum_1095_days), col = 'green', lty = 2)
 # hist(obs.vars.sub$sum_1095_days)
@@ -58,7 +60,22 @@ obs.vars$log10_FSS_26Aug14 <- log10(obs.vars$FSS_26Aug14)
 #log is about the same as boxcox. so we go with log
 obs.vars$log10_sum_1095_days <- log10(obs.vars$sum_1095_day)
 
-#PADISRSA_1YR
+#PALITHERODRCA####
+# hist(obs.vars$PALITHERODRCA, 100)
+# hist(1/(obs.vars$PALITHERODRCA))
+# hist(asin(sqrt(obs.vars$PALITHERODRCA)))
+# shapiro.test(log10(1/(obs.vars$PALITHERODRCA+1)))
+# 
+# boxcox(FSS_26Aug14 ~ PALITHERODRCA, data = obs.vars.sub, lambda = seq(0, 0.3, .01))
+# hist((obs.vars.sub$PALITHERODRCA^(0.06) - 1)/0.06)
+# ks.test((obs.vars.sub$PALITHERODRCA^(0.06) - 1)/0.06, 'pnorm')
+# shapiro.test((obs.vars.sub$PALITHERODRCA^(0.06) - 1)/0.06)
+# #This is very much either on or off. And looking at the partial dependence plot
+# #there seems to be a break at 90% on the effect with FSS. We will use that as our
+# #cut to convert this variable to binary
+obs.vars$bin_PALITHERODRCA <- ifelse(obs.vars$PALITHERODRCA < 90,0,1)
+
+#PADISRSA_1YR####
 # hist(obs.vars$PADISRSA_1YR)
 # hist((sqrt(obs.vars$PADISRSA_1YR)))
 # hist((log(obs.vars$PADISRSA_1YR+1)))
@@ -89,22 +106,7 @@ obs.vars$log10_sum_1095_days <- log10(obs.vars$sum_1095_day)
 #stick with sqrt
 obs.vars$sqrt_PADISRSA_1YR <- sqrt(obs.vars$PADISRSA_1YR)
 
-#PALITHERODRCA
-# hist(obs.vars.sub$PALITHERODRCA, 100)
-# hist(1/(obs.vars$PALITHERODRCA))
-# hist(asin(sqrt(obs.vars$PALITHERODRCA)))
-# shapiro.test(log10(1/(obs.vars$PALITHERODRCA+1)))
-# 
-# boxcox(FSS_26Aug14 ~ PALITHERODRCA, data = obs.vars.sub, lambda = seq(0, 0.3, .01))
-# hist((obs.vars.sub$PALITHERODRCA^(0.06) - 1)/0.06)
-# ks.test((obs.vars.sub$PALITHERODRCA^(0.06) - 1)/0.06, 'pnorm')
-# shapiro.test((obs.vars.sub$PALITHERODRCA^(0.06) - 1)/0.06)
-# #This is very much either on or off. And looking at the partial dependence plot
-# #there seems to be a break at 90% on the effect with FSS. We will use that as our
-# #cut to convert this variable to binary
-obs.vars$bin_PALITHERODRCA <- ifelse(obs.vars$PALITHERODRCA < 90,0,1)
-
-#XSLOPE_MAP
+#XSLOPE_MAP####
 # hist(obs.vars$XSLOPE_MAP)
 # hist(log10(obs.vars$XSLOPE_MAP+3))
 # plot(density(log10(obs.vars$XSLOPE_MAP+3)))
@@ -119,10 +121,10 @@ obs.vars$bin_PALITHERODRCA <- ifelse(obs.vars$PALITHERODRCA < 90,0,1)
 # #but to take the log we need to adjust the negative slopes
 # #given that negative and zero slopes are likely due to mapping errors
 # #we will convert them to very small values just above 0.
-obs.vars[obs.vars$XSLOPE_MAP <= 0,'XSLOPE_MAP'] <- 0.0001
+obs.vars[which(obs.vars$XSLOPE_MAP <= 0),'XSLOPE_MAP'] <- 0.0001
 obs.vars$log10_XSLOPE_MAP <- log10(obs.vars$XSLOPE_MAP)
 
-#PASILTRCA
+#PASILTRCA####
 # hist(obs.vars$PASILTRCA)
 # hist(log10(obs.vars$PASILTRCA))
 # plot(density(log10(obs.vars$PASILTRCA)))
@@ -136,7 +138,7 @@ obs.vars$log10_XSLOPE_MAP <- log10(obs.vars$XSLOPE_MAP)
 #log is about the same as boxcox. so we go with log
 obs.vars$log10_PASILTRCA <- log10(obs.vars$PASILTRCA)
 
-#MIN_Z
+#MIN_Z####
 # hist(obs.vars$MIN_Z, 10)
 # hist(log10(obs.vars$MIN_Z), 10)
 # plot(density(log10(obs.vars$MIN_Z)))
@@ -150,18 +152,70 @@ obs.vars$log10_PASILTRCA <- log10(obs.vars$PASILTRCA)
 #log is about the same as boxcox. so we go with log
 obs.vars$log10_MIN_Z <- log10(obs.vars$MIN_Z)
 
-#LEAVING OWNERSHIPS OUT FOR NOW
-# hist(obs.vars$POWNRCA_PRI, 100)
-# shapiro.test(obs.vars$POWNRCA_PRI)
-# 
-# hist(obs.vars$PAOWNRSA_FED)
-# hist(obs.vars$PAOWNRCA_FED)
+#STRMPWR####
+# hist(obs.vars.sub$STRMPWR)
+# plot(density(obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)]))
+# hist(log10(obs.vars.sub$STRMPWR))
+# boxcox(FSS_26Aug14 ~ STRMPWR, data = obs.vars.sub, lambda = seq(0, 0.3, .01))
+# plot(density(log10(obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)] + (1 - obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)]))))
+# shapiro.test(log10(obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)] + (1 - obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)]))
+# ks.test(log10(obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)] + (1 - obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)])), "pnorm")
+obs.vars$log10_STRMPWR <- log10(obs.vars$STRMPWR + (1 - min(obs.vars$STRMPWR)))
+
+#"LAT_RAW"####
+# hist(obs.vars.sub$LAT_RAW)
+# plot(density(obs.vars.sub$LAT_RAW))
+# shapiro.test(obs.vars.sub$LAT_RAW)
+# hist(log10(obs.vars.sub$LAT_RAW))
+# boxcox(FSS_26Aug14 ~ LAT_RAW, data = obs.vars.sub, lambda = seq(0, 0.3, .01))
+# plot(density(log10(obs.vars.sub$LAT_RAW[!is.na(obs.vars.sub$LAT_RAW)] + (1 - obs.vars.sub$LAT_RAW[!is.na(obs.vars.sub$LAT_RAW)]))))
+# shapiro.test(log10(obs.vars.sub$LAT_RAW[!is.na(obs.vars.sub$LAT_RAW)] + (1 - obs.vars.sub$LAT_RAW[!is.na(obs.vars.sub$LAT_RAW)]))
+# ks.test(log10(obs.vars.sub$LAT_RAW[!is.na(obs.vars.sub$LAT_RAW)] + (1 - obs.vars.sub$LAT_RAW[!is.na(obs.vars.sub$LAT_RAW)])), "pnorm")
+#Don't gain much with transformation. Leave untransformed.
+
+#upDist####
+# hist(obs.vars.sub$upDist)
+# plot(density(obs.vars.sub$upDist))
+# shapiro.test(sqrt(obs.vars.sub$upDist))
+# hist(sqrt(obs.vars.sub$upDist))
+obs.vars$sqrt_upDist <- sqrt(obs.vars$upDist)
+
+#APOPRCA2010####
+# hist(obs.vars.sub$APOPRCA2010)
+# plot(density(obs.vars.sub$APOPRCA2010))
+# shapiro.test(log10(obs.vars.sub$APOPRCA2010 + 1))
+# hist(log10(obs.vars.sub$APOPRCA2010 + 1))
+obs.vars$log10_APOPRCA2010 <- log10(obs.vars$APOPRCA2010 + 1)
+
+#PASUSCEP5_DE####
+# hist(obs.vars.sub$PASUSCEP5_DE)
+# plot(density(obs.vars.sub$PASUSCEP5_DE))
+# shapiro.test(log10(obs.vars.sub$PASUSCEP5_DE + 1))
+# hist(log10(obs.vars.sub$PASUSCEP5_DE + 1))
+obs.vars$log10_PASUSCEP5_DE <- log10(obs.vars$PASUSCEP5_DE + 1)
+
+#POWNRCA_FED####
+#hist(obs.vars$POWNRCA_FED)
+#hist(((log10(obs.vars$POWNRCA_FED + 1))))
+#Including transformation in case we want to use it not sure how much gain we get
+obs.vars$log10_POWNRCA_FED <- log10(obs.vars$POWNRCA_FED + 1)
+
+#POWNRCA_PRI####
+# hist(obs.vars$POWNRCA_PRI)
+# hist(log10(obs.vars$POWNRCA_PRI + 1))
+#Including transformation in case we want to use it not sure how much gain we get
+obs.vars$log10_POWNRCA_PRI <- log10(obs.vars$POWNRCA_PRI + 1)
+
+#PAOWNRCA_AGR####
 # hist(obs.vars$PAOWNRCA_AGR)
-# hist(obs.vars$PAOWNRSA_AGR)
+# hist(log10(obs.vars$PAOWNRCA_AGR + 1))
+# summary(obs.vars$PAOWNRCA_AGR)
+obs.vars$bin_PAOWNRCA_AGR <- ifelse(obs.vars$PAOWNRCA_AGR > 0,1,0)
 
 #Now that we have the transformed variables we put them back in the 
 #SSN object
 obs.vars <- obs.vars[obs$pid,]
+obs.vars <- obs.vars[!is.na(obs.vars$pid),]
 row.names(obs.vars) <- obs.vars$pid
 ssn1 <- putSSNdata.frame(obs.vars, ssn1, Name = 'Obs')
 
