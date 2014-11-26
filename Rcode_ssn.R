@@ -1,6 +1,8 @@
 library(SSN)
 library(plyr)
 
+options('scipen' = 100)
+
 ssn1 <- importSSN('bugs.ssn')
 obs <- getSSNdata.frame(ssn1, Name = "Obs")
 obs <- rename(obs, c(
@@ -57,7 +59,7 @@ ssn1.glmssn1 <- glmssn(log10_FSS_26Aug14  ~ log10_sum_1095_days + bin_PALITHEROD
                         sqrt_PADISRSA_1YR, 
                        ssn1,
                        EstMeth = "REML",
-                       CorModels = c("locID","Exponential.tailup", "Exponential.taildown"),
+                       CorModels = c("locID","Exponential.tailup", "Exponential.taildown", "Exponential.Euclid"),
                        addfunccol = "afvArea",
                        family = "Gaussian")
 end.time <- Sys.time()
@@ -66,13 +68,18 @@ print(end.time - start.time)
 
 summary(ssn1.glmssn1)
 
+start.time <- Sys.time()
+print(start.time)
 ssn1.glmssn2 <- glmssn(log10_FSS_26Aug14  ~ log10_sum_1095_days + 
-                         sqrt_PADISRSA_1YR + bin_PALITHERODRCA + log10_XSLOPE_MAP + 
-                         log10_PASILTRCA + log10_MIN_Z, 
+                         sqrt_PADISRSA_1YR + bin_PALITHERODRCA, 
                        ssn1,
                        EstMeth = "REML",
-                       CorModels = c("locID","Exponential.tailup", "Exponential.taildown",
-                                     "Exponential.Euclid"), addfunccol = "afvArea",family = "Gaussian")
+                       CorModels = c("locID","Spherical.tailup", "Spherical.taildown"), 
+                       addfunccol = "afvArea",
+                       family = "Gaussian")
+end.time <- Sys.time()
+print(end.time)
+print(end.time - start.time)
 
 summary(ssn1.glmssn2)
 

@@ -10,7 +10,7 @@ obs.complete$SVN <- str_trim(obs.complete$SVN)
 obs.fss2 <- read.csv('fss2_s2_data.csv')
 obs.fss2 <- within(obs.fss2, rm(X))
 
-vars <- c("STATION_KEY", "SITE_NAME", "SVN", "YEAR",names(obs.fss2))
+vars <- c("STATION_KEY", "SITE_NAME", "SVN", "DATE","YEAR",names(obs.fss2))
 
 obs.vars <- obs.complete[,vars]
 
@@ -153,7 +153,7 @@ obs.vars$log10_PASILTRCA <- log10(obs.vars$PASILTRCA)
 obs.vars$log10_MIN_Z <- log10(obs.vars$MIN_Z)
 
 #STRMPWR####
-# hist(obs.vars.sub$STRMPWR)
+# hist(obs.vars$STRMPWR)
 # plot(density(obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)]))
 # hist(log10(obs.vars.sub$STRMPWR))
 # boxcox(FSS_26Aug14 ~ STRMPWR, data = obs.vars.sub, lambda = seq(0, 0.3, .01))
@@ -166,7 +166,7 @@ obs.vars$log10_STRMPWR <- log10(obs.vars$STRMPWR + (1 - min(obs.vars$STRMPWR)))
 # hist(obs.vars.sub$LAT_RAW)
 # plot(density(obs.vars.sub$LAT_RAW))
 # shapiro.test(obs.vars.sub$LAT_RAW)
-# hist(log10(obs.vars.sub$LAT_RAW))
+# hist((obs.vars$LAT_RAW))
 # boxcox(FSS_26Aug14 ~ LAT_RAW, data = obs.vars.sub, lambda = seq(0, 0.3, .01))
 # plot(density(log10(obs.vars.sub$LAT_RAW[!is.na(obs.vars.sub$LAT_RAW)] + (1 - obs.vars.sub$LAT_RAW[!is.na(obs.vars.sub$LAT_RAW)]))))
 # shapiro.test(log10(obs.vars.sub$LAT_RAW[!is.na(obs.vars.sub$LAT_RAW)] + (1 - obs.vars.sub$LAT_RAW[!is.na(obs.vars.sub$LAT_RAW)]))
@@ -174,21 +174,21 @@ obs.vars$log10_STRMPWR <- log10(obs.vars$STRMPWR + (1 - min(obs.vars$STRMPWR)))
 #Don't gain much with transformation. Leave untransformed.
 
 #upDist####
-# hist(obs.vars.sub$upDist)
+# hist(obs.vars$upDist)
 # plot(density(obs.vars.sub$upDist))
 # shapiro.test(sqrt(obs.vars.sub$upDist))
 # hist(sqrt(obs.vars.sub$upDist))
 obs.vars$sqrt_upDist <- sqrt(obs.vars$upDist)
 
 #APOPRCA2010####
-# hist(obs.vars.sub$APOPRCA2010)
+# hist(obs.vars$APOPRCA2010)
 # plot(density(obs.vars.sub$APOPRCA2010))
 # shapiro.test(log10(obs.vars.sub$APOPRCA2010 + 1))
 # hist(log10(obs.vars.sub$APOPRCA2010 + 1))
 obs.vars$log10_APOPRCA2010 <- log10(obs.vars$APOPRCA2010 + 1)
 
 #PASUSCEP5_DE####
-# hist(obs.vars.sub$PASUSCEP5_DE)
+# hist(obs.vars$PASUSCEP5_DE)
 # plot(density(obs.vars.sub$PASUSCEP5_DE))
 # shapiro.test(log10(obs.vars.sub$PASUSCEP5_DE + 1))
 # hist(log10(obs.vars.sub$PASUSCEP5_DE + 1))
@@ -213,9 +213,8 @@ obs.vars$log10_POWNRCA_PRI <- log10(obs.vars$POWNRCA_PRI + 1)
 obs.vars$bin_PAOWNRCA_AGR <- ifelse(obs.vars$PAOWNRCA_AGR > 0,1,0)
 
 #Now that we have the transformed variables we put them back in the 
-#SSN object
-obs.vars <- obs.vars[obs$pid,]
-obs.vars <- obs.vars[!is.na(obs.vars$pid),]
+#SSN object - THE SORTING HERE IS SCREWING THINGS UP
+obs.vars <- obs.vars[match(obs$pid, obs.vars$pid),]
 row.names(obs.vars) <- obs.vars$pid
 ssn1 <- putSSNdata.frame(obs.vars, ssn1, Name = 'Obs')
 
