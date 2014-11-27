@@ -3,7 +3,7 @@
 library(SSN)
 library(stringr)
 library(MASS)
-ssn1 <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN04/lsn.ssn", o.write=FALSE)
+ssn1 <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN05/lsn.ssn", o.write=FALSE)
 obs<- getSSNdata.frame(ssn1, Name = "Obs")
 obs.complete <- read.csv("ssn_RF_data.csv")
 obs.complete$SVN <- str_trim(obs.complete$SVN)
@@ -25,12 +25,6 @@ obs.vars <- merge(obs[,c("SVN","rid", "ratio", "locID", "netID", "pid", "afvArea
 #don't run when going through. only for data exploration
 #obs.vars <- arrange(obs.vars, STATION_KEY, desc(YEAR))
 #obs.vars.sub <- obs.vars[!duplicated(obs.vars$STATION_KEY),]
-
-model1 <- c("FSS_26Aug14","sum_1095_days","PADISRSA_1YR","PALITHERODRCA","XSLOPE_MAP","PASILTRCA","MIN_Z","POWNRCA_PRI")
-model2 <- c("FSS_26Aug14","sum_1095_days","PADISRSA_1YR","PALITHERODRCA","XSLOPE_MAP","PASILTRCA","MIN_Z","PAOWNRSA_FED")
-model3 <- c("FSS_26Aug14","sum_1095_days","PADISRSA_1YR","PALITHERODRCA","XSLOPE_MAP","PASILTRCA","MIN_Z","PAOWNRCA_FED")
-model4 <- c("FSS_26Aug14","sum_1095_days","PADISRSA_1YR","PALITHERODRCA","XSLOPE_MAP","PASILTRCA","MIN_Z","PAOWNRCA_AGR")
-model5 <- c("FSS_26Aug14","sum_1095_days","PADISRSA_1YR","PALITHERODRCA","XSLOPE_MAP","PASILTRCA","MIN_Z","PAOWNRSA_AGR")
 
 ####TRANSFORMATIONS####
 names(obs.vars)
@@ -160,6 +154,7 @@ obs.vars$log10_MIN_Z <- log10(obs.vars$MIN_Z)
 # plot(density(log10(obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)] + (1 - obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)]))))
 # shapiro.test(log10(obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)] + (1 - obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)]))
 # ks.test(log10(obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)] + (1 - obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)])), "pnorm")
+obs.vars[which(obs.vars$STRMPWR <= 0),'STRMPWR'] <- 0.0001
 obs.vars$log10_STRMPWR <- log10(obs.vars$STRMPWR + (1 - min(obs.vars$STRMPWR)))
 
 #"LAT_RAW"####

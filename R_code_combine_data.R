@@ -250,6 +250,8 @@ colnames(comb)
 nhd <- read.dbf('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/Watershed_Characteristics/NHDplus_21/EROMExtension/EROM_MA0001.DBF')
 nhd.flow <- nhd[,c('Comid','Q0001A')]
 
+#fill in based on similar area, rainfall and location
+comb[comb$STATION_KEY %in% c('23817','33323','33333','33355','dfw_49477','dfw_795','35786'),'NHDP21_COMID'] <- c(23872745,23890092,23890512,23881680,23876147,23914541,23876147)
 comb <- merge(comb, nhd.flow, by.x = "NHDP21_COMID", by.y = 'Comid', all.x = TRUE)
 comb$STRMPWR <- comb$XSLOPE_MAP * comb$Q0001A
 
