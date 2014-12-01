@@ -4,34 +4,34 @@ library(stringr)
 
 options('scipen' = 100)
 
-ssn1 <- importSSN('bugs.ssn')
-obs <- getSSNdata.frame(ssn1, Name = "Obs")
-obs <- rename(obs, c(
-  "STATION_KE" = "STATION_KEY",
-  "APOPRCA201" = "APOPRCA2010",
-  "sum_1095_d" = "sum_1095_days",
-  "FSS_26Aug1" = "FSS_26Aug14",
-  "PALITHEROD" = "PALITHERODRCA",
-  "PADISRSA_1" = "PADISRSA_1YR",
-  "PASUSCEP5_" = "PASUSCEP5_DE", 
-  "POWNRCA_PR" = "POWNRCA_PRI",
-  "POWNRCA_FE" = "POWNRCA_FED",
-  "PAOWNRCA_A" = "PAOWNRCA_AGR",
-  "log10_FSS_" = "log10_FSS_26Aug14",
-  "log10_sum_" = "log10_sum_1095_days",
-  "sqrt_PADIS" = "sqrt_PADISRSA_1YR",
-  "bin_PALITH" = "bin_PALITHERODRCA",
-  "log10_XSLO" = "log10_XSLOPE_MAP",
-  "log10_PASI" = "log10_PASILTRCA",
-  "log10_MIN_" = "log10_MIN_Z",
-  "log10_STRM" = "log10_STRMPWR",
-  "sqrt_upDis" = "sqrt_upDist",
-  "log10_APOP" = "log10_APOPRCA2010",
-  "log10_PASU" = "log10_PASUSCEP5_DE",
-  "log10_POWN" = "log10_POWNRCA_PRI",
-  "log10_POWN.1" = "log10_POWNRCA_FED",
-  "bin_PAOWNR" = "bin_PAOWNRCA_AGR"))
-ssn1 <- putSSNdata.frame(obs, ssn1, Name = 'Obs')
+# ssn1 <- importSSN('bugs.ssn')
+# obs <- getSSNdata.frame(ssn1, Name = "Obs")
+# obs <- rename(obs, c(
+#   "STATION_KE" = "STATION_KEY",
+#   "APOPRCA201" = "APOPRCA2010",
+#   "sum_1095_d" = "sum_1095_days",
+#   "FSS_26Aug1" = "FSS_26Aug14",
+#   "PALITHEROD" = "PALITHERODRCA",
+#   "PADISRSA_1" = "PADISRSA_1YR",
+#   "PASUSCEP5_" = "PASUSCEP5_DE", 
+#   "POWNRCA_PR" = "POWNRCA_PRI",
+#   "POWNRCA_FE" = "POWNRCA_FED",
+#   "PAOWNRCA_A" = "PAOWNRCA_AGR",
+#   "log10_FSS_" = "log10_FSS_26Aug14",
+#   "log10_sum_" = "log10_sum_1095_days",
+#   "sqrt_PADIS" = "sqrt_PADISRSA_1YR",
+#   "bin_PALITH" = "bin_PALITHERODRCA",
+#   "log10_XSLO" = "log10_XSLOPE_MAP",
+#   "log10_PASI" = "log10_PASILTRCA",
+#   "log10_MIN_" = "log10_MIN_Z",
+#   "log10_STRM" = "log10_STRMPWR",
+#   "sqrt_upDis" = "sqrt_upDist",
+#   "log10_APOP" = "log10_APOPRCA2010",
+#   "log10_PASU" = "log10_PASUSCEP5_DE",
+#   "log10_POWN" = "log10_POWNRCA_PRI",
+#   "log10_POWN.1" = "log10_POWNRCA_FED",
+#   "bin_PAOWNR" = "bin_PAOWNRCA_AGR"))
+# ssn1 <- putSSNdata.frame(obs, ssn1, Name = 'Obs')
 
 # #save the ssn object
 # writeSSN(ssn1, filename = 'C:/users/pbryant/desktop/SubSSN/LSN/lsn.ssn')
@@ -420,7 +420,6 @@ qqnorm(ssn1.resid.S)
 
 resids.S.df <- getSSNdata.frame(ssn1.resid.S)
 plot(resids.S.df[,"_fit_"],resids2.df[,"_resid_"])
-#qqplot is linear and residual plot shows no trend. log transformation of response appears appropriate.
 
 save(ssn1.glmssn.S, file = 'ssn1_glmssn_S.Rdata')
 
@@ -475,6 +474,40 @@ AIC(ssn1.glmssn.S)
 # 3 Spherical.taildown 0.29709578431
 # 4              locID 0.05041105489
 # 5             Nugget 0.26382100750
+
+#### ssn1.glmssn2.S ####
+start.time <- Sys.time()
+print(start.time)
+ssn1.glmssn2.S <- glmssn(log10_FSS_26Aug14  ~ sum_1095_days + PALITHERODRCA + PADISRSA_1YR + 
+                          XSLOPE_MAP + PASILTRCA + MIN_Z + upDist + 
+                          APOPRCA2010 + PASUSCEP5_DE + POWNRCA_FED + POWNRCA_PRI + 
+                          PAOWNRCA_AGR, 
+                        ssn1,
+                        EstMeth = "REML",
+                        CorModels = c("locID","Exponential.tailup", "Spherical.taildown", "Exponential.Euclid"),
+                        addfunccol = "afvArea",
+                        family = "Gaussian")
+end.time <- Sys.time()
+print(end.time)
+print(end.time - start.time)
+
+summary(ssn1.glmssn2.S)
+varcomp(ssn1.glmssn2.S)
+#Plot the residuals
+ssn1.resid2.S <- residuals(ssn1.glmssn2.S)
+par(mfrow = c(1,2))
+hist(ssn1.resid2.S)
+hist(ssn1, "log10_FSS_26Aug14")
+
+qqnorm(ssn1.resid2.S)
+
+resids2.S.df <- getSSNdata.frame(ssn1.resid2.S)
+plot(resids2.S.df[,"_fit_"],resids2.S.df[,"_resid_"])
+
+save(ssn1.glmssn2.S, file = 'ssn1_glmssn_S.Rdata')
+
+AIC(ssn1.glmssn2.S)
+#-107.6321
 
 #### ssn1.glmssn1 ####
 start.time <- Sys.time()

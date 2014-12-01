@@ -3,7 +3,8 @@
 library(SSN)
 library(stringr)
 library(MASS)
-ssn1 <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN05/lsn.ssn", o.write=FALSE)
+ssn1 <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN05/lsn.ssn", o.write = TRUE)
+#ssn1 <- importSSN('C:/users/pbryant/desktop/midcoasttmdl-gis/revisedssn/lsn05/lsn.ssn', o.write = TRUE)
 obs<- getSSNdata.frame(ssn1, Name = "Obs")
 obs.complete <- read.csv("ssn_RF_data.csv")
 obs.complete$SVN <- str_trim(obs.complete$SVN)
@@ -214,4 +215,4 @@ row.names(obs.vars) <- obs.vars$pid
 ssn1 <- putSSNdata.frame(obs.vars, ssn1, Name = 'Obs')
 
 #save the ssn object to the github folder
-writeSSN(ssn1, filename = 'bugs.ssn')
+#writeSSN(ssn1, filename = 'bugs.ssn')
