@@ -1,6 +1,6 @@
 "","var","na.count","fss1.rf_keep","fss2.rf_keep","pctfn.rf_keep","pctsa.rf_keep","pctsafn.rf_keep","oe.rf_keep"
 "1","SVN",0,NA,NA,NA,NA,NA,NA
-"2","NHDP21_COMID",6,NA,NA,NA,NA,NA,NA
+"2","NHDP21_COMID",0,NA,NA,NA,NA,NA,NA
 "3","STATION_KEY",0,NA,NA,NA,NA,NA,NA
 "4","rid",0,NA,NA,NA,NA,NA,NA
 "5","POURID",0,NA,NA,NA,NA,NA,NA
@@ -444,8 +444,8 @@
 "443","XWIDTH",501,NA,NA,NA,NA,NA,NA
 "444","MAX_Z",0,NA,NA,NA,NA,NA,NA
 "445","REACHLEN",529,NA,NA,NA,NA,NA,NA
-"446","Q0001A",7,NA,NA,NA,NA,NA,NA
-"447","STRMPWR",7,NA,NA,NA,NA,NA,NA
+"446","Q0001A",0,NA,NA,NA,NA,NA,NA
+"447","STRMPWR",0,NA,NA,NA,NA,NA,NA
 "448","FSS_26Aug14",0,NA,NA,NA,NA,NA,NA
 "449","DATE",0,NA,NA,NA,NA,NA,NA
 "450","YEAR",0,NA,NA,NA,NA,NA,NA

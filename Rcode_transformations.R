@@ -3,7 +3,7 @@
 library(SSN)
 library(stringr)
 library(MASS)
-ssn1 <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN04/lsn.ssn", o.write=FALSE)
+ssn1 <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN05/lsn.ssn", o.write=FALSE)
 obs<- getSSNdata.frame(ssn1, Name = "Obs")
 obs.complete <- read.csv("ssn_RF_data.csv")
 obs.complete$SVN <- str_trim(obs.complete$SVN)
@@ -15,7 +15,7 @@ vars <- c("STATION_KEY", "SITE_NAME", "SVN", "YEAR",names(obs.fss2))
 obs.vars <- obs.complete[,vars]
 
 obs.vars <- merge(obs[,c("SVN","rid", "ratio", "locID", "netID", "pid", "upDist",  "afvArea",
-                         "HU_6_NAME", "HU_8_NAME", "HU_10_NAME", "HU_12_NAME", "HU_08", "LONG_RAW", "LAT_RAW", "NHDHigh",
+                         "HU_6_NAME", "HU_8_NAME", "HU_10_NAME", "HU_12_NAME", "HU_08", "LONG_RAW", "NHDHigh",
                          "NHDh_Reach", "NHDP21_Rea", "NHDP12_COM", "HU_10", "HU_12")],
                   obs.vars, 
                   by = "SVN",
@@ -24,12 +24,6 @@ obs.vars <- merge(obs[,c("SVN","rid", "ratio", "locID", "netID", "pid", "upDist"
 #don't run when going through. only for data exploration
 #obs.vars <- arrange(obs.vars, STATION_KEY, desc(YEAR))
 #obs.vars.sub <- obs.vars[!duplicated(obs.vars$STATION_KEY),]
-
-model1 <- c("FSS_26Aug14","sum_1095_days","PADISRSA_1YR","PALITHERODRCA","XSLOPE_MAP","PASILTRCA","MIN_Z","POWNRCA_PRI")
-model2 <- c("FSS_26Aug14","sum_1095_days","PADISRSA_1YR","PALITHERODRCA","XSLOPE_MAP","PASILTRCA","MIN_Z","PAOWNRSA_FED")
-model3 <- c("FSS_26Aug14","sum_1095_days","PADISRSA_1YR","PALITHERODRCA","XSLOPE_MAP","PASILTRCA","MIN_Z","PAOWNRCA_FED")
-model4 <- c("FSS_26Aug14","sum_1095_days","PADISRSA_1YR","PALITHERODRCA","XSLOPE_MAP","PASILTRCA","MIN_Z","PAOWNRCA_AGR")
-model5 <- c("FSS_26Aug14","sum_1095_days","PADISRSA_1YR","PALITHERODRCA","XSLOPE_MAP","PASILTRCA","MIN_Z","PAOWNRSA_AGR")
 
 ####TRANSFORMATIONS####
 #FSS_26Aug14
@@ -161,9 +155,9 @@ obs.vars$log10_MIN_Z <- log10(obs.vars$MIN_Z)
 
 #Now that we have the transformed variables we put them back in the 
 #SSN object
-obs.vars <- obs.vars[obs$pid,]
+obs.vars <- obs.vars[match(obs$pid,obs.vars$pid),]
 row.names(obs.vars) <- obs.vars$pid
 ssn1 <- putSSNdata.frame(obs.vars, ssn1, Name = 'Obs')
 
 #save the ssn object to the github folder
-writeSSN(ssn1, filename = 'bugs.ssn')
+#writeSSN(ssn1, filename = 'bugs.ssn')

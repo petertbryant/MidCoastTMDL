@@ -1,42 +1,44 @@
 library(SSN)
 library(plyr)
 
-ssn1 <- importSSN('bugs.ssn')
-obs <- getSSNdata.frame(ssn1, Name = "Obs")
-obs <- rename(obs, c(
-              "STATION_KE" = "STATION_KEY",
-              "APOPRCA201" = "APOPRCA2010",
-              "sum_60_day" = "sum_60_days",
-              "sum_180_da" = "sum_180_days",
-              "sum_365_da" = "sum_365_days",
-              "sum_1095_d" = "sum_1095_days",
-              "PPT_1981_2" = "PPT_1981_2010",
-              "FSS_26Aug1" = "FSS_26Aug14",
-              "PLITHERODR" = "PLITHERODRCA",
-              "PLITHERODR.1" = "PLITHERODRSA",
-              "PSILTRCA" = "PSILTRCA",
-              "PDISRCA_1Y" = "PDISRCA_1YR",
-              "PDISRCA_3Y" = "PDISRCA_3YR",
-              "PDISRSA_1Y" = "PDISRSA_1YR",
-              "POWNRCA_PR" = "POWNRCA_PRI",
-              "POWNRCA_FE" = "POWNRCA_FED",
-              "POWNRSA_FE" = "POWNRSA_FED",
-              "PALITHEROD" = "PALITHERODRCA",
-              "PALITHEROD.1" = "PALITHERODRSA",
-              "PASILT_CLA" = "PASILT_CLAYRCA",
-              "PADISRSA_1" = "PADISRSA_1YR",
-              "PAOWNRCA_F" = "PAOWNRCA_FED",
-              "PAOWNRCA_A" = "PAOWNRCA_AGR",
-              "PAOWNRSA_F" = "PAOWNRSA_FED",
-              "PAOWNRSA_A" = "PAOWNRSA_AGR",
-              "log10_FSS_" = "log10_FSS_26Aug14",
-              "log10_sum_" = "log10_sum_1095_days",
-              "sqrt_PADIS" = "sqrt_PADISRSA_1YR",
-              "bin_PALITH" = "bin_PALITHERODRCA",
-              "log10_XSLO" = "log10_XSLOPE_MAP",
-              "log10_PASI" = "log10_PASILTRCA",
-              "log10_MIN_" = "log10_MIN_Z"))
-ssn1 <- putSSNdata.frame(obs, ssn1, Name = 'Obs')
+options(scipen = 100)
+
+# ssn1 <- importSSN('bugs.ssn')
+# obs <- getSSNdata.frame(ssn1, Name = "Obs")
+# obs <- rename(obs, c(
+#               "STATION_KE" = "STATION_KEY",
+#               "APOPRCA201" = "APOPRCA2010",
+#               "sum_60_day" = "sum_60_days",
+#               "sum_180_da" = "sum_180_days",
+#               "sum_365_da" = "sum_365_days",
+#               "sum_1095_d" = "sum_1095_days",
+#               "PPT_1981_2" = "PPT_1981_2010",
+#               "FSS_26Aug1" = "FSS_26Aug14",
+#               "PLITHERODR" = "PLITHERODRCA",
+#               "PLITHERODR.1" = "PLITHERODRSA",
+#               "PSILTRCA" = "PSILTRCA",
+#               "PDISRCA_1Y" = "PDISRCA_1YR",
+#               "PDISRCA_3Y" = "PDISRCA_3YR",
+#               "PDISRSA_1Y" = "PDISRSA_1YR",
+#               "POWNRCA_PR" = "POWNRCA_PRI",
+#               "POWNRCA_FE" = "POWNRCA_FED",
+#               "POWNRSA_FE" = "POWNRSA_FED",
+#               "PALITHEROD" = "PALITHERODRCA",
+#               "PALITHEROD.1" = "PALITHERODRSA",
+#               "PASILT_CLA" = "PASILT_CLAYRCA",
+#               "PADISRSA_1" = "PADISRSA_1YR",
+#               "PAOWNRCA_F" = "PAOWNRCA_FED",
+#               "PAOWNRCA_A" = "PAOWNRCA_AGR",
+#               "PAOWNRSA_F" = "PAOWNRSA_FED",
+#               "PAOWNRSA_A" = "PAOWNRSA_AGR",
+#               "log10_FSS_" = "log10_FSS_26Aug14",
+#               "log10_sum_" = "log10_sum_1095_days",
+#               "sqrt_PADIS" = "sqrt_PADISRSA_1YR",
+#               "bin_PALITH" = "bin_PALITHERODRCA",
+#               "log10_XSLO" = "log10_XSLOPE_MAP",
+#               "log10_PASI" = "log10_PASILTRCA",
+#               "log10_MIN_" = "log10_MIN_Z"))
+# ssn1 <- putSSNdata.frame(obs, ssn1, Name = 'Obs')
 
 ###################################################
 ### Create the Distance Matrix
