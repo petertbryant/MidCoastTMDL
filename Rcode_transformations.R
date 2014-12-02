@@ -8,7 +8,7 @@ obs<- getSSNdata.frame(ssn1, Name = "Obs")
 obs.complete <- read.csv("ssn_RF_data.csv")
 obs.complete$SVN <- str_trim(obs.complete$SVN)
 obs.fss2 <- read.csv('fss2_s2_data.csv')
-obs.fss2 <- within(obs.fss2, rm(X))
+obs.fss2 <- within(obs.fss2, rm(X, upDist))
 
 vars <- c("STATION_KEY", "SITE_NAME", "SVN", "YEAR",names(obs.fss2))
 
