@@ -1,0 +1,15 @@
+t <- data.frame(h = seq(0,2,.01))
+t$ls <- ifelse(t$h < 1, 1-t$h, 0)
+t$s <- ifelse(t$h < 1, 1-(3/2)*t$h+(1/2)*t$h^3, 0)
+t$m <- ifelse(t$h == 0, 1, log(t$h +1)/t$h)
+t$e <- exp(-t$h)
+
+par(mfrow=c(2,2))
+plot(t$h,t$ls,type="l",main="Linear w sill")
+plot(t$h, t$s,type = "l",main="Spherical")
+plot(t$h, t$m,type = "l",main="MARIAH")
+plot(t$h, t$e,type="l",main="Exponential")
+
+lines(t$h, t$s)
+lines(t$h, t$m)
+lines(t$h, t$e)
