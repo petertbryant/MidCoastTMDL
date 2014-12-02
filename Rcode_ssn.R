@@ -1276,20 +1276,48 @@ end.time <- Sys.time()
 print(end.time)
 print(end.time - start.time)
 
-#### ssn1.glmssn.SSS ####
+#### ssn1.glmssn.ESG ####
 start.time <- Sys.time()
 print(start.time)
-ssn1.glmssn.SSS <- glmssn(log10_FSS_26Aug14  ~ sum_1095_days + PALITHERODRCA + PADISRSA_1YR + 
+ssn1.glmssn.ESG <- glmssn(log10_FSS_26Aug14  ~ sum_1095_days + PALITHERODRCA + PADISRSA_1YR + 
                             PASILTRCA + APOPRCA2010 + POWNRCA_FED, 
                           ssn1,
                           EstMeth = "REML",
-                          CorModels = c("locID","Spherical.tailup", "Spherical.taildown", "Spherical.Euclid"),
+                          CorModels = c("locID","Exponential.tailup", "Spherical.taildown", "Gaussian.Euclid"),
                           addfunccol = "afvArea",
                           family = "Gaussian")
 end.time <- Sys.time()
 print(end.time)
 print(end.time - start.time)
-print(end.time - 1st.start.time)
+
+#### ssn1.glmssn.SSE.2 ####
+start.time <- Sys.time()
+print(start.time)
+ssn1.glmssn.SSE.2 <- glmssn(log10_FSS_26Aug14  ~ sum_1095_days + PADISRSA_1YR, 
+                          ssn1,
+                          EstMeth = "REML",
+                          CorModels = c("locID","Spherical.tailup", "Spherical.taildown", "Exponential.Euclid"),
+                          addfunccol = "afvArea",
+                          family = "Gaussian")
+end.time <- Sys.time()
+print(end.time)
+print(end.time - start.time)
+
+#### ssn1.glmssn.SSE.3 ####
+start.time <- Sys.time()
+print(start.time)
+ssn1.glmssn.SSE.3 <- glmssn(log10_FSS_26Aug14  ~ sum_1095_days + PALITHERODRCA + PADISRSA_1YR + 
+                              XSLOPE_MAP + PASILTRCA + MIN_Z + upDist + 
+                              APOPRCA2010 + PASUSCEP5_DE + POWNRCA_FED + POWNRCA_PRI + 
+                              PAOWNRCA_AGR + STRMPWR + LAT_RAW, 
+                            ssn1,
+                            EstMeth = "REML",
+                            CorModels = c("locID","Spherical.tailup", "Spherical.taildown", "Exponential.Euclid"),
+                            addfunccol = "afvArea",
+                            family = "Gaussian")
+end.time <- Sys.time()
+print(end.time)
+print(end.time - start.time)
 
 ###################################################
 ### check the residuals
@@ -1345,6 +1373,7 @@ plot( na.omit( getSSNdata.frame(ssn1)[, "FSS_26Aug14"]),
 ###################################################
 ### cross validation stats
 ###################################################
+##ML##
 CrossValidationStatsSSN(ssn1.glmssn4.G)
 #           bias    std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90    cov.95
 # 1 -0.001191478 -0.00201606 0.1883938 0.1913374 0.9864037 0.8237548 0.9131545 0.9438059
@@ -1375,10 +1404,67 @@ CrossValidationStatsSSN(ssn1.glmssn1.NULL)
 # 1 -0.00042555 -0.0007098064 0.2048384 0.2056859 0.9988453 0.8186462 0.9118774 0.945083
 
 
-###################################################
-### R2
-###################################################
-GR2(ssn1.glmssn1.P)
-varcomp(ssn1.glmssn1.P)
-varcomp(ssn1.glmssn2)
+##REML##
+CrossValidationStatsSSN(ssn1.glmssn.EEE)
+#           bias    std.bias    RMSPE       RAV  std.MSPE    cov.80    cov.90    cov.95
+# 1 -0.001219661 -0.00206018 0.188277 0.1918349 0.9811075 0.8250319 0.9131545 0.9438059
+
+CrossValidationStatsSSN(ssn1.glmssn.ELE)
+#           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90    cov.95
+# 1 -0.001048184 -0.001769277 0.1884244 0.1915877 0.9833104 0.8237548 0.9157088 0.9463602
+
+CrossValidationStatsSSN(ssn1.glmssn.ELG)
+#           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80   cov.90    cov.95
+# 1 -0.000918074 -0.001548822 0.1891589 0.1921395 0.9838551 0.8275862 0.916986 0.9463602
+
+CrossValidationStatsSSN(ssn1.glmssn.EME)
+#           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90   cov.95
+# 1 -0.001248669 -0.002107834 0.1883868 0.1920776 0.9803915 0.8275862 0.9118774 0.945083
+
+CrossValidationStatsSSN(ssn1.glmssn.ESE)
+#           bias    std.bias     RMSPE       RAV  std.MSPE    cov.80   cov.90   cov.95
+# 1 -0.001173164 -0.00198104 0.1882641 0.1916325 0.9820012 0.8250319 0.916986 0.945083
+
+CrossValidationStatsSSN(ssn1.glmssn.LLE)
+#          bias    std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90    cov.95
+# 1 -0.00105426 -0.00178155 0.1885075 0.1916772 0.9828379 0.8237548 0.9157088 0.9463602
+
+CrossValidationStatsSSN(ssn1.glmssn.MEE)
+#         bias     std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90    cov.95
+# 1 -0.0012244 -0.002067542 0.1883018 0.1918595 0.9811502 0.8263091 0.9144317 0.9438059
+
+CrossValidationStatsSSN(ssn1.glmssn.MME)
+#           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90   cov.95
+# 1 -0.001248691 -0.002107895 0.1883866 0.1920746 0.9804132 0.8275862 0.9118774 0.945083
+
+CrossValidationStatsSSN(ssn1.glmssn.SSE)
+#           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80   cov.90   cov.95
+# 1 -0.001182433 -0.001996497 0.1882473 0.1916278 0.9819218 0.8250319 0.916986 0.945083
+
+CrossValidationStatsSSN(ssn1.glmssn.SSS)
+#           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80   cov.90   cov.95
+# 1 -0.001169532 -0.001975525 0.1883464 0.1916555 0.9823161 0.8237548 0.916986 0.945083
+
+CrossValidationStatsSSN(ssn1.glmssn.ESG)
+#           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90    cov.95
+# 1 -0.001055536 -0.001779893 0.1888768 0.1920662 0.9829735 0.8250319 0.9182631 0.9463602
+
+GR2(ssn1.glmssn.EEE) # 0.2447016
+GR2(ssn1.glmssn.ELE) # 0.2450364
+GR2(ssn1.glmssn.ELG) # 0.2645521
+GR2(ssn1.glmssn.EME) # 0.2405389
+GR2(ssn1.glmssn.ESE) # 0.2454929
+GR2(ssn1.glmssn.LLE) # 0.2451181
+GR2(ssn1.glmssn.MEE) # 0.244801
+GR2(ssn1.glmssn.MME) # 0.240545
+GR2(ssn1.glmssn.SSE) # 0.2457414
+GR2(ssn1.glmssn.SSS) # 0.2502698
+GR2(ssn1.glmssn.ESG) # 0.2638648
+
+CrossValidationStatsSSN(ssn1.glmssn.SSE.2)
+#           bias     std.bias     RMSPE      RAV  std.MSPE    cov.80    cov.90    cov.95
+# 1 -0.001963672 -0.003251992 0.1915419 0.196302 0.9750998 0.8326948 0.9067688 0.9412516
+ CrossValidationStatsSSN(ssn1.glmssn.SSE.3)
+#           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90    cov.95
+# 1 -0.001606171 -0.002531696 0.1902606 0.1929672 0.9842688 0.8275862 0.9157088 0.9438059
 
