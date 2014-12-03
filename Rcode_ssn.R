@@ -1220,6 +1220,8 @@ end.time <- Sys.time()
 print(end.time)
 print(end.time - start.time)
 
+save(ssn1.glmssn.SSE, file = 'ssn1_glmssn_SSE.Rdata')
+
 #### ssn1.glmssn.LLE ####
 start.time <- Sys.time()
 print(start.time)
@@ -1322,14 +1324,10 @@ print(end.time - start.time)
 ###################################################
 ### check the residuals
 ###################################################
-ssn1.resid1 <- residuals(ssn1.glmssn1)
+ssn1.resid1 <- residuals(ssn1.glmssn.SSE)
 names( getSSNdata.frame(ssn1.resid1) )
 plot(ssn1.resid1)
 
-ssn1.resid1.P <- residuals(ssn1.glmssn1.P)
-par(mfrow = c(1,2))
-hist(ssn1.resid1.P, breaks = 100)
-hist(ssn1, "FSS_26Aug14")
 ###################################################
 ### plot the residuals
 ###################################################
@@ -1340,9 +1338,9 @@ hist(ssn1, "log10_FSS_26Aug14")
 ###################################################
 ### cross validation
 ###################################################
-cv.out <- CrossValidationSSN(ssn1.glmssn1)
+cv.out <- CrossValidationSSN(ssn1.glmssn.SSE)
 par(mfrow = c(1, 2))
-plot(ssn1.glmssn1$sampinfo$z,
+plot(ssn1.glmssn.SSE$sampinfo$z,
      cv.out[, "cv.pred"], pch = 19,
      xlab = "Observed Data", ylab = "LOOCV Prediction")
 abline(0, 1)
@@ -1350,26 +1348,6 @@ plot( na.omit( getSSNdata.frame(ssn1)[, "FSS_26Aug14"]),
       cv.out[, "cv.se"], pch = 19,
       xlab = "Observed Data", ylab = "LOOCV Prediction SE")
 
-
-cv.out <- CrossValidationSSN(ssn1.glmssn2)
-par(mfrow = c(1, 2))
-plot(ssn1.glmssn2$sampinfo$z,
-     cv.out[, "cv.pred"], pch = 19,
-     xlab = "Observed Data", ylab = "LOOCV Prediction")
-abline(0, 1)
-plot( na.omit( getSSNdata.frame(ssn1)[, "log10_FSS_26Aug14"]),
-      cv.out[, "cv.se"], pch = 19,
-      xlab = "Observed Data", ylab = "LOOCV Prediction SE")
-
-cv.out <- CrossValidationSSN(ssn1.glmssn1.P)
-par(mfrow = c(1, 2))
-plot(ssn1.glmssn1.P$sampinfo$z,
-     cv.out[, "cv.pred"], pch = 19,
-     xlab = "Observed Data", ylab = "LOOCV Prediction")
-abline(0, 1)
-plot( na.omit( getSSNdata.frame(ssn1)[, "FSS_26Aug14"]),
-      cv.out[, "cv.se"], pch = 19,
-      xlab = "Observed Data", ylab = "LOOCV Prediction SE")
 ###################################################
 ### cross validation stats
 ###################################################
@@ -1468,3 +1446,11 @@ CrossValidationStatsSSN(ssn1.glmssn.SSE.2)
 #           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90    cov.95
 # 1 -0.001606171 -0.002531696 0.1902606 0.1929672 0.9842688 0.8275862 0.9157088 0.9438059
 
+#### RMSE for the selected model ####
+ssn1.glmssn.SSE.preds <- as.data.frame(getPreds(ssn1.glmssn.SSE))
+ssn1.glmssn.SSE.preds$cv.pred.untran <- 10^(ssn1.glmssn.SSE.preds$cv.pred)
+ssn1.glmssn.SSE.preds <- merge(ssn1.glmssn.SSE.preds, obs.vars[,c('pid','STATION_KEY','FSS_26Aug14')], by = 'pid')
+
+library(hydroGOF)
+rmse(ssn1.glmssn.SSE.preds$cv.pred.untran, ssn1.glmssn.SSE.preds$FSS_26Aug14)
+#[1] 11.6405
