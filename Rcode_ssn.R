@@ -39,7 +39,7 @@ options('scipen' = 100)
 ##################################################
 ### Create the Distance Matrix
 ###################################################
-createDistMat(ssn1, o.write = TRUE)
+createDistMat(ssn1, predpts = 'preds', o.write = TRUE, amongpreds = TRUE)
 
 ###################################################
 # map the stream network with observed sites

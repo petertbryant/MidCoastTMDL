@@ -3,7 +3,7 @@
 library(SSN)
 library(stringr)
 library(MASS)
-ssn1 <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN05/lsn.ssn", o.write = TRUE)
+ssn1 <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN05/lsn.ssn", predpts = "preds", o.write = TRUE)
 #ssn1 <- importSSN('C:/users/pbryant/desktop/midcoasttmdl-gis/revisedssn/lsn05/lsn.ssn', o.write = TRUE)
 obs<- getSSNdata.frame(ssn1, Name = "Obs")
 obs.complete <- read.csv("ssn_RF_data.csv")
