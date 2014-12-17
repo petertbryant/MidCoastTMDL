@@ -1365,6 +1365,7 @@ ssn1.glmssn.ELG <- glmssn(log10_FSS_26Aug14  ~ sum_1095_days +
 end.time <- Sys.time()
 print(end.time)
 print(end.time - start.time)
+save(ssn1.glmssn.ELG, file = 'ssn1_glmssn_ELG.Rdata')
 
 #### ssn1.glmssn.ELE ####
 start.time <- Sys.time()
@@ -1380,6 +1381,7 @@ ssn1.glmssn.ELE <- glmssn(log10_FSS_26Aug14  ~ sum_1095_days +
 end.time <- Sys.time()
 print(end.time)
 print(end.time - start.time)
+save(ssn1.glmssn.ELE, file = 'ssn1_glmssn_ELE.Rdata')
 
 #### ssn1.glmssn.EME ####
 start.time <- Sys.time()
@@ -1395,6 +1397,7 @@ ssn1.glmssn.EME <- glmssn(log10_FSS_26Aug14  ~ sum_1095_days +
 end.time <- Sys.time()
 print(end.time)
 print(end.time - start.time)
+save(ssn1.glmssn.EME, file = 'ssn1_glmssn_EME.Rdata')
 
 #### ssn1.glmssn.ESE ####
 start.time <- Sys.time()
@@ -1410,6 +1413,7 @@ ssn1.glmssn.ESE <- glmssn(log10_FSS_26Aug14  ~ sum_1095_days +
 end.time <- Sys.time()
 print(end.time)
 print(end.time - start.time)
+save(ssn1.glmssn.ESE, file = 'ssn1_glmssn_ESE.Rdata')
 
 #### ssn1.glmssn.SSE ####
 start.time <- Sys.time()
@@ -1425,7 +1429,6 @@ ssn1.glmssn.SSE <- glmssn(log10_FSS_26Aug14  ~ sum_1095_days +
 end.time <- Sys.time()
 print(end.time)
 print(end.time - start.time)
-
 save(ssn1.glmssn.SSE, file = 'ssn1_glmssn_SSE.Rdata')
 
 #### ssn1.glmssn.LLE ####
@@ -1442,6 +1445,7 @@ ssn1.glmssn.LLE <- glmssn(log10_FSS_26Aug14  ~ sum_1095_days +
 end.time <- Sys.time()
 print(end.time)
 print(end.time - start.time)
+save(ssn1.glmssn.LLE, file = 'ssn1_glmssn_LLE.Rdata')
 
 #### ssn1.glmssn.MME ####
 start.time <- Sys.time()
@@ -1457,6 +1461,7 @@ ssn1.glmssn.MME <- glmssn(log10_FSS_26Aug14  ~ sum_1095_days +
 end.time <- Sys.time()
 print(end.time)
 print(end.time - start.time)
+save(ssn1.glmssn.MME, file = 'ssn1_glmssn_MME.Rdata')
 
 #### ssn1.glmssn.MEE ####
 start.time <- Sys.time()
@@ -1472,6 +1477,7 @@ ssn1.glmssn.MEE <- glmssn(log10_FSS_26Aug14  ~ sum_1095_days +
 end.time <- Sys.time()
 print(end.time)
 print(end.time - start.time)
+save(ssn1.glmssn.MEE, file = 'ssn1_glmssn_MEE.Rdata')
 
 #### ssn1.glmssn.SSS ####
 start.time <- Sys.time()
@@ -1487,6 +1493,7 @@ ssn1.glmssn.SSS <- glmssn(log10_FSS_26Aug14  ~ sum_1095_days +
 end.time <- Sys.time()
 print(end.time)
 print(end.time - start.time)
+save(ssn1.glmssn.SSS, file = 'ssn1_glmssn_SSS.Rdata')
 
 #### ssn1.glmssn.ESG ####
 start.time <- Sys.time()
@@ -1502,6 +1509,7 @@ ssn1.glmssn.ESG <- glmssn(log10_FSS_26Aug14  ~ sum_1095_days +
 end.time <- Sys.time()
 print(end.time)
 print(end.time - start.time)
+save(ssn1.glmssn.ESG, file = 'ssn1_glmssn_ESG.Rdata')
 
 ###################################################
 ### check the residuals
@@ -1534,30 +1542,53 @@ plot( na.omit( getSSNdata.frame(ssn1)[, "FSS_26Aug14"]),
 ### cross validation stats
 ###################################################
 ##ML##
+compare.models <- InfoCritCompare(list(ssn1.glmssn.ELG,ssn1.glmssn.ELE,ssn1.glmssn.EME,ssn1.glmssn.ESE,
+                                       ssn1.glmssn.SSE,ssn1.glmssn.LLE,ssn1.glmssn.MME,ssn1.glmssn.MEE,
+                                       ssn1.glmssn.SSS,ssn1.glmssn.ESG))
+# 1  log10_FSS_26Aug14 ~ sum_1095_days + PDISRSA_1YR + POWNRCA_PRI + PALITHERODRCA + PASILTRCA + DAPOPRCA2010      REML
+# 2  log10_FSS_26Aug14 ~ sum_1095_days + PDISRSA_1YR + POWNRCA_PRI + PALITHERODRCA + PASILTRCA + DAPOPRCA2010      REML
+# 3  log10_FSS_26Aug14 ~ sum_1095_days + PDISRSA_1YR + POWNRCA_PRI + PALITHERODRCA + PASILTRCA + DAPOPRCA2010      REML
+# 4  log10_FSS_26Aug14 ~ sum_1095_days + PDISRSA_1YR + POWNRCA_PRI + PALITHERODRCA + PASILTRCA + DAPOPRCA2010      REML
+# 5  log10_FSS_26Aug14 ~ sum_1095_days + PDISRSA_1YR + POWNRCA_PRI + PALITHERODRCA + PASILTRCA + DAPOPRCA2010      REML
+# 6  log10_FSS_26Aug14 ~ sum_1095_days + PDISRSA_1YR + POWNRCA_PRI + PALITHERODRCA + PASILTRCA + DAPOPRCA2010      REML
+# 7  log10_FSS_26Aug14 ~ sum_1095_days + PDISRSA_1YR + POWNRCA_PRI + PALITHERODRCA + PASILTRCA + DAPOPRCA2010      REML
+# 8  log10_FSS_26Aug14 ~ sum_1095_days + PDISRSA_1YR + POWNRCA_PRI + PALITHERODRCA + PASILTRCA + DAPOPRCA2010      REML
+# 9  log10_FSS_26Aug14 ~ sum_1095_days + PDISRSA_1YR + POWNRCA_PRI + PALITHERODRCA + PASILTRCA + DAPOPRCA2010      REML
+# 10 log10_FSS_26Aug14 ~ sum_1095_days + PDISRSA_1YR + POWNRCA_PRI + PALITHERODRCA + PASILTRCA + DAPOPRCA2010      REML
+# Variance_Components neg2LogL    AIC       bias  std.bias  RMSPE    RAV std.MSPE
+# 1     Exponential.tailup + LinearSill.taildown + Gaussian.Euclid + locID + Nugget   -223.5 -207.5 -0.0005968 -0.001020 0.1902 0.1920   0.9900
+# 2  Exponential.tailup + LinearSill.taildown + Exponential.Euclid + locID + Nugget   -223.5 -207.5 -0.0007075 -0.001211 0.1897 0.1918   0.9885
+# 3      Exponential.tailup + Mariah.taildown + Exponential.Euclid + locID + Nugget   -221.3 -205.3 -0.0009215 -0.001569 0.1896 0.1922   0.9864
+# 4   Exponential.tailup + Spherical.taildown + Exponential.Euclid + locID + Nugget   -223.8 -207.8 -0.0008255 -0.001408 0.1894 0.1917   0.9878
+# 5     Spherical.tailup + Spherical.taildown + Exponential.Euclid + locID + Nugget   -224.0 -208.0 -0.0008063 -0.001375 0.1894 0.1916   0.9878
+# 6   LinearSill.tailup + LinearSill.taildown + Exponential.Euclid + locID + Nugget   -223.4 -207.4 -0.0006832 -0.001165 0.1895 0.1918   0.9852
+# 7           Mariah.tailup + Mariah.taildown + Exponential.Euclid + locID + Nugget   -221.3 -205.3 -0.0009217 -0.001569 0.1896 0.1922   0.9864
+# 8      Mariah.tailup + Exponential.taildown + Exponential.Euclid + locID + Nugget   -222.8 -206.8 -0.0008914 -0.001519 0.1895 0.1919   0.9870
+# 9       Spherical.tailup + Spherical.taildown + Spherical.Euclid + locID + Nugget   -224.4 -208.4 -0.0007432 -0.001266 0.1893 0.1916   0.9877
+# 10     Exponential.tailup + Spherical.taildown + Gaussian.Euclid + locID + Nugget   -223.9 -207.9 -0.0007204 -0.001227 0.1899 0.1919   0.9888
+# cov.80 cov.90 cov.95
+# 1  0.8301 0.9093 0.9438
+# 2  0.8314 0.9106 0.9451
+# 3  0.8276 0.9106 0.9413
+# 4  0.8276 0.9093 0.9451
+# 5  0.8289 0.9093 0.9438
+# 6  0.8289 0.9093 0.9464
+# 7  0.8276 0.9106 0.9413
+# 8  0.8263 0.9106 0.9451
+# 9  0.8289 0.9093 0.9438
+# 10 0.8289 0.9132 0.9451
+
 CrossValidationStatsSSN(ssn1.glmssn14.G)
 #        bias  std.bias  RMSPE    RAV std.MSPE cov.80 cov.90 cov.95
 #1 -0.0008452 -0.001444 0.1896 0.1913    0.993  0.825 0.9106 0.9438
 
 CrossValidationStatsSSN(ssn1.glmssn5.G)
-#           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90    cov.95
-# 1 -0.001095451 -0.001863036 0.1890676 0.1919526 0.9866342 0.8224777 0.9118774 0.9438059
+#       bias  std.bias  RMSPE    RAV std.MSPE cov.80 cov.90 cov.95
+# 1 -0.01671 -0.004852 0.4765 0.9364    1.001 0.8301 0.9055 0.9451
 
 CrossValidationStatsSSN(ssn1.glmssn6.G)
 #           bias     std.bias   RMSPE       RAV  std.MSPE    cov.80    cov.90    cov.95
 # 1 -0.001430853 -0.002417528 0.18973 0.1924555 0.9877347 0.8339719 0.9118774 0.9386973
-
-CrossValidationStatsSSN(ssn1.glmssn1.S)
-#           bias     std.bias   RMSPE      RAV  std.MSPE    cov.80    cov.90    cov.95
-# 1 -0.001538842 -0.002422118 0.19059 0.191696 0.9978387 0.8250319 0.9106003 0.9438059
-
-CrossValidationStatsSSN(ssn1.glmssn2.S)
-#           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90   cov.95
-# 1 -0.001123455 -0.001900468 0.1883655 0.1910589 0.9880666 0.8224777 0.9157088 0.945083
-
-CrossValidationStatsSSN(ssn1.glmssn1.ELE)
-#           bias    std.bias    RMSPE       RAV  std.MSPE    cov.80    cov.90    cov.95
-# 1 -0.001388988 -0.00217256 0.190798 0.1917153 0.9988858 0.8263091 0.9106003 0.9463602
-
 
 CrossValidationStatsSSN(ssn1.glmssn1.NULL)
 #          bias      std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90   cov.95
@@ -1636,3 +1667,11 @@ ssn1.glmssn.SSE.preds <- merge(ssn1.glmssn.SSE.preds, obs.vars[,c('pid','STATION
 library(hydroGOF)
 rmse(ssn1.glmssn.SSE.preds$cv.pred.untran, ssn1.glmssn.SSE.preds$FSS_26Aug14)
 #[1] 11.6405
+
+
+variable.compare <- InfoCritCompare(list(ssn1.glmssn1.G,ssn1.glmssn3.G,ssn1.glmssn4.G,ssn1.glmssn5.G,
+                                         ssn1.glmssn6.G,ssn1.glmssn7.G,ssn1.glmssn8.G,ssn1.glmssn9.G,
+                                         ssn1.glmssn10.G,ssn1.glmssn11.G,ssn1.glmssn12.G,ssn1.glmssn13.G,
+                                         ssn1.glmssn14.G))
+
+
