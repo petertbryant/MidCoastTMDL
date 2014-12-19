@@ -68,7 +68,19 @@ colnames(fss2.s1)
 # remove NAs in response variable
 fss2.s1 <- fss2.s1[(!is.na(fss2.s1$FSS_26Aug14)),]
 # remove any NAs - this has been taken care of prior to this but for good measure we'll leave it in
+#This removes the whole row where there is an NA. There are columns that are all NA due to scaling 
 fss2.s1 <- data.frame(na.omit(fss2.s1))
+
+# #Normalize the data to the same scale - Completed on 12/17 at 1618/1620. Did not affect rank order
+# Will not normalize to same scale at this point in the data processing since it affects the 
+# value of the %inc MSE because the scale of the response is so small. 
+# fss2.s1$LONG_RAW <- abs(fss2.s1$LONG_RAW)
+# fss2.s1 <- as.data.frame(lapply(fss2.s1,function(x) {(x-min(x))/(max(x)-min(x))}))
+# 
+# #This introduces NAs for those variables that were all 0
+# fss2.s1 <- fss2.s1[,setdiff(names(fss2.s1),c("X2year_count_60_days","X10year_count_60_days", "X25year_count_60_days", "X50year_count_60_days",
+#                         "X100year_count_60_days", "X10year_count_180_days", "X25year_count_180_days",
+#                         "X50year_count_180_days", "X100year_count_180_days"))]
 
 # mtry value
 mtry.fss2.s1 <- as.integer(((ncol(fss2.s1)-1) / 3),0)
@@ -118,7 +130,7 @@ load("fss2_s1_visd_20141210_1515.RData")
 #### s1 boxplot ####
 fss2.s1.vi.l <- melt(fss2.s1.vi, id=c("var_name","var_index"))
 
-png('varImpALL.png', width = 960, height = 960)
+png('varImpALL_scaled.png', width = 960, height = 960)
 bymedian <- with(fss2.s1.vi.l, reorder(var_index, value, median))
 boxplot(value ~ bymedian, data = fss2.s1.vi.l,
         ylab = "Variable index", xlab = "% Increase MSE", 
@@ -146,26 +158,29 @@ load("fss2_s1_20141210_1515.RData")
 
 #### Variable selection ####
 # Values drop off and then level out. Arbitrarily going with 50% of the variables.
-# grab all variable names with median values > 0.4805920 = 50% of the data
-fss2.s2.col <- fss2.s1.vi.median[fss2.s1.vi.median$median >= 0.4805920,][,1]
+# grab all variable names with median values > 1.004880e-04 = 50% of the data
+# This 50% of the data reflects 50% of the original list of variables prior to scaling
+# Scaling had the effect of dropping variables that were all 0s anyway.
+fss2.s2.col <- fss2.s1.vi.median[fss2.s1.vi.median$median >= 1.004880e-04,][,1]
 fss2.s2.col <- c("FSS_26Aug14",fss2.s2.col)
 fss2.s2 <- fss2.s1[,colnames(fss2.s1) %in% fss2.s2.col]
 
 #### Correlation plots ####
-fss2.s2.col
+names(fss2.s2.col) <- fss2.s2.col
 
 #Method: Look for r<=0.2. If lower importance variable has r>=0.2 with any higher importance variables select the highest 
 #importance variable unless that variable is already conceptually represented.
 
 # Precip  "sum_1095_days" "PPT_1981_2010" "sum_365_days"  "sum_180_days"  "sum_60_days"
 png('precip_cor.png')
-pairs(fss2.s2[,fss2.s2.col[c(3,4,7,33,37)]],
+pairs(fss2.s2[,fss2.s2.col[c("sum_1095_days", "PPT_1981_2010", "sum_365_days",  "sum_180_days","sum_60_days")]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 dev.off()
 # keep "sum_1095_days"
 
 # Disturb [1] "PDISRSA_1YR"  "PADISRSA_1YR" "PDISRCA_1YR"  "PDISRCA_3YR"  "PADISRCA_1YR" "PDISRCA_10YR" "PADISRCA_3YR"
-pairs(fss2.s2[,fss2.s2.col[c(9,10,13,21,41,45,47)]],
+pairs(fss2.s2[,fss2.s2.col[c("PDISRSA_1YR", "PADISRSA_1YR", "PDISRCA_1YR",  "PDISRCA_3YR",  
+                             "PADISRCA_1YR", "PDISRCA_10YR", "PADISRCA_3YR")]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 # everything is coorelated
 # keep "PDISRSA_1YR",
@@ -173,7 +188,10 @@ pairs(fss2.s2[,fss2.s2.col[c(9,10,13,21,41,45,47)]],
 # Lithology/soils
 #[1] "PALITHERODRCA"  "PALITHERODRSA"  "PASILTRCA"      "PACLAYRCA"      "PASILT_CLAYRCA" "PASANDRCA"      "MAKFACTRCA"     "PSILTRCA"      
 #[9] "PCLAYRCA"       "PLITHERODRSA"   "PLITHERODRCA"   "PSANDRCA"       "PSILT_CLAYRCA"  "MKFACTRCA"      "PALITHCOMPRCA"
-pairs(fss2.s2[,fss2.s2.col[c(2,6,14,15,17,19,20,22,23,29,32,34,35,48,56)]],
+pairs(fss2.s2[,fss2.s2.col[c("PALITHERODRCA", "PALITHERODRSA", "PASILTRCA", "PACLAYRCA", 
+                             "PASILT_CLAYRCA", "PASANDRCA", "MAKFACTRCA", "PSILTRCA",      
+                             "PCLAYRCA", "PLITHERODRSA",  "PLITHERODRCA",  "PSANDRCA", 
+                             "PSILT_CLAYRCA", "MKFACTRCA", "PALITHCOMPRCA")]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 # almost everything is coorelated
 # Keep "PALITHERODRCA", "PASILTRCA", "PACLAYRCA"
@@ -181,13 +199,15 @@ pairs(fss2.s2[,fss2.s2.col[c(2,6,14,15,17,19,20,22,23,29,32,34,35,48,56)]],
 # Ownership 
 #  [1] "DAPOPRCA2010" "APOPRCA2010"  "POWNRCA_PRI"  "PAOWNRSA_PRI" "POPRCA2010"   "POWNRSA_PRI"  "PAOWNRCA_AGR" "POWNRCA_FED"  "PAOWNRSA_FED"
 # [10] "PAOWNRCA_PRI" "POWNRSA_FED"  "PAOWNRCA_URB" "PAOWNRSA_AGR" "DAROADX"
-pairs(fss2.s2[,fss2.s2.col[c(12,24,31,38,39,40,46,50,51,52,53,54,55,57)]],
+pairs(fss2.s2[,fss2.s2.col[c("DAPOPRCA2010", "APOPRCA2010", "POWNRCA_PRI", "PAOWNRSA_PRI", "POPRCA2010",
+                             "POWNRSA_PRI",  "PAOWNRCA_AGR", "POWNRCA_FED",  "PAOWNRSA_FED",
+                             "PAOWNRCA_PRI", "POWNRSA_FED",  "PAOWNRCA_URB", "PAOWNRSA_AGR", "DAROADX")]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 # Keep"DAPOPRCA2010","POWNRCA_PRI","PAOWNRCA_AGR,"DAROADX"
 
 #Susceptibility
 # "PASUSCEP5_DE" "PASUSCEP4_DE" "PSUSCEP4_DE"  "PSUSCEP5_DE" 
-pairs(fss2.s2[,fss2.s2.col[c(16,18,25,43)]],
+pairs(fss2.s2[,fss2.s2.col[c("PASUSCEP5_DE", "PASUSCEP4_DE", "PSUSCEP4_DE",  "PSUSCEP5_DE")]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 #All correlated. 
 #Keep "PASUSCEP5_DE"
@@ -195,7 +215,9 @@ pairs(fss2.s2[,fss2.s2.col[c(16,18,25,43)]],
 # Others/The rest
 #[1] "STRMPWR"    "XSLOPE_MAP" "MIN_Z"      "LONG_RAW"   "LAT_RAW"    "upDist"     "afvArea"    "PATYPEF"    "ARCASQM"    "ARSASQM"   
 #[11] "Q0001A"   
-pairs(fss2.s2[,fss2.s2.col[-c(1,3,4,7,33,16,18,25,43,37,9,10,13,21,41,45,47,2,6,14,15,17,19,20,22,23,29,32,34,35,48,56,12,24,31,38,39,40,46,50,51,52,53,54,55,57)]],
+pairs(fss2.s2[,fss2.s2.col[c("STRMPWR", "XSLOPE_MAP", "MIN_Z", "LONG_RAW", "LAT_RAW", 
+                             "upDist", "afvArea", "PATYPEF", "ARCASQM",    "ARSASQM",   
+                           "Q0001A")]],
       lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 # udist and Long coorelated
 # keeep [1] "STRMPWR", "XSLOPE_MAP","MIN_Z","LAT_RAW"
@@ -208,9 +230,6 @@ keeps.s2 <- c("FSS_26Aug14",
               "PASUSCEP5_DE",
               "STRMPWR", "XSLOPE_MAP","MIN_Z","LAT_RAW")
 
-pairs(fss2.s2[,fss2.s2.col[fss2.s2.col %in% keeps.s2[-1]]],
-      lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
-
 #Further remove variables to reduce the influence of correlation on raising variable importance
 fss2.s2 <- fss2.s2[,colnames(fss2.s2) %in% keeps.s2]
 colnames(fss2.s2)
@@ -219,6 +238,7 @@ colnames(fss2.s2)
 # remove any NAs
 fss2.s2 <- data.frame(na.omit(fss2.s2))
 #write.csv(fss2.s2, 'fss2_s2_data.csv')
+#write.csv(fss2.s2, 'fss2_s2_data_scaled.csv')
 
 # --- #
 ##### Random Forest Step 2 ####

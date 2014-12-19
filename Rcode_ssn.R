@@ -4,38 +4,6 @@ library(stringr)
 
 options('scipen' = 100)
 
-# ssn1 <- importSSN('bugs.ssn')
-# obs <- getSSNdata.frame(ssn1, Name = "Obs")
-# obs <- rename(obs, c(
-#   "STATION_KE" = "STATION_KEY",
-#   "APOPRCA201" = "APOPRCA2010",
-#   "sum_1095_d" = "sum_1095_days",
-#   "FSS_26Aug1" = "FSS_26Aug14",
-#   "PALITHEROD" = "PALITHERODRCA",
-#   "PADISRSA_1" = "PADISRSA_1YR",
-#   "PASUSCEP5_" = "PASUSCEP5_DE", 
-#   "POWNRCA_PR" = "POWNRCA_PRI",
-#   "POWNRCA_FE" = "POWNRCA_FED",
-#   "PAOWNRCA_A" = "PAOWNRCA_AGR",
-#   "log10_FSS_" = "log10_FSS_26Aug14",
-#   "log10_sum_" = "log10_sum_1095_days",
-#   "sqrt_PADIS" = "sqrt_PADISRSA_1YR",
-#   "bin_PALITH" = "bin_PALITHERODRCA",
-#   "log10_XSLO" = "log10_XSLOPE_MAP",
-#   "log10_PASI" = "log10_PASILTRCA",
-#   "log10_MIN_" = "log10_MIN_Z",
-#   "log10_STRM" = "log10_STRMPWR",
-#   "sqrt_upDis" = "sqrt_upDist",
-#   "log10_APOP" = "log10_APOPRCA2010",
-#   "log10_PASU" = "log10_PASUSCEP5_DE",
-#   "log10_POWN" = "log10_POWNRCA_PRI",
-#   "log10_POWN.1" = "log10_POWNRCA_FED",
-#   "bin_PAOWNR" = "bin_PAOWNRCA_AGR"))
-# ssn1 <- putSSNdata.frame(obs, ssn1, Name = 'Obs')
-
-# #save the ssn object
-# writeSSN(ssn1, filename = 'C:/users/pbryant/desktop/SubSSN/LSN/lsn.ssn')
-
 ##################################################
 ### Create the Distance Matrix
 ###################################################
@@ -389,6 +357,57 @@ AIC(ssn1.glmssn3.G)
 # 
 # Residual standard error: 0.2372
 # Generalized R-squared: 0.2582
+
+#Scaling the data left p-values the same. Residual standard error is halved. GR2 is the same. AIC way lower.
+#Below, see that untransformed RMSE is improved to 3.6
+#Effect = No diff for variable selection.
+# Call:
+#   glmssn(formula = log10_FSS_26Aug14 ~ LAT_RAW + sum_1095_days + 
+#            XSLOPE_MAP + MIN_Z + STRMPWR + PDISRSA_1YR + POWNRCA_PRI + 
+#            PALITHERODRCA + PACLAYRCA + PASILTRCA + PASUSCEP5_DE + DAROADX + 
+#            DAPOPRCA2010 + PAOWNRCA_AGR, ssn.object = ssn1, family = "Gaussian", 
+#          CorModels = c("locID", "Exponential.tailup", "Exponential.taildown", 
+#                        "Exponential.Euclid"), addfunccol = "afvArea", EstMeth = "ML")
+# 
+# Residuals:
+#   Min       1Q   Median       3Q      Max 
+# -0.41270 -0.06425  0.01227  0.09220  0.47498 
+# 
+# Coefficients:
+#   Estimate Std. Error t value Pr(>|t|)    
+# (Intercept)    0.39063    0.06499   6.011  < 2e-16 ***
+#   LAT_RAW        0.07282    0.09004   0.809  0.41891    
+# sum_1095_days -0.30144    0.03674  -8.205  < 2e-16 ***
+#   XSLOPE_MAP    -0.01542    0.04372  -0.353  0.72441    
+# MIN_Z         -0.03382    0.05617  -0.602  0.54734    
+# STRMPWR       -0.10247    0.10249  -1.000  0.31772    
+# PDISRSA_1YR    0.08261    0.02903   2.846  0.00455 ** 
+#   POWNRCA_PRI    0.05642    0.01554   3.632  0.00030 ***
+#   PALITHERODRCA  0.13426    0.02147   6.254  < 2e-16 ***
+#   PACLAYRCA      0.08025    0.04825   1.663  0.09664 .  
+# PASILTRCA      0.09275    0.04367   2.124  0.03401 *  
+#   PASUSCEP5_DE   0.02404    0.04556   0.528  0.59794    
+# DAROADX        0.10404    0.12990   0.801  0.42342    
+# DAPOPRCA2010   0.18214    0.04928   3.696  0.00023 ***
+#   PAOWNRCA_AGR   0.07511    0.07969   0.943  0.34619    
+# ---
+#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# 
+# Covariance Parameters:
+#   Covariance.Model Parameter       Estimate
+# Exponential.tailup   parsill      0.0014070
+# Exponential.tailup     range    614.2147098
+# Exponential.taildown   parsill      0.0048045
+# Exponential.taildown     range  12009.8212620
+# Exponential.Euclid   parsill      0.0042566
+# Exponential.Euclid     range 172375.7611170
+# locID   parsill      0.0000187
+# Nugget   parsill      0.0061414
+# 
+# Residual standard error: 0.1289502
+# Generalized R-squared: 0.2582293
+#AIC - scaled = -1216.322
+
 # > varcomp(ssn1.glmssn3.G)
 # VarComp Proportion
 # 1    Covariates (R-sq)   0.258208
@@ -1211,6 +1230,46 @@ AIC(ssn1.glmssn14.G)
 # Residual standard error: 0.2365
 # Generalized R-squared: 0.249
 
+#scaled
+# Call:
+#   glmssn(formula = log10_FSS_26Aug14 ~ sum_1095_days + PDISRSA_1YR + 
+#            POWNRCA_PRI + PALITHERODRCA + PASILTRCA + DAPOPRCA2010, ssn.object = ssn1, 
+#          family = "Gaussian", CorModels = c("locID", "Exponential.tailup", 
+#                                             "Exponential.taildown", "Exponential.Euclid"), addfunccol = "afvArea", 
+#          EstMeth = "ML")
+# 
+# Residuals:
+#   Min       1Q   Median       3Q      Max 
+# -0.43014 -0.06432  0.01135  0.09206  0.44924 
+# 
+# Coefficients:
+#   Estimate Std. Error t value Pr(>|t|)    
+# (Intercept)    0.44297    0.03642  12.161  < 2e-16 ***
+#   sum_1095_days -0.31639    0.03629  -8.719  < 2e-16 ***
+#   PDISRSA_1YR    0.08801    0.02813   3.129  0.00182 ** 
+#   POWNRCA_PRI    0.05862    0.01520   3.857  0.00012 ***
+#   PALITHERODRCA  0.13621    0.02107   6.466  < 2e-16 ***
+#   PASILTRCA      0.11911    0.04023   2.961  0.00316 ** 
+#   DAPOPRCA2010   0.19232    0.04841   3.973    8e-05 ***
+#   ---
+#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# 
+# Covariance Parameters:
+#   Covariance.Model Parameter       Estimate
+# Exponential.tailup   parsill      0.0016560
+# Exponential.tailup     range    599.7843407
+# Exponential.taildown   parsill      0.0045089
+# Exponential.taildown     range  11580.1162327
+# Exponential.Euclid   parsill      0.0042054
+# Exponential.Euclid     range 142016.4350760
+# locID   parsill      0.0000354
+# Nugget   parsill      0.0061395
+# 
+# Residual standard error: 0.1286279
+# Generalized R-squared: 0.2490099
+# > AIC(ssn1.glmssn14.G)
+# [1] -1225.341
+
 #### ssn1.glmssn1.NULL ####
 #Check the aspatial model
 start.time <- Sys.time()
@@ -1511,6 +1570,33 @@ print(end.time)
 print(end.time - start.time)
 save(ssn1.glmssn.ESG, file = 'ssn1_glmssn_ESG.Rdata')
 
+#############################
+#### Ecological Approach ####
+#The above uses a mathematical approach to model selection. The below uses a set of 
+#variables that include potential interactions based on our knowledge of how landscape
+#affect sediment dynamics. 
+em <- read.csv('ecological_models.csv')
+formulas <- as.character(em$Formula)
+formulas <- formulas[formulas != ""]
+formulas <- paste('log10_FSS_26Aug14 ~',formulas)
+ssn.ecomod.list <- list()
+for(i in 1:length(formulas)) {
+  fit <- glmssn(as.formula(formulas[i]),
+                            ssn1,
+                            EstMeth = "ML",
+                            CorModels = c("locID","Spherical.tailup", "Spherical.taildown", "Exponential.Euclid"),
+                            addfunccol = "afvArea",
+                            family = "Gaussian")
+  save(fit, file = paste("model",i,".Rdata",sep=''))
+  ssn.ecomod.list <- c(ssn.ecomod.list, list(fit))
+}
+ecomod.compare <- InfoCritCompare(ssn.ecomod.list)
+write.csv(ecomod.compare, 'ecological_models_comparison.csv')
+save(ssn.ecomod.list, file = 'allModelsList.Rdata')
+
+#started at 12:58
+print(Sys.time)
+
 ###################################################
 ### check the residuals
 ###################################################
@@ -1541,7 +1627,15 @@ plot( na.omit( getSSNdata.frame(ssn1)[, "FSS_26Aug14"]),
 ###################################################
 ### cross validation stats
 ###################################################
+#We can use InfoCritCompare to evaluate model performance instead of calling
+#CrossValidationStatsSSN for each individual model 
 ##ML##
+variable.compare <- InfoCritCompare(list(ssn1.glmssn1.G,ssn1.glmssn3.G,ssn1.glmssn4.G,ssn1.glmssn5.G,
+                                         ssn1.glmssn6.G,ssn1.glmssn7.G,ssn1.glmssn8.G,ssn1.glmssn9.G,
+                                         ssn1.glmssn10.G,ssn1.glmssn11.G,ssn1.glmssn12.G,ssn1.glmssn13.G,
+                                         ssn1.glmssn14.G))
+
+##REML##
 compare.models <- InfoCritCompare(list(ssn1.glmssn.ELG,ssn1.glmssn.ELE,ssn1.glmssn.EME,ssn1.glmssn.ESE,
                                        ssn1.glmssn.SSE,ssn1.glmssn.LLE,ssn1.glmssn.MME,ssn1.glmssn.MEE,
                                        ssn1.glmssn.SSS,ssn1.glmssn.ESG))
@@ -1578,68 +1672,6 @@ compare.models <- InfoCritCompare(list(ssn1.glmssn.ELG,ssn1.glmssn.ELE,ssn1.glms
 # 9  0.8289 0.9093 0.9438
 # 10 0.8289 0.9132 0.9451
 
-CrossValidationStatsSSN(ssn1.glmssn14.G)
-#        bias  std.bias  RMSPE    RAV std.MSPE cov.80 cov.90 cov.95
-#1 -0.0008452 -0.001444 0.1896 0.1913    0.993  0.825 0.9106 0.9438
-
-CrossValidationStatsSSN(ssn1.glmssn5.G)
-#       bias  std.bias  RMSPE    RAV std.MSPE cov.80 cov.90 cov.95
-# 1 -0.01671 -0.004852 0.4765 0.9364    1.001 0.8301 0.9055 0.9451
-
-CrossValidationStatsSSN(ssn1.glmssn6.G)
-#           bias     std.bias   RMSPE       RAV  std.MSPE    cov.80    cov.90    cov.95
-# 1 -0.001430853 -0.002417528 0.18973 0.1924555 0.9877347 0.8339719 0.9118774 0.9386973
-
-CrossValidationStatsSSN(ssn1.glmssn1.NULL)
-#          bias      std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90   cov.95
-# 1 -0.00042555 -0.0007098064 0.2048384 0.2056859 0.9988453 0.8186462 0.9118774 0.945083
-
-
-##REML##
-CrossValidationStatsSSN(ssn1.glmssn.EEE)
-#           bias    std.bias    RMSPE       RAV  std.MSPE    cov.80    cov.90    cov.95
-# 1 -0.001219661 -0.00206018 0.188277 0.1918349 0.9811075 0.8250319 0.9131545 0.9438059
-
-CrossValidationStatsSSN(ssn1.glmssn.ELE)
-#           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90    cov.95
-# 1 -0.001048184 -0.001769277 0.1884244 0.1915877 0.9833104 0.8237548 0.9157088 0.9463602
-
-CrossValidationStatsSSN(ssn1.glmssn.ELG)
-#           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80   cov.90    cov.95
-# 1 -0.000918074 -0.001548822 0.1891589 0.1921395 0.9838551 0.8275862 0.916986 0.9463602
-
-CrossValidationStatsSSN(ssn1.glmssn.EME)
-#           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90   cov.95
-# 1 -0.001248669 -0.002107834 0.1883868 0.1920776 0.9803915 0.8275862 0.9118774 0.945083
-
-CrossValidationStatsSSN(ssn1.glmssn.ESE)
-#           bias    std.bias     RMSPE       RAV  std.MSPE    cov.80   cov.90   cov.95
-# 1 -0.001173164 -0.00198104 0.1882641 0.1916325 0.9820012 0.8250319 0.916986 0.945083
-
-CrossValidationStatsSSN(ssn1.glmssn.LLE)
-#          bias    std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90    cov.95
-# 1 -0.00105426 -0.00178155 0.1885075 0.1916772 0.9828379 0.8237548 0.9157088 0.9463602
-
-CrossValidationStatsSSN(ssn1.glmssn.MEE)
-#         bias     std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90    cov.95
-# 1 -0.0012244 -0.002067542 0.1883018 0.1918595 0.9811502 0.8263091 0.9144317 0.9438059
-
-CrossValidationStatsSSN(ssn1.glmssn.MME)
-#           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90   cov.95
-# 1 -0.001248691 -0.002107895 0.1883866 0.1920746 0.9804132 0.8275862 0.9118774 0.945083
-
-CrossValidationStatsSSN(ssn1.glmssn.SSE)
-#           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80   cov.90   cov.95
-# 1 -0.001182433 -0.001996497 0.1882473 0.1916278 0.9819218 0.8250319 0.916986 0.945083
-
-CrossValidationStatsSSN(ssn1.glmssn.SSS)
-#           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80   cov.90   cov.95
-# 1 -0.001169532 -0.001975525 0.1883464 0.1916555 0.9823161 0.8237548 0.916986 0.945083
-
-CrossValidationStatsSSN(ssn1.glmssn.ESG)
-#           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90    cov.95
-# 1 -0.001055536 -0.001779893 0.1888768 0.1920662 0.9829735 0.8250319 0.9182631 0.9463602
-
 GR2(ssn1.glmssn.EEE) # 0.2447016
 GR2(ssn1.glmssn.ELE) # 0.2450364
 GR2(ssn1.glmssn.ELG) # 0.2645521
@@ -1652,14 +1684,7 @@ GR2(ssn1.glmssn.SSE) # 0.2457414
 GR2(ssn1.glmssn.SSS) # 0.2502698
 GR2(ssn1.glmssn.ESG) # 0.2638648
 
-CrossValidationStatsSSN(ssn1.glmssn.SSE.2)
-#           bias     std.bias     RMSPE      RAV  std.MSPE    cov.80    cov.90    cov.95
-# 1 -0.001963672 -0.003251992 0.1915419 0.196302 0.9750998 0.8326948 0.9067688 0.9412516
- CrossValidationStatsSSN(ssn1.glmssn.SSE.3)
-#           bias     std.bias     RMSPE       RAV  std.MSPE    cov.80    cov.90    cov.95
-# 1 -0.001606171 -0.002531696 0.1902606 0.1929672 0.9842688 0.8275862 0.9157088 0.9438059
-
-#### RMSE for the selected model ####
+#### Untransformed RMSE for the selected model ####
 ssn1.glmssn.SSE.preds <- as.data.frame(getPreds(ssn1.glmssn.SSE))
 ssn1.glmssn.SSE.preds$cv.pred.untran <- 10^(ssn1.glmssn.SSE.preds$cv.pred)
 ssn1.glmssn.SSE.preds <- merge(ssn1.glmssn.SSE.preds, obs.vars[,c('pid','STATION_KEY','FSS_26Aug14')], by = 'pid')
@@ -1669,9 +1694,14 @@ rmse(ssn1.glmssn.SSE.preds$cv.pred.untran, ssn1.glmssn.SSE.preds$FSS_26Aug14)
 #[1] 11.6405
 
 
-variable.compare <- InfoCritCompare(list(ssn1.glmssn1.G,ssn1.glmssn3.G,ssn1.glmssn4.G,ssn1.glmssn5.G,
-                                         ssn1.glmssn6.G,ssn1.glmssn7.G,ssn1.glmssn8.G,ssn1.glmssn9.G,
-                                         ssn1.glmssn10.G,ssn1.glmssn11.G,ssn1.glmssn12.G,ssn1.glmssn13.G,
-                                         ssn1.glmssn14.G))
+ssn1.glmssn3.G.preds <- as.data.frame(getPreds(ssn1.glmssn3.G))
+ssn1.glmssn3.G.preds$cv.pred.untran <- 10^(ssn1.glmssn3.G.preds$cv.pred)
+ssn1.glmssn3.G.preds <- merge(ssn1.glmssn3.G.preds, obs.vars[,c('pid','STATION_KEY','FSS_26Aug14')], by = 'pid')
+
+library(hydroGOF)
+ssn1.glmssn3.G.preds$cv.pred.untran.unscale <- ssn1.glmssn3.G.preds$cv.pred.untran*(max(ssn1.glmssn3.G.preds$FSS_26Aug14)-min(ssn1.glmssn3.G.preds$FSS_26Aug14)) + min(ssn1.glmssn3.G.preds$FSS_26Aug14)
+ssn1.glmssn3.G.preds$FSS_26Aug14.unscale <- ssn1.glmssn3.G.preds$FSS_26Aug14*(max(ssn1.glmssn3.G.preds$FSS_26Aug14)-min(ssn1.glmssn3.G.preds$FSS_26Aug14)) + min(ssn1.glmssn3.G.preds$FSS_26Aug14)
+rmse(ssn1.glmssn3.G.preds$cv.pred.untran.unscale, ssn1.glmssn3.G.preds$FSS_26Aug14.unscale)
+#[1] 3.610497
 
 

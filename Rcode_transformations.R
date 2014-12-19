@@ -27,7 +27,7 @@ obs.vars <- merge(obs[,c("SVN","rid", "ratio", "locID", "netID", "pid", "afvArea
 #obs.vars <- arrange(obs.vars, STATION_KEY, desc(YEAR))
 #obs.vars.sub <- obs.vars[!duplicated(obs.vars$STATION_KEY),]
 
-####TRANSFORMATIONS####
+#### Response TRANSFORMATION####
 names(obs.vars)
 ####FSS_26Aug14####
 # hist(obs.vars.sub$FSS_26Aug14)
@@ -39,6 +39,7 @@ names(obs.vars)
 #log should be just fine
 obs.vars$log10_FSS_26Aug14 <- log10(obs.vars$FSS_26Aug14)
 
+#### Explanatory Transformations ####
 #sum_1095_days####
 # qqnorm(log(obs.vars.sub$sum_1095_days), pch = 16)
 # qqline(log(obs.vars.sub$sum_1095_days), col = 'green', lty = 2)
@@ -53,7 +54,7 @@ obs.vars$log10_FSS_26Aug14 <- log10(obs.vars$FSS_26Aug14)
 # ks.test((obs.vars.sub$sum_1095_days^(0.02) - 1)/0.02, 'pnorm')
 # plot(density(((obs.vars.sub$sum_1095_days)^(0.02) - 1)/0.02))
 #log is about the same as boxcox. so we go with log
-obs.vars$log10_sum_1095_days <- log10(obs.vars$sum_1095_day)
+#obs.vars$log10_sum_1095_days <- log10(obs.vars$sum_1095_day)
 
 #PALITHERODRCA####
 # hist(obs.vars$PALITHERODRCA, 100)
@@ -68,7 +69,7 @@ obs.vars$log10_sum_1095_days <- log10(obs.vars$sum_1095_day)
 # #This is very much either on or off. And looking at the partial dependence plot
 # #there seems to be a break at 90% on the effect with FSS. We will use that as our
 # #cut to convert this variable to binary
-obs.vars$bin_PALITHERODRCA <- ifelse(obs.vars$PALITHERODRCA < 90,0,1)
+#obs.vars$bin_PALITHERODRCA <- ifelse(obs.vars$PALITHERODRCA < 90,0,1)
 
 #PADISRSA_1YR####
 # hist(obs.vars$PADISRSA_1YR)
@@ -99,7 +100,7 @@ obs.vars$bin_PALITHERODRCA <- ifelse(obs.vars$PALITHERODRCA < 90,0,1)
 # ks.test((obs.vars.sub$PADISRSA_1YR^(0.13) - 1)/0.13, 'pnorm')
 # shapiro.test((obs.vars.sub$PADISRSA_1YR^(0.13) - 1)/0.13)
 #stick with sqrt
-obs.vars$sqrt_PADISRSA_1YR <- sqrt(obs.vars$PADISRSA_1YR)
+#obs.vars$sqrt_PADISRSA_1YR <- sqrt(obs.vars$PADISRSA_1YR)
 
 #XSLOPE_MAP####
 # hist(obs.vars$XSLOPE_MAP)
@@ -116,8 +117,8 @@ obs.vars$sqrt_PADISRSA_1YR <- sqrt(obs.vars$PADISRSA_1YR)
 # #but to take the log we need to adjust the negative slopes
 # #given that negative and zero slopes are likely due to mapping errors
 # #we will convert them to very small values just above 0.
-obs.vars[which(obs.vars$XSLOPE_MAP <= 0),'XSLOPE_MAP'] <- 0.0001
-obs.vars$log10_XSLOPE_MAP <- log10(obs.vars$XSLOPE_MAP)
+#obs.vars[which(obs.vars$XSLOPE_MAP <= 0),'XSLOPE_MAP'] <- 0.0001
+#obs.vars$log10_XSLOPE_MAP <- log10(obs.vars$XSLOPE_MAP)
 
 #PASILTRCA####
 # hist(obs.vars$PASILTRCA)
@@ -131,7 +132,7 @@ obs.vars$log10_XSLOPE_MAP <- log10(obs.vars$XSLOPE_MAP)
 # ks.test((obs.vars.sub$PASILTRCA^(0.09) - 1)/0.09, 'pnorm')
 # shapiro.test((obs.vars.sub$PASILTRCA^(0.09) - 1)/0.09)
 #log is about the same as boxcox. so we go with log
-obs.vars$log10_PASILTRCA <- log10(obs.vars$PASILTRCA)
+#obs.vars$log10_PASILTRCA <- log10(obs.vars$PASILTRCA)
 
 #MIN_Z####
 # hist(obs.vars$MIN_Z, 10)
@@ -145,7 +146,7 @@ obs.vars$log10_PASILTRCA <- log10(obs.vars$PASILTRCA)
 # ks.test((obs.vars.sub$MIN_Z^(0.08) - 1)/0.08, 'pnorm')
 # shapiro.test((obs.vars.sub$MIN_Z^(0.08) - 1)/0.08)
 #log is about the same as boxcox. so we go with log
-obs.vars$log10_MIN_Z <- log10(obs.vars$MIN_Z)
+#obs.vars$log10_MIN_Z <- log10(obs.vars$MIN_Z)
 
 #STRMPWR####
 # hist(obs.vars$STRMPWR)
@@ -155,8 +156,8 @@ obs.vars$log10_MIN_Z <- log10(obs.vars$MIN_Z)
 # plot(density(log10(obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)] + (1 - obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)]))))
 # shapiro.test(log10(obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)] + (1 - obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)]))
 # ks.test(log10(obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)] + (1 - obs.vars.sub$STRMPWR[!is.na(obs.vars.sub$STRMPWR)])), "pnorm")
-obs.vars[which(obs.vars$STRMPWR <= 0),'STRMPWR'] <- 0.0001
-obs.vars$log10_STRMPWR <- log10(obs.vars$STRMPWR + (1 - min(obs.vars$STRMPWR)))
+#obs.vars[which(obs.vars$STRMPWR <= 0),'STRMPWR'] <- 0.0001
+#obs.vars$log10_STRMPWR <- log10(obs.vars$STRMPWR + (1 - min(obs.vars$STRMPWR)))
 
 #"LAT_RAW"####
 # hist(obs.vars.sub$LAT_RAW)
@@ -174,40 +175,45 @@ obs.vars$log10_STRMPWR <- log10(obs.vars$STRMPWR + (1 - min(obs.vars$STRMPWR)))
 # plot(density(obs.vars.sub$upDist))
 # shapiro.test(sqrt(obs.vars.sub$upDist))
 # hist(sqrt(obs.vars.sub$upDist))
-obs.vars$sqrt_upDist <- sqrt(obs.vars$upDist)
+#obs.vars$sqrt_upDist <- sqrt(obs.vars$upDist)
 
 #APOPRCA2010####
 # hist(obs.vars$APOPRCA2010)
 # plot(density(obs.vars.sub$APOPRCA2010))
 # shapiro.test(log10(obs.vars.sub$APOPRCA2010 + 1))
 # hist(log10(obs.vars.sub$APOPRCA2010 + 1))
-obs.vars$log10_APOPRCA2010 <- log10(obs.vars$APOPRCA2010 + 1)
+#obs.vars$log10_APOPRCA2010 <- log10(obs.vars$APOPRCA2010 + 1)
 
 #PASUSCEP5_DE####
 # hist(obs.vars$PASUSCEP5_DE)
 # plot(density(obs.vars.sub$PASUSCEP5_DE))
 # shapiro.test(log10(obs.vars.sub$PASUSCEP5_DE + 1))
 # hist(log10(obs.vars.sub$PASUSCEP5_DE + 1))
-obs.vars$log10_PASUSCEP5_DE <- log10(obs.vars$PASUSCEP5_DE + 1)
+#obs.vars$log10_PASUSCEP5_DE <- log10(obs.vars$PASUSCEP5_DE + 1)
 
 #POWNRCA_FED####
 #hist(obs.vars$POWNRCA_FED)
 #hist(((log10(obs.vars$POWNRCA_FED + 1))))
 #Including transformation in case we want to use it not sure how much gain we get
-obs.vars$log10_POWNRCA_FED <- log10(obs.vars$POWNRCA_FED + 1)
+#obs.vars$log10_POWNRCA_FED <- log10(obs.vars$POWNRCA_FED + 1)
 
 #POWNRCA_PRI####
 # hist(obs.vars$POWNRCA_PRI)
 # hist(log10(obs.vars$POWNRCA_PRI + 1))
 #Including transformation in case we want to use it not sure how much gain we get
-obs.vars$log10_POWNRCA_PRI <- log10(obs.vars$POWNRCA_PRI + 1)
+#obs.vars$log10_POWNRCA_PRI <- log10(obs.vars$POWNRCA_PRI + 1)
 
 #PAOWNRCA_AGR####
 # hist(obs.vars$PAOWNRCA_AGR)
 # hist(log10(obs.vars$PAOWNRCA_AGR + 1))
 # summary(obs.vars$PAOWNRCA_AGR)
-obs.vars$bin_PAOWNRCA_AGR <- ifelse(obs.vars$PAOWNRCA_AGR > 0,1,0)
+#obs.vars$bin_PAOWNRCA_AGR <- ifelse(obs.vars$PAOWNRCA_AGR > 0,1,0)
 
+#### Variable Scaling #### 
+obs.vars[,c(names(obs.fss2),'log10_FSS_26Aug14')] <- as.data.frame(lapply(obs.vars[,c(names(obs.fss2),'log10_FSS_26Aug14')],
+                                                   function(x) {(x-min(x))/(max(x)-min(x))}))
+
+#### Put the data back into the ssn ####
 #Now that we have the transformed variables we put them back in the 
 #SSN object - THE SORTING HERE IS SCREWING THINGS UP
 obs.vars <- obs.vars[match(obs$pid, obs.vars$pid),]

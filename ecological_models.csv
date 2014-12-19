@@ -1,0 +1,61 @@
+Category,Formula,Simple Terms
+Natural Factors Only,,
+Precip + Soil,sum_1095_days + PALITHERODRCA,Rain + Erodible
+,sum_1095_days + PALITHERODRCA + sum_1095_days*PALITHERODRCA,Rain + Erodible + Rain*Erodible
+,sum_1095_days + PALITHERODRCA + PASILTRCA + PACLAYRCA,Rain + Erodible + Silt + Clay
+,sum_1095_days + PALITHERODRCA + PASILTRCA + PACLAYRCA + sum_1095_days*PALITHERODRCA,Rain + Erodible + Silt + Clay + Rain*Erodible
+,sum_1095_days + PALITHERODRCA + PASILTRCA + PACLAYRCA + sum_1095_days*PASILTRCA,Rain + Erodible + Silt + Clay + Rain*Silt
+,sum_1095_days + PALITHERODRCA + PASILTRCA + PACLAYRCA + sum_1095_days*PACLAYRCA,Rain + Erodible + Silt + Clay + Rain*Clay
+Precip + Soil + Stream Chars,sum_1095_days + PALITHERODRCA + STRMPWR,Rain + Erodible + StreamPower
+,sum_1095_days + PALITHERODRCA + STRMPWR + PASILTRCA,Rain + Erodible + StreamPower + Silt
+,sum_1095_days + PALITHERODRCA + STRMPWR + MIN_Z,Rain + Erodible + StreamPower + Elevation
+,sum_1095_days + PALITHERODRCA + STRMPWR + PASILTRCA + MIN_Z,Rain + Erodible + StreamPower + Silt + Elevation
+,sum_1095_days + PALITHERODRCA + XSLOPE_MAP + PASILTRCA + MIN_Z,Rain + Erodible + Slope + Silt + Elevation
+Landslides,sum_1095_days + PASUSCEP5_DE + STRMPWR + PASILTRCA,Rain + LandslideSuscep + StreamPower + Silt
+,sum_1095_days + PASUSCEP5_DE + STRMPWR + PASILTRCA + PASUSCEP5_DE*XSLOPE_MAP,Rain + LandslideSuscep + StreamPower + Silt + LandslideSuscep*StreamPower
+,sum_1095_days + PASUSCEP5_DE + STRMPWR + PASILTRCA + PASUSCEP5_DE*sum_1095_days,Rain + LandslideSuscep + StreamPower + Silt + LandslideSuscep*Rain
+,sum_1095_days + PASUSCEP5_DE + STRMPWR + PASILTRCA + PASUSCEP5_DE*sum_1095_days + PASUSCEP5_DE*XSLOPE_MAP,Rain + LandslideSuscep + StreamPower + Silt + LandslideSuscep*Rain + LandslideSuscep*StreamPower
+Human Factors Only,,
+All,POWNRCA_PRI + PDISRSA_1YR + PAOWNRCA_AGR + DAROADX + DAPOPRCA2010,PrivForest + Disturbance + Ag + RoadX + PopulationDensity
+Riparian Only,PDISRSA_1YR + DAROADX,Disturbance + RoadX
+Landuse Only,POWNRCA_PRI + PAOWNRCA_AGR + DAPOPRCA2010,PrivForest + Ag + PopulationDensity
+Landuse + Roads,POWNRCA_PRI + PAOWNRCA_AGR + DAPOPRCA2010 + DAROADX,PrivForest + Ag + PopulationDensity + RoadX
+Natural and Human Factors,,
+Precip + Dis,sum_1095_days + PDISRSA_1YR,Rain + Disturbance
+,sum_1095_days + PDISRSA_1YR + sum_1095_days*PDISRSA_1YR,Rain + Disturbance + Rain*Disturbance
+,sum_1095_days + PDISRSA_1YR + PASILTRCA,Rain + Disturbance + Silt
+,sum_1095_days + PDISRSA_1YR + PASILTRCA + PDISRSA_1YR*PASILTRCA,Rain + Disturbance + Silt + Disturbance*Silt
+,sum_1095_days + PDISRSA_1YR + PASILTRCA + PDISRSA_1YR*sum_1095_days,Rain + Disturbance + Silt + Disturbance*Rain
+,sum_1095_days + PDISRSA_1YR + PASILTRCA + PDISRSA_1YR*sum_1095_days + PDISRSA_1YR*PASILTRCA,Rain + Disturbance + Silt + Disturbance*Rain + Disturbance*Silt
+Priv + Suscep,sum_1095_days + PASUSCEP5_DE,Rain + LandslideSuscep
+,sum_1095_days + PASUSCEP5_DE + POWNRCA_PRI,Rain + LandslideSuscep + PrivForest
+,sum_1095_days + PASUSCEP5_DE + POWNRCA_PRI + POWNRCA_PRI*PASUSCEP5_DE,Rain + LandslideSuscep + PrivForest + PrivForest*LandslideSuscep
+,sum_1095_days + PASUSCEP5_DE + POWNRCA_PRI + POWNRCA_PRI*PASUSCEP5_DE + PALITHERODRCA,Rain + LandslideSuscep + PrivForest + PrivForest*LandslideSuscep + Erodible
+,sum_1095_days + PASUSCEP5_DE + POWNRCA_PRI + PALITHERODRCA,Rain + LandslideSuscep + PrivForest + Erodible
+Ag,sum_1095_days + PALITHERODRCA + PASILTRCA + PAOWNRCA_AGR + PDISRSA_1YR,Rain + Erodible + Silt + Ag + Disturbance
+,sum_1095_days + PALITHERODRCA + PASILTRCA + PAOWNRCA_AGR + PDISRSA_1YR + PAOWNRCA_AGR*PASILTRCA,Rain + Erodible + Silt + Ag + Disturbance + Ag*Silt
+,sum_1095_days + PALITHERODRCA + PASILTRCA + PAOWNRCA_AGR + PDISRSA_1YR + PAOWNRCA_AGR*sum_1095_days,Rain + Erodible + Silt + Ag + Disturbance + Ag*Rain
+,sum_1095_days + PALITHERODRCA + PASILTRCA + PAOWNRCA_AGR + PDISRSA_1YR + PAOWNRCA_AGR*PASILTRCA + PAOWNRCA_AGR*sum_1095_days,Rain + Erodible + Silt + Ag + Disturbance + Ag*Silt +Ag*Rain
+Roads,sum_1095_days + PALITHERODRCA + PASILTRCA + DAROADX,Rain + Erodible + Silt + RoadX
+,sum_1095_days + PALITHERODRCA + PASILTRCA + DAROADX + DAROADX*PALITHERODRCA,Rain + Erodible + Silt + RoadX + RoadX*Erodible
+,sum_1095_days + PALITHERODRCA + PASILTRCA + DAROADX + DAROADX*PASILTRCA,Rain + Erodible + Silt + RoadX + RoadX*Silt
+,sum_1095_days + PALITHERODRCA + PASILTRCA + DAROADX + DAROADX*PASILTRCA + DAROADX*PALITHERODRCA,Rain + Erodible + Silt + RoadX + RoadX*Silt + RoadX*Erodible
+Forestry,sum_1095_days + PALTIHERODRCA + PASILTRCA + STRMPWR + POWNRCA_PRI + PDISRSA_1YR,Rain + Erodible + Silt + StreamPower + PrivForest + Disturbance
+,sum_1095_days + PALITHERODRCA + PASILTRCA + POWNRCA_PRI + PDISRSA_1YR,Rain + Erodible + Silt + PrivForest + Disturbance
+,sum_1095_days + PALTIHERODRCA + PASILTRCA + STRMPWR + POWNRCA_PRI + PDISRSA_1YR + DAROADX,Rain + Erodible + Silt + StreamPower + PrivForest + Disturbance + RoadX
+,sum_1095_days + PALTIHERODRCA + PASILTRCA + STRMPWR + POWNRCA_PRI + PDISRSA_1YR + POWNRCA_PRI*sum_1095_days,Rain + Erodible + Silt + StreamPower + PrivForest + Disturbance + PrivForest*Rain
+,sum_1095_days + PALTIHERODRCA + PASILTRCA + STRMPWR + POWNRCA_PRI + PDISRSA_1YR + POWNRCA_PRI*PALITHERODRCA,Rain + Erodible + Silt + StreamPower + PrivForest + Disturbance + PrivForest*Erodible
+,sum_1095_days + PALTIHERODRCA + PASILTRCA + STRMPWR + POWNRCA_PRI + PDISRSA_1YR + DAROADX + POWNRCA_PRI*sum_1095_days,Rain + Erodible + Silt + StreamPower + PrivForest + Disturbance + RoadX + PrivForest*Rain
+,sum_1095_days + PALTIHERODRCA + PASILTRCA + STRMPWR + POWNRCA_PRI + PDISRSA_1YR + DAROADX + POWNRCA_PRI*PALITHERODRCA,Rain + Erodible + Silt + StreamPower + PrivForest + Disturbance + RoadX + PrivForest*Erodible
+,sum_1095_days + PALTIHERODRCA + PASILTRCA + STRMPWR + POWNRCA_PRI + PDISRSA_1YR + POWNRCA_PRI*sum_1095_days + POWNRCA_PRI*PALITHERODRCA,Rain + Erodible + Silt + StreamPower + PrivForest + Disturbance + PrivForest*Rain + PrivForest*Erodible
+,sum_1095_days + PALTIHERODRCA + PASILTRCA + STRMPWR + POWNRCA_PRI + PDISRSA_1YR + DAROADX + POWNRCA_PRI*sum_1095_days + POWNRCA_PRI*PALITHERODRCA,Rain + Erodible + Silt + StreamPower + PrivForest + Disturbance + RoadX + PrivForest*Rain + PrivForest*Erodible
+Streamside dis,sum_1095_days + PALITHERODRCA + PASILTRCA + PDISRSA_1YR,Rain + Erodible + Silt + Disturbance
+,sum_1095_days + PALITHERODRCA + PASILTRCA + PDISRSA_1YR + PDISRSA_1YR*sum_1095_days,Rain + Erodible + Silt + Disturbance + Disturbance*Rain
+,sum_1095_days + PALITHERODRCA + PASILTRCA + PDISRSA_1YR + PDISRSA_1YR*PALITHERODRCA,Rain + Erodible + Silt + Disturbance + Disturbance*Erodible
+,sum_1095_days + PALITHERODRCA + PASILTRCA + PDISRSA_1YR + PDISRSA_1YR*PASILTRCA,Rain + Erodible + Silt + Disturbance + Disturbance*Silt
+,sum_1095_days + PALITHERODRCA + PASILTRCA + PDISRSA_1YR + XSLOPE_MAP,Rain + Erodible + Silt + Disturbance + Slope
+,sum_1095_days + PALITHERODRCA + PASILTRCA + PDISRSA_1YR + PDISRSA_1YR*sum_1095_days + PDISRSA_1YR*PALITHERODRCA,Rain + Erodible + Silt + Disturbance + Disturbance*Rain + Disturbance*Erodible
+,sum_1095_days + PALITHERODRCA + PASILTRCA + PDISRSA_1YR + PDISRSA_1YR*sum_1095_days + PDISRSA_1YR*PALITHERODRCA + PDISRSA_1YR*PASILTRCA,Rain + Erodible + Silt + Disturbance + Disturbance*Rain + Disturbance*Erodible + Disturbance*Silt
+,sum_1095_days + PALITHERODRCA + PASILTRCA + PDISRSA_1YR  + PDISRSA_1YR*PALITHERODRCA + PDISRSA_1YR*PASILTRCA,Rain + Erodible + Silt + Disturbance  + Disturbance*Erodible + Disturbance*Silt
+,sum_1095_days + PALITHERODRCA + PASILTRCA + PDISRSA_1YR  + PDISRSA_1YR*PALITHERODRCA + PDISRSA_1YR*PASILTRCA + XSLOPE_MAP,Rain + Erodible + Silt + Disturbance  + Disturbance*Erodible + Disturbance*Silt + Slope
+,sum_1095_days + PALITHERODRCA + PASILTRCA + PDISRSA_1YR + PDISRSA_1YR*PASILTRCA + XSLOPE_MAP,Rain + Erodible + Silt + Disturbance + Disturbance*Silt + Slope
