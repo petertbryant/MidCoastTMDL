@@ -1580,7 +1580,7 @@ formulas <- as.character(em$Formula)
 formulas <- formulas[formulas != ""]
 formulas <- paste('log10_FSS_26Aug14 ~',formulas)
 ssn.ecomod.list <- list()
-for(i in 1:length(formulas)) {
+for(i in 39:length(formulas)) {
   fit <- glmssn(as.formula(formulas[i]),
                             ssn1,
                             EstMeth = "ML",
