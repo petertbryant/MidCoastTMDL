@@ -215,7 +215,7 @@ obs.vars[,c(names(obs.fss2),'log10_FSS_26Aug14')] <- as.data.frame(lapply(obs.va
 
 #### Put the data back into the ssn ####
 #Now that we have the transformed variables we put them back in the 
-#SSN object - THE SORTING HERE IS SCREWING THINGS UP
+#SSN object
 obs.vars <- obs.vars[match(obs$pid, obs.vars$pid),]
 row.names(obs.vars) <- obs.vars$pid
 ssn1 <- putSSNdata.frame(obs.vars, ssn1, Name = 'Obs')

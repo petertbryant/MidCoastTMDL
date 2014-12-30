@@ -1495,30 +1495,39 @@ save(ssn.SSE.NULL, file = 'ssn_SSE_NULL.Rdata')
 ###################################################
 ### check the residuals   
 ###################################################
-ssn1.resid1 <- residuals(ssn1.glmssn.SSE)
+ssn1.resid1 <- residuals(ssn1.glmssn14.G)
 names( getSSNdata.frame(ssn1.resid1) )
 plot(ssn1.resid1)
+
+resids <- getSSNdata.frame(ssn1.resid1, Name = "Obs")
+
 
 ###################################################
 ### plot the residuals
 ###################################################
-par(mfrow = c(1, 2))
-hist(ssn1.resid1)
-hist(ssn1, "log10_FSS_26Aug14")
-
+png('residuals.png', width = 6, height = 6, units = 'in', res = 200)
+par(mfrow = c(2, 2))
+hist(ssn1.resid1, xlab = "Residuals")
+#hist(ssn1, "log10_FSS_26Aug14", xlab = 'Observed log10 FSS')
+plot(resids$"_fit_",resids$"_resid_", xlab = 'Predicted log10 FSS', ylab = 'Raw residuals')
+plot(resids$"_fit_",resids$"_resid.stand_", xlab = 'Predicted log10 FSS', ylab = 'Standardized residuals')
+qqnorm(resids$"_resid.stand_", ylab = 'Standardized residuals')
+abline(0,1)
+dev.off()
 ###################################################
 ### cross validation
 ###################################################
-cv.out <- CrossValidationSSN(ssn1.glmssn.SSE)
+cv.out <- CrossValidationSSN(ssn1.glmssn.EEE)
+png('LOOCV.png', width = 6, height = 4, units = 'in', res = 100)
 par(mfrow = c(1, 2))
-plot(ssn1.glmssn.SSE$sampinfo$z,
+plot(ssn1.glmssn.EEE$sampinfo$z,
      cv.out[, "cv.pred"], pch = 19,
-     xlab = "Observed Data", ylab = "LOOCV Prediction")
+     xlab = "Observed Data", ylab = "LOOCV Prediction", ylim = c(0,1))
 abline(0, 1)
 plot( na.omit( getSSNdata.frame(ssn1)[, "FSS_26Aug14"]),
       cv.out[, "cv.se"], pch = 19,
       xlab = "Observed Data", ylab = "LOOCV Prediction SE")
-
+dev.off()
 ###################################################
 ### cross validation stats
 ###################################################
