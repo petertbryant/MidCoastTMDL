@@ -63,6 +63,7 @@ x.p <- c(ul$x[i.for],ll$x[i.back])
 y.p <- c(ul$y[i.for],ll$y[i.back])
 
 #Make the plot
+png('predInterval.png',width = 6, height = 6, res = 100, units = "in")
 plot.new()
 polygon(x.p,y.p,col = "light grey", border = FALSE)
 par(new = TRUE)
@@ -70,6 +71,7 @@ plot(preds$log10_FSS_26Aug14, preds$fit, pch = 19, ylim = c(0,1), xlab = 'Scaled
 lines(loess.smooth(mean.df$log10_FSS_26Aug14, mean.df$mean_fit))
 lines(loess.smooth(mean.df$log10_FSS_26Aug14, mean.df$mean_uci))
 lines(loess.smooth(mean.df$log10_FSS_26Aug14, mean.df$mean_lci))
+dev.off()
 
 #### Run a scenario with zero disturbance ####
 ssn1.glmssn.EEE.0 <- ssn1.glmssn.EEE

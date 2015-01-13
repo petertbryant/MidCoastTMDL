@@ -124,7 +124,7 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
 save(fss2.s1.vi, file=paste0("fss2_s1_vi_",timestamp,".RData"))
 save(fss2.s1.visd, file=paste0("fss2_s1_visd_",timestamp,".RData"))
 timestamp
-load("fss2_s1_vi_20141210_1515.RData")
+load("C:/users/pbryant/desktop/midcoasttmdl-modelruns/rf_runs/fss2_s1_vi_20141210_1515.RData")
 load("fss2_s1_visd_20141210_1515.RData")
 
 #### s1 boxplot ####
@@ -153,8 +153,8 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
 save(fss2.s1.vi.median, file=paste0("fss2_s1_vi_median_",timestamp,".RData"))
 save(fss2.s1, file=paste0("fss2_s1_",timestamp,".RData"))
 timestamp
-load("fss2_s1_vi_median_20141210_1515.RData")
-load("fss2_s1_20141210_1515.RData")
+load("C:/users/pbryant/desktop/midcoasttmdl-modelruns/rf_runs/fss2_s1_vi_median_20141210_1515.RData")
+load("C:/users/pbryant/desktop/midcoasttmdl-modelruns/rf_runs/fss2_s1_20141210_1515.RData")
 
 #### Variable selection ####
 # Values drop off and then level out. Arbitrarily going with 50% of the variables.
@@ -295,17 +295,31 @@ fss2.s2.vi.l <- melt(fss2.s2.vi, id=c("var_name","var_index"))
 # fm <- melt(fss2.s2.rm.rf.vi)
 # fm <- merge(fm, index.merge, by = 'variable', all.x = TRUE)
 
-#png('varImpALL_s2.png', width = 960, height = 960)
+fss2.vars <- fss2.s1.vi[fss2.s1.vi$var_name %in% setdiff(names(fss2.s2),"FSS_26Aug14"),]
+fss2.s2.vi.l <- melt(fss2.vars, id=c("var_name","var_index"))
+png('varImp_s2.png', width = 960, height = 960)
 bymedian <- with(fss2.s2.vi.l, reorder(var_name, value, median))
-par(yaxt="n",mar=c(5, 8, 4, 5))
+par(yaxt="n",mar=c(5, 8, 4, 5),cex=2)
 boxplot(value ~ bymedian, data = fss2.s2.vi.l,
         xlab = "% Increase MSE", 
         varwidth = TRUE,
         col = "lightgray", horizontal = TRUE)
 lablist.y<-levels(bymedian)
 axis(2, labels = FALSE)
-text(y = 1:15, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
-#dev.off()
+text(y = 1:14, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
+dev.off()
+
+png('varImpALL_s2.png', width = 960, height = 960)
+bymedian <- with(fss2.s2.vi.l, reorder(var_name, value, median))
+par(yaxt="n",mar=c(5, 8, 4, 5),cex=2)
+boxplot(value ~ bymedian, data = fss2.s2.vi.l,
+        xlab = "% Increase MSE", 
+        varwidth = TRUE,
+        col = "lightgray", horizontal = TRUE)
+lablist.y<-levels(bymedian)
+axis(2, labels = FALSE)
+text(y = 1:14, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
+dev.off()
 
 #R2
 1-sum((fss2.s2$FSS_26Aug14-predict(fss2.s2.rf))^2)/sum((fss2.s2$FSS_26Aug14-mean(fss2.s2$FSS_26Aug14))^2)

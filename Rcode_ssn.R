@@ -19,8 +19,8 @@ createDistMat(ssn1, predpts = 'preds', o.write = TRUE, amongpreds = TRUE)
 ###################################################
 ### plot the Torgegram
 ###################################################
-# ssn1.Torg <- Torgegram(ssn1, "log10_FSS_26Aug14", nlag = 15, maxlag = 50000, nlagcutoff=5)
-# plot(ssn1.Torg)
+ssn1.Torg <- Torgegram(ssn1, "log10_FSS_26Aug14", nlag = 15, maxlag = 50000, nlagcutoff=5)
+plot(ssn1.Torg)
 
 ###################################################
 ### Variable Selection Via Backward Deletion   ###
@@ -1466,19 +1466,21 @@ formulas <- as.character(em$Formula)
 formulas <- formulas[formulas != ""]
 formulas <- paste('log10_FSS_26Aug14 ~',formulas)
 ssn.ecomod.list <- list()
-for(i in 39:length(formulas)) {
+for(i in 1:length(formulas)) {
+  print(paste("Started model", i, "at", Sys.time()))
   fit <- glmssn(as.formula(formulas[i]),
                             ssn1,
                             EstMeth = "ML",
-                            CorModels = c("locID","Spherical.tailup", "Spherical.taildown", "Exponential.Euclid"),
+                            CorModels = c("locID","Exponential.tailup", "Exponential.taildown", "Exponential.Euclid"),
                             addfunccol = "afvArea",
                             family = "Gaussian")
   save(fit, file = paste("model",i,".Rdata",sep=''))
   ssn.ecomod.list <- c(ssn.ecomod.list, list(fit))
+  print(paste("Finished model", i, "at", Sys.time()))
 }
 ecomod.compare <- InfoCritCompare(ssn.ecomod.list)
-write.csv(ecomod.compare, 'ecological_models_comparison.csv')
-save(ssn.ecomod.list, file = 'allModelsList.Rdata')
+write.csv(ecomod.compare, 'ecological_models_comparison_01072015.csv')
+save(ssn.ecomod.list, file = 'allModelsList_01072015.Rdata')
 
 #started at 12:58
 print(Sys.time)
@@ -1518,15 +1520,29 @@ dev.off()
 ### cross validation
 ###################################################
 cv.out <- CrossValidationSSN(ssn1.glmssn.EEE)
-png('LOOCV.png', width = 6, height = 4, units = 'in', res = 100)
-par(mfrow = c(1, 2))
+png('LOOCV_AR.png', width = 4, height = 4, units = 'in', res = 100)
+#par(mfrow = c(1, 2))
 plot(ssn1.glmssn.EEE$sampinfo$z,
      cv.out[, "cv.pred"], pch = 19,
      xlab = "Observed Data", ylab = "LOOCV Prediction", ylim = c(0,1))
 abline(0, 1)
-plot( na.omit( getSSNdata.frame(ssn1)[, "FSS_26Aug14"]),
-      cv.out[, "cv.se"], pch = 19,
-      xlab = "Observed Data", ylab = "LOOCV Prediction SE")
+# plot( na.omit( getSSNdata.frame(ssn1)[, "FSS_26Aug14"]),
+#       cv.out[, "cv.se"], pch = 19,
+#       xlab = "Observed Data", ylab = "LOOCV Prediction SE")
+dev.off()
+
+#Unscaled and Untransformed
+df.un <- cbind(cv.out, getSSNdata.frame(ssn1.glmssn.EEE)[,c('log10_FSS_26Aug14','FSS_26Aug14')])
+#df.un$FSS_26Aug14 <- df.un$FSS_26Aug14*(min.max[min.max$variable == "FSS_26Aug14",'max_val']-min.max[min.max$variable == "FSS_26Aug14",'min_val']) + min.max[min.max$variable == "FSS_26Aug14",'min_val']
+df.un$log10_FSS_26Aug14 <- ssn1.glmssn.EEE$sampinfo$z*(min.max[min.max$variable == "log10_FSS_26Aug14",'max_val']-min.max[min.max$variable == "log10_FSS_26Aug14",'min_val']) + min.max[min.max$variable == "log10_FSS_26Aug14",'min_val']
+df.un$cv.pred <- df.un$cv.pred*(min.max[min.max$variable == "log10_FSS_26Aug14",'max_val']-min.max[min.max$variable == "log10_FSS_26Aug14",'min_val']) + min.max[min.max$variable == "log10_FSS_26Aug14",'min_val']
+df.un$cv.se <- df.un$cv.se*(min.max[min.max$variable == "log10_FSS_26Aug14",'max_val']-min.max[min.max$variable == "log10_FSS_26Aug14",'min_val']) + min.max[min.max$variable == "log10_FSS_26Aug14",'min_val']
+#df.un <- as.data.frame(lapply(df.un, function(x) {10^x}))
+df.un$cv.pred <- 10^df.un$cv.pred
+
+png('LOOCV_Un.png', width = 4, height = 4, units = 'in', res = 100)
+plot(10^df.un$log10_FSS_26Aug14, 10^df.un$cv.pred, pch = 19, xlab = "Observed Data", ylab = "LOOCV Prediction", ylim = c(0,70)) #ylim = c(0,1.8), xlim = c(0,1.8)
+abline(0,1)
 dev.off()
 ###################################################
 ### cross validation stats

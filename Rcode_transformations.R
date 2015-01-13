@@ -3,6 +3,8 @@
 library(SSN)
 library(stringr)
 library(MASS)
+library(plyr)
+library(reshape2)
 ssn1 <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN05/lsn.ssn", predpts = "preds", o.write = TRUE)
 #ssn1 <- importSSN('C:/users/pbryant/desktop/midcoasttmdl-gis/revisedssn/lsn05/lsn.ssn', o.write = TRUE)
 obs<- getSSNdata.frame(ssn1, Name = "Obs")
@@ -210,6 +212,8 @@ obs.vars$log10_FSS_26Aug14 <- log10(obs.vars$FSS_26Aug14)
 #obs.vars$bin_PAOWNRCA_AGR <- ifelse(obs.vars$PAOWNRCA_AGR > 0,1,0)
 
 #### Variable Scaling #### 
+melted <- melt(obs.vars[,c(names(obs.vars)[24:39])])
+min.max <- ddply(melted, .(variable), summarize, min_val = min(value), max_val = max(value))
 obs.vars[,c(names(obs.fss2),'log10_FSS_26Aug14')] <- as.data.frame(lapply(obs.vars[,c(names(obs.fss2),'log10_FSS_26Aug14')],
                                                    function(x) {(x-min(x))/(max(x)-min(x))}))
 

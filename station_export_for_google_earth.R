@@ -1,4 +1,4 @@
-export <- obs[,c('SVN','STATION_KEY','SITE_NAME','DATE',"FSS_26Aug14",
+export <- obs.vars[,c('SVN','STATION_KEY','SITE_NAME','DATE',"FSS_26Aug14",
                  "sum_1095_days", 
                  "PDISRSA_1YR",
                  "PALITHERODRCA", "PASILTRCA", "PACLAYRCA",
