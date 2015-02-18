@@ -1497,7 +1497,7 @@ save(ssn.SSE.NULL, file = 'ssn_SSE_NULL.Rdata')
 ###################################################
 ### check the residuals   
 ###################################################
-ssn1.resid1 <- residuals(ssn1.glmssn14.G)
+ssn1.resid1 <- residuals(ssn1.glmssn.EEE)
 names( getSSNdata.frame(ssn1.resid1) )
 plot(ssn1.resid1)
 
@@ -1583,6 +1583,8 @@ ssn.ecomod.top.preds$cv.pred.untran.unscale <- ssn.ecomod.top.preds$cv.pred.untr
 ssn.ecomod.top.preds$FSS_26Aug14.unscale <- ssn.ecomod.top.preds$FSS_26Aug14*(max(ssn.ecomod.top.preds$FSS_26Aug14)-min(ssn.ecomod.top.preds$FSS_26Aug14)) + min(ssn.ecomod.top.preds$FSS_26Aug14)
 rmse(ssn.ecomod.top.preds$cv.pred.untran.unscale, ssn.ecomod.top.preds$FSS_26Aug14.unscale)
 #[1] 3.610497
+df.un$log10_FSS_26Aug14 <- as.numeric(df.un$log10_FSS_26Aug14)
+rmse(10^df.un$cv.pred,10^df.un$log10_FSS_26Aug14)
 
 ##################################
 #### Check model significance ####
@@ -1679,3 +1681,35 @@ print(end.time)
 print(end.time - start.time)
 
 AIC(ssn1.top.ecomod.EEE)
+
+#Considering variable inflation and multicolinearity between model parameters
+pairs(getSSNdata.frame(ssn1.glmssn.EEE)[,c("PDISRSA_1YR", "sum_1095_days", "PALITHERODRCA", "POWNRCA_PRI", "DAPOPRCA2010", "PASILTRCA")],
+      lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
+
+in_frame <- getSSNdata.frame(ssn1.glmssn.EEE)[,c("PDISRSA_1YR", "sum_1095_days", "PALITHERODRCA", "POWNRCA_PRI", "DAPOPRCA2010", "PASILTRCA")]
+vif_init<-NULL
+for(val in names(in_frame)){
+  form_in<-formula(paste(val,' ~ .'))
+  vif_init<-rbind(vif_init,c(val,VIF(lm(form_in,data=in_frame))))
+}
+
+vif_func<-function(in_frame,ob.ssn){
+  
+  vif_init<-NULL
+  for(val in names(in_frame)){
+    form_in<-formula(paste(val,' ~ ',paste(setdiff(names(in_frame),val),collapse = ' + ')))
+    tmp.ssn <- glmssn(form_in, 
+                      ob.ssn,
+                      EstMeth = "ML",
+                      CorModels = c("locID","Exponential.tailup", "Exponential.taildown", "Exponential.Euclid"),
+                      addfunccol = "afvArea",
+                      family = "Gaussian")
+    ssn.summary <- summary(tmp.ssn)
+    VIF.val <- 1/(1 - ssn.summary$Rsquared)
+    new.row <- c(val, VIF.val)
+    vif_init <- rbind(vif_init,new.row)
+  }
+  return(vif_init)
+}
+
+vif.glmssn.EEE <- vif_func(getSSNdata.frame(ssn1.glmssn.EEE)[,c("PDISRSA_1YR", "sum_1095_days", "PALITHERODRCA", "POWNRCA_PRI", "DAPOPRCA2010", "PASILTRCA")], ssn1)

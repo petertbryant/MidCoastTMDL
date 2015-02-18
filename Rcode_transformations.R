@@ -25,6 +25,12 @@ obs.vars <- merge(obs[,c("SVN","rid", "ratio", "locID", "netID", "pid", "afvArea
                   all.x = TRUE)
 #obs.vars <- obs.vars[!is.na(obs.vars$STRMPWR),]
 
+#RID crosswalk by SVN
+rid.cross <- merge(obs[,c('STATION_KEY','SVN','rid','pid')],obs.complete[,c('SVN','rid','pid')],by='SVN',suffixes=c('.NEW','.OLD'))
+
+#Output for GIS display
+#write.csv(obs.vars[,c("SVN","rid","sum_1095_days","FSS_26Aug14", "PDISRSA_1YR", "POWNRCA_PRI", "PALITHERODRCA", "PASILTRCA", "DAPOPRCA2010" )], 'final_model_vars.csv')
+
 #don't run when going through. only for data exploration
 #obs.vars <- arrange(obs.vars, STATION_KEY, desc(YEAR))
 #obs.vars.sub <- obs.vars[!duplicated(obs.vars$STATION_KEY),]
