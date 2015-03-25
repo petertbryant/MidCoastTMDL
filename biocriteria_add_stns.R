@@ -206,7 +206,7 @@ bugs.all$Q90TH <- round(bugs.all$fss_pred * 10^(quantile(ref$fss_pred_resids_tra
 
 #### Determine sediment stressor status ####
 #set up residual conditions 
-bugs.all$fss_resid_cond <- ifelse(bugs.all$FSS >= bugs.all$Q90TH, "Poor", ifelse(bugs.all$FSS <= bugs.all$Q75TH, "Good", "Fair"))
+bugs.all$fss_resid_cond <- ifelse(as.numeric(bugs.all$FSS) >= as.numeric(bugs.all$Q90TH), "Poor", ifelse(bugs.all$FSS <= bugs.all$Q75TH, "Good", "Fair"))
 
 # Not impaired or Potential Concern
 sed01 <- subset(bugs.all, biocriteria_status == "Attaining" | biocriteria_status == "Potential Concern")
