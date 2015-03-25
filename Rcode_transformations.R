@@ -222,7 +222,7 @@ melted <- melt(obs.vars[,c(names(obs.vars)[24:39])])
 min.max <- ddply(melted, .(variable), summarize, min_val = min(value), max_val = max(value))
 obs.vars[,c(names(obs.fss2),'log10_FSS_26Aug14')] <- as.data.frame(lapply(obs.vars[,c(names(obs.fss2),'log10_FSS_26Aug14')],
                                                    function(x) {(x-min(x))/(max(x)-min(x))}))
-
+save(min.max, file = 'minmax.Rdata')
 #### Put the data back into the ssn ####
 #Now that we have the transformed variables we put them back in the 
 #SSN object

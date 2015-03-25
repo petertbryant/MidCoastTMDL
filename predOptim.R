@@ -492,7 +492,7 @@ distGeo <-
     # compute distance for the scaled and rotated coordinates */
     sqrt(newx^2 + newy^2)
   }
-#### ####
+
 UK4Apply <-
   function(vec, covb, XXSiXi, XSi, Vi, z, n, p)
   {
@@ -502,33 +502,6 @@ UK4Apply <-
     cbind(tlam %*% z,
           sqrt(vec[n+p+1] - tlam %*% vec[1:n] + t(m) %*% vec[(n+1):(n+p)]))
   }
-#### ####
-bp <- function(Xs, pid, target) {
-  vars <- M[(n+1):(n+p),pid]
-  vars["PDISRSA_1YR"] <- Xs[1]
-  vars["POWNRCA_PRI"] <- Xs[2]
-  vars["DAPOPRCA2010"] <- Xs[3]
-  
-  r1 <- (vars - XSi %*% M[1:n,pid])
-  m <- covb %*% r1
-  tlam <- t(M[1:n,pid] + XXSiXi %*% r1) %*% Vi
-  p1 <- tlam %*% z
-  p2 <- target
-  (p2 - p1)^2
-}
-
-#I need 
-#       theta <- object$estimates$theta
-#       sumparsil <- sum(theta[attr(theta, "type") == "parsill"])
-#       parsilvec <- rep(sumparsil, times = length(Vpred[1, ]))
-#       M <- (Vpred, t(Xpred), parsilvec), 
-#       n <- object$sampinfo$obs.sample.size, 
-#       Xobs <- object$sampinfo$X
-#       Vi <- (object$estimates$Vi)
-#       XSi <- (t(Xobs) %*% Vi)
-#       covb <- object$estimates$covb 
-#       XXSiXi <- (Xobs %*% covb)
-#       z <- object$sampinfo$z
 
 
 SSNpred.site <- function(vars = NULL, ssn, pid) {
@@ -563,36 +536,67 @@ SSNpred.site <- function(vars = NULL, ssn, pid) {
            pred.int.low = preds.5.dis[preds.5.dis$pid == pid,"lci"],
            observed = preds.5[preds.5$pid == imp.pid[i,'pid'],'log10_FSS_26Aug14']))
 }
+#### ####
+#load('predOptim.Rdata')
+load('ssn1_glmssn_EEE.Rdata')
+load('minmax.Rdata')
+load('precip_daily_sum_1095_days.Rdata')
 
-load('predOptim.Rdata')
+impaired <- data.frame(STATION_KEY = c(21842,34660,21792,33361,26818,33418,33417,34695,26822,33320,33333,30403,34665,26816,25297,26964,29906,33327),
+                       TMDL_Target = c(14,14,14,3,7,rep(14,6),8,14,8,14,8,14,14))
+impaired$TMDL_Target_Scaled_log <- (log10(impaired$TMDL_Target)-min.max[min.max$variable == 'log10_FSS_26Aug14','min_val'])/(min.max[min.max$variable == 'log10_FSS_26Aug14','max_val']-min.max[min.max$variable == 'log10_FSS_26Aug14','min_val'])
+
+
+obs <- getSSNdata.frame(ssn1.glmssn.EEE, Name = 'Obs')
+
+#Generate table of quantiles
+library(plyr)
+qall <- ddply(dfdall,.(STATION_KEY),function(x){quantile(x$sum_1095_days, probs = seq(0,1,0.1))})
+qall.scaled <- data.frame(STATION_KEY = qall$STATION_KEY, as.data.frame(lapply(qall[,setdiff(names(qall),'STATION_KEY')],
+                     function(x) {(x-min.max[min.max$variable == 'sum_1095_days','min_val'])/
+                                    (min.max[min.max$variable == 'sum_1095_days','max_val']-
+                                       min.max[min.max$variable == 'sum_1095_days','min_val'])})))
+
+library(dplyr)
+max.obs <- data.frame(obs %>% group_by(STATION_KEY) %>% filter(log10_FSS_26Aug14 == max(log10_FSS_26Aug14)))
+max.obs <- max.obs[!duplicated(max.obs$STATION_KEY),]
+preds <- getSSNdata.frame(ssn1.glmssn.EEE, Name = "preds")
+pid.order <- preds$pid
+preds <- rename(preds, STATION_KEY = STATION_KE)
+preds <- merge(preds, max.obs[,c('STATION_KEY','sum_1095_days','PALITHERODRCA','PDISRSA_1YR',
+                                 'PASILTRCA','DAPOPRCA2010','POWNRCA_PRI','log10_FSS_26Aug14')],by = 'STATION_KEY',all.x = TRUE)
+preds$STATION_KEY <- as.character(preds$STATION_KEY)
+preds <- preds[match(pid.order,preds$pid),]
+row.names(preds) <- preds$pid
+ssn1.glmssn.EEE <- putSSNdata.frame(preds, ssn1.glmssn.EEE, Name = "preds")
+
+#Fill in sum_1095_days with the 90th percentile of 3 year sum from 1995 through 2012 at each impaired site
+preds.p <- preds
+preds.p[preds.p$STATION_KEY %in% qall.scaled$STATION_KEY,'sum_1095_days'] <- qall.scaled[order(match(qall.scaled$STATION_KEY,
+                                                                                                 preds.p[preds.p$STATION_KEY %in% qall.scaled$STATION_KEY,
+                                                                                                       'STATION_KEY'])),'X90.']
+preds.p <- preds.p[match(pid.order,preds.p$pid),]
+row.names(preds.p) <- preds.p$pid
+ssn1.glmssn.EEE.p <- putSSNdata.frame(preds.p, ssn1.glmssn.EEE, Name = "preds")
 
 imp.pid <- merge(preds[,c('STATION_KEY','pid')], impaired, all.y = T, by ="STATION_KEY")
+
 result <- list()
 
 for (i in 1:nrow(imp.pid)) {
-  tmp <- optim(M[c("PDISRSA_1YR","POWNRCA_PRI","DAPOPRCA2010"),as.character(imp.pid[i,"pid"])], bp, target = imp.pid[i,'TMDL_Target_Scaled_log'], pid = as.character(imp.pid[i,"pid"]), lower = 0,upper = 1,method = "L-BFGS-B") #, lower = 0,upper = 1, method = "L-BFGS-B"
-  tmp$imp.info <- imp.pid[i,]
-  tmp$input.vars <- M[c((n+1):(n+p)),as.character(imp.pid[i,"pid"])]
-  tmp$p1.SSN <- SSNpred.site(vars = tmp$par, ssn = ssn1.glmssn.EEE, pid = imp.pid[i,"pid"])[1:4]
-  tmp$p1.orig <- SSNpred.site(ssn = ssn1.glmssn.EEE, pid = imp.pid[i,"pid"])
-  result <- append(result, list(tmp))
-}
-
-result2 <- list()
-
-for (i in 1:nrow(imp.pid)) {
-  tmp <- optim(M[c("PDISRSA_1YR","POWNRCA_PRI","DAPOPRCA2010"),as.character(imp.pid[i,"pid"])], 
+  tmp <- optim(preds[preds$pid == as.character(imp.pid[i,"pid"]),c("PDISRSA_1YR","POWNRCA_PRI","DAPOPRCA2010")], 
                predict.PTB,
                target = imp.pid[i,'TMDL_Target_Scaled_log'], 
                pid = as.character(imp.pid[i,"pid"]), 
-               object = ssn1.glmssn.EEE.5, 
+               object = ssn1.glmssn.EEE.p, 
                predpointsID='preds', 
                lower = 0,upper = 1,method = "L-BFGS-B") #, lower = 0,upper = 1, method = "L-BFGS-B"
   tmp$imp.info <- imp.pid[i,]
-  tmp$input.vars <- M[c((n+1):(n+p)),as.character(imp.pid[i,"pid"])]
-  tmp$p1.SSN <- SSNpred.site(vars = tmp$par, ssn = ssn1.glmssn.EEE, pid = imp.pid[i,"pid"])[1:4]
+  tmp$p.var <- preds.p[preds.p$pid == as.character(imp.pid[i,"pid"]),"sum_1095_days"]
+  tmp$p1.SSN <- SSNpred.site(vars = tmp$par, ssn = ssn1.glmssn.EEE.p, pid = imp.pid[i,"pid"])[1:4]
+  tmp$orig.vars <- preds[preds$pid == as.character(imp.pid[i,"pid"]),c("PDISRSA_1YR","POWNRCA_PRI","DAPOPRCA2010","sum_1095_days",'PALITHERODRCA','PASILTRCA')]
   tmp$p1.orig <- SSNpred.site(ssn = ssn1.glmssn.EEE, pid = imp.pid[i,"pid"])
-  result2 <- append(result2, list(tmp))
+  result <- append(result, list(tmp))
 }
 
 fss.group <- read.csv('//deqhq1/tmdl/tmdl_wr/midcoast/models/sediment/target_development/final/R_output_bugs_CART_ALL_final_2013-06-15_trans.csv')

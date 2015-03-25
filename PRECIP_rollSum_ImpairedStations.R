@@ -21,6 +21,8 @@ for(i in 1:nrow(sam_df)) {
 dfdall <- dfdall[!is.na(dfdall$datestr),]
 dfdall$datestr <- factor(as.character(dfdall$datestr))
 
+save(dfdall, file = 'precip_daily_sum_1095_days.Rdata')
+
 #plot of all sites
 boxplot(dfdall$sum_1095_days~dfdall$STATION_KEY,las=2)
 points(obs.complete[obs.complete$STATION_KEY %in% unique(dfdall$STATION_KEY),'sum_1095_days'] ~ 
@@ -37,9 +39,6 @@ for (i in 1:length(unique(dfdall$STATION_KEY))) {
   }
 }
 
-#Generate table of quantiles
-library(plyr)
-qall <- ddply(dfdall,.(STATION_KEY),function(x){quantile(x$sum_1095_days, probs = seq(0,1,0.1))})
 
 
 
