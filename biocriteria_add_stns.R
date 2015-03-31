@@ -74,8 +74,12 @@ bugs.all <- merge(bugs.all,chars[,c("SVN","Ref_Samples","NewSample","FSS_May05_t
 bugs.all <- bugs.all[!is.na(bugs.all$LAT_NHD),]
 
 #### Evalute biocriteria status ####
+#Bring in Data Quality objective determinations
+bugs.all <- merge(bugs.all, FSS[,c('Sample','Use.303d')], by.x = 'SVN', by.y = 'Sample', all.x = TRUE)
+bugs.dqo <- bugs.all[bugs.all$Use.303d == 'Yes',]
+
 #Average scores for same year
-bugs.s <- aggregate(PREDATOR_Nov05_score ~ STATION_KEY + Year_Sampled + PREDATOR_Nov05_model, data=bugs.all, mean)
+bugs.s <- aggregate(PREDATOR_Nov05_score ~ STATION_KEY + Year_Sampled + PREDATOR_Nov05_model, data=bugs.dqo, mean)
 bugs.s <- bugs.s[bugs.s$Year_Sampled >= 2002,]
 
 #Evaluate MWCF model samples
@@ -144,6 +148,7 @@ bugs.all <- merge(bugs.all, bc_status[,c('STATION_KEY','biocriteria_status')], a
 bugs.all <- merge(bugs.all, bc_old, all.x = TRUE, by = 'STATION_KEY',suffixes = c("",".OLD"))
 bugs.all <- merge(bugs.all, FSS[,c('Sample','FSS')], by.x = 'SVN', by.y = 'Sample', all.x = TRUE)
 bugs.all <- merge(bugs.all, targets[,c('SVN','Q75TH')], by = 'SVN', all.x = TRUE)
+bugs.all[is.na(bugs.all$biocriteria_status),'biocriteria_status'] <- bugs.all[is.na(bugs.all$biocriteria_status),'biocriteria_status.OLD']
 
 #### Apply CART model ####
 bugs.all$fss_pred_trans <- predict(ref.F.cart.prune, newdata=bugs.all)
@@ -246,6 +251,14 @@ bugs.F <- merge(bugs.F,aggregate(samples_tot ~ STATION_KEY, data=bugs.F,  sum), 
 bugs.F <- bugs.F[with(bugs.F, order(STATION_KEY, -Year_sampled)), ]
 bugs.F.mc <- bugs.F[bugs.F$STATION_KEY %in% mc$STATION_KEY,]
 
+bugs.all[,'NEW_STATION'] <- ifelse(!bugs.all$STATION_KEY %in% bugs.F.mc$STATION_KEY,'NEW','OLD')
+bugs.all[,'NEW_SAMPLE'] <- ifelse(!bugs.all$SVN %in% bugs$SVN,'NEW','OLD')
+bugs.all[,'NEW'] <- ifelse(bugs.all$NEW_STATION == 'NEW' | bugs.all$NEW_SAMPLE == 'NEW','NEW','OLD')
+
+write.csv(bugs.all,'allstns_new_status.csv')
+
 mc2[,'NEW_STATION'] <- ifelse(!mc2$STATION_KEY %in% bugs.F.mc$STATION_KEY,'NEW','OLD')
 mc2[,'NEW_SAMPLE'] <- ifelse(!mc2$SVN %in% bugs$SVN,'NEW','OLD')
 mc2[,'NEW'] <- ifelse(mc2$NEW_STATION == 'NEW' | mc2$NEW_SAMPLE == 'NEW','NEW','OLD')
+
+write.csv(mc2,'midcoast_new_status.csv')
