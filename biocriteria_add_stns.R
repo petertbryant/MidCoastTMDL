@@ -6,6 +6,18 @@ options(scipen = 100, stringsAsFactors = FALSE)
 
 #### Bring in source data ####
 
+#Bring in the cART variables for the CTSI sites
+source('Rcode_CART_vars_for_CTSI.R')
+
+CTSI_chars$FSS_May05_trans<-log10(as.numeric(CTSI_chars$FSS_May05)+1)
+CTSI_chars$LONG_NHD_trans<-as.numeric(CTSI_chars$LONG_NHD)*-1   #can't do calculations on negative values for transformation code
+CTSI_chars$PRECIPSITE_MM_trans<-log10(as.numeric(CTSI_chars$PRECIPSITE_MM) +1)
+CTSI_chars$STRMPOWER_trans<-log10(as.numeric(CTSI_chars$STRMPOWER) +1)
+CTSI_chars$MAFLOWU_trans<-log10(as.numeric(CTSI_chars$MAFLOWU) +1)
+CTSI_chars$ELEV_FT_trans<-sqrt(as.numeric(CTSI_chars$ELEV_FT))
+CTSI_chars$SLOPE_trans<-sqrt(as.numeric(CTSI_chars$SLOPE))
+CTSI_chars$PCT_FSP3_trans<-asin(sqrt(round(as.numeric(CTSI_chars$PCT_FSP3),2)))
+
 #Bring in data used as input to random forest 
 #These data were used as input to Rcode_transformations.R
 obs.complete <- read.csv("ssn_RF_data.csv")
@@ -28,6 +40,7 @@ FSS <- read.xlsx2('C:/users/pbryant/desktop/OE_Stress_Abunds_data quality_25feb1
 #These are the input data for the CART calculated for ALL samples (except CTSI sites)
 chars <- read.csv('//deqhq1/tmdl/tmdl_wr/midcoast/data/benthicmacros/stationwork/r_inputs/r_input_cart_2013_06_15.csv')
 chars$SVN <- str_trim(chars$SVN)
+
 #data transformations so the calculated data will fit with the model predict function
 chars$FSS_May05_trans<-log10(as.numeric(chars$FSS_May05)+1)
 chars$LONG_NHD_trans<-as.numeric(chars$LONG_NHD)*-1   #can't do calculations on negative values for transformation code
@@ -64,18 +77,35 @@ bugs$PCT_FSP3_trans<-asin(sqrt(bugs$PCT_FSP3))
 ref<-subset(bugs, REF_SAMPLES == "1")
 ref$BASINNAME<-factor(ref$BASINNAME,levels=unique(ref$BASINNAME))
 ref$ERODRES_CAT<-factor(ref$ERODRES_CAT,levels=unique(ref$ERODRES_CAT))
-ref<-ref[,c("FSS_May05_trans","AREAWTMAP","MAFLOWU_trans","SLOPE_trans","PRECIPSITE_MM_trans","STRMPOWER_trans","LONG_NHD_trans","LAT_NHD","ELEV_FT_trans","PCT_FSP3_trans","ERODRES_CAT")]
+ref<-ref[,c("FSS_May05","FSS_May05_trans","AREAWTMAP","MAFLOWU_trans","SLOPE_trans","PRECIPSITE_MM_trans","STRMPOWER_trans","LONG_NHD_trans","LAT_NHD","ELEV_FT_trans","PCT_FSP3_trans","ERODRES_CAT")]
 
 #### Continue data input build out ####
 #Combine CART characteristics to the samples used inlcuding new and old
-bugs.all <- merge(bugs.all,chars[,c("SVN","Ref_Samples","NewSample","FSS_May05_trans","AREAWTMAP","MAFLOWU_trans","SLOPE_trans","PRECIPSITE_MM_trans",
+bugs.all <- merge(bugs.all,chars[,c("SVN","Ref_Samples","NewSample","FSS_May05","FSS_May05_trans","AREAWTMAP","MAFLOWU_trans","SLOPE_trans","PRECIPSITE_MM_trans",
                                     "STRMPOWER_trans","LONG_NHD_trans","LAT_NHD","ELEV_FT_trans","PCT_FSP3_trans","ERODRES_CAT")],
                   by = 'SVN',all.x=TRUE)
-bugs.all <- bugs.all[!is.na(bugs.all$LAT_NHD),]
+#Pull in the CTSI CART predictors
+bugs.all <- merge(bugs.all, CTSI_chars[,c("STATION_KEY","FSS_May05","FSS_May05_trans","AREAWTMAP","MAFLOWU_trans","SLOPE_trans","PRECIPSITE_MM_trans",
+                                          "STRMPOWER_trans","LONG_NHD_trans","LAT_NHD","ELEV_FT_trans","PCT_FSP3_trans","ERODRES_CAT")], by = 'STATION_KEY', 
+                  all.x = TRUE, suffixes = c('','.y'))
+bugs.all[grep('CTSI',bugs.all$STATION_KEY),c("FSS_May05_trans","AREAWTMAP","MAFLOWU_trans","SLOPE_trans","PRECIPSITE_MM_trans",
+                                          "STRMPOWER_trans","LONG_NHD_trans","LAT_NHD","ELEV_FT_trans",
+                                          "PCT_FSP3_trans","ERODRES_CAT")] <- bugs.all[grep('CTSI',bugs.all$STATION_KEY),
+                                                                                       c("FSS_May05_trans.y","AREAWTMAP.y","MAFLOWU_trans.y","SLOPE_trans.y",
+                                                                                         "PRECIPSITE_MM_trans.y", "STRMPOWER_trans.y","LONG_NHD_trans.y",
+                                                                                         "LAT_NHD.y","ELEV_FT_trans.y","PCT_FSP3_trans.y","ERODRES_CAT.y")]
+#One CTSI station (CTSI_57) was assigned to Station 29898 - SVN: SLTZ0812IRM0004
+bugs.all[bugs.all$SVN == 'SLTZ0812IRM0004',c("AREAWTMAP","MAFLOWU_trans","SLOPE_trans","PRECIPSITE_MM_trans",
+                                             "STRMPOWER_trans","LONG_NHD_trans","LAT_NHD","ELEV_FT_trans",
+                                             "PCT_FSP3_trans","ERODRES_CAT")] <- bugs.all[bugs.all$STATION_KEY == 29898,c("AREAWTMAP","MAFLOWU_trans",
+                                                                                                                          "SLOPE_trans","PRECIPSITE_MM_trans",
+                                                                                                                          "STRMPOWER_trans","LONG_NHD_trans","LAT_NHD",
+                                                                                                                          "ELEV_FT_trans", "PCT_FSP3_trans","ERODRES_CAT")][2,]
 
 #### Evalute biocriteria status ####
 #Bring in Data Quality objective determinations
 bugs.all <- merge(bugs.all, FSS[,c('Sample','Use.303d')], by.x = 'SVN', by.y = 'Sample', all.x = TRUE)
+bugs.all[grep('SLTZ',bugs.all$SVN),'Use.303d'] <- 'Yes'
 bugs.dqo <- bugs.all[bugs.all$Use.303d == 'Yes',]
 
 #Average scores for same year
@@ -149,6 +179,13 @@ bugs.all <- merge(bugs.all, bc_old, all.x = TRUE, by = 'STATION_KEY',suffixes = 
 bugs.all <- merge(bugs.all, FSS[,c('Sample','FSS')], by.x = 'SVN', by.y = 'Sample', all.x = TRUE)
 bugs.all <- merge(bugs.all, targets[,c('SVN','Q75TH')], by = 'SVN', all.x = TRUE)
 bugs.all[is.na(bugs.all$biocriteria_status),'biocriteria_status'] <- bugs.all[is.na(bugs.all$biocriteria_status),'biocriteria_status.OLD']
+
+#the fss values for CTSI need to be added in
+bugs.all[grep('SLTZ',bugs.all$SVN),'FSS'] <- bugs.all[grep('SLTZ',bugs.all$SVN),'FSS_May05.y']
+
+#with the correct FSS values we now need to match column names
+bugs.all$FSS_May05 <- as.numeric(bugs.all$FSS)
+bugs.all$FSS_May05_trans<-log10(as.numeric(bugs.all$FSS_May05)+1)
 
 #### Apply CART model ####
 bugs.all$fss_pred_trans <- predict(ref.F.cart.prune, newdata=bugs.all)
@@ -251,9 +288,11 @@ bugs.F <- merge(bugs.F,aggregate(samples_tot ~ STATION_KEY, data=bugs.F,  sum), 
 bugs.F <- bugs.F[with(bugs.F, order(STATION_KEY, -Year_sampled)), ]
 bugs.F.mc <- bugs.F[bugs.F$STATION_KEY %in% mc$STATION_KEY,]
 
-bugs.all[,'NEW_STATION'] <- ifelse(!bugs.all$STATION_KEY %in% bugs.F.mc$STATION_KEY,'NEW','OLD')
+bugs.all[,'NEW_STATION'] <- ifelse(!bugs.all$STATION_KEY %in% bugs.F$STATION_KEY,'NEW','OLD')
 bugs.all[,'NEW_SAMPLE'] <- ifelse(!bugs.all$SVN %in% bugs$SVN,'NEW','OLD')
 bugs.all[,'NEW'] <- ifelse(bugs.all$NEW_STATION == 'NEW' | bugs.all$NEW_SAMPLE == 'NEW','NEW','OLD')
+
+bugs.all <- bugs.all[,!grepl('\\.y',names(bugs.all))]
 
 write.csv(bugs.all,'allstns_new_status.csv')
 
