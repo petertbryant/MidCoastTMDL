@@ -270,6 +270,10 @@ sed_resid_stat <- rbind(sed01[,c('SVN','sediment_resid_status')],sed02[,c('SVN',
 bugs.all <- merge(bugs.all, sed_resid_stat, by = 'SVN')
 rm(sed_resid_stat,sed01,sed02,sed03)
 
+bugs.all.any.sed <- ddply(bugs.all, .(STATION_KEY), function(x) {ifelse(any(x$sediment_resid_status == "Impaired - Sediment Stressor"),x$anysed <- 1, x$anysed <- 0)})
+bugs.all.any.sed <- rename(bugs.all.any.sed, c("V1" = "ansysed"))
+bugs.all <- merge(bugs.all, bugs.all.any.sed, by = 'STATION_KEY', all.x = TRUE)
+
 table(bugs.all$sediment_resid_status)
 
 #### compare midcoast stations only ####
@@ -296,8 +300,6 @@ bugs.all <- bugs.all[,!grepl('\\.y',names(bugs.all))]
 
 write.csv(bugs.all,'allstns_new_status.csv')
 
-mc2[,'NEW_STATION'] <- ifelse(!mc2$STATION_KEY %in% bugs.F.mc$STATION_KEY,'NEW','OLD')
-mc2[,'NEW_SAMPLE'] <- ifelse(!mc2$SVN %in% bugs$SVN,'NEW','OLD')
-mc2[,'NEW'] <- ifelse(mc2$NEW_STATION == 'NEW' | mc2$NEW_SAMPLE == 'NEW','NEW','OLD')
+mc2 <- bugs.all[bugs.all$STATION_KEY %in% mc$STATION_KEY,]
 
 write.csv(mc2,'midcoast_new_status.csv')
