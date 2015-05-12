@@ -4,13 +4,14 @@ library(hydroGOF)
 
 options(scipen = 100)
 
+#Get the model object
+load('ssn1_glmssn_EEE.Rdata')
+load('minmax.Rdata')
+
 #list of impaired stations
 impaired <- data.frame(STATION_KEY = c(21842,34660,21792,33361,26818,33418,33417,34695,26822,33320,33333,30403,34665,26816,25297,26964,29906,33327),
                        TMDL_Target = c(14,14,14,3,7,rep(14,6),8,14,8,14,8,14,14))
 impaired$TMDL_Target_Scaled_log <- (log10(impaired$TMDL_Target)-min.max[min.max$variable == 'log10_FSS_26Aug14','min_val'])/(min.max[min.max$variable == 'log10_FSS_26Aug14','max_val']-min.max[min.max$variable == 'log10_FSS_26Aug14','min_val'])
-
-#Get the model object
-load('ssn1_glmssn_EEE.Rdata')
 
 #Fill in the model variables into the prediction data frame
 obs <- getSSNdata.frame(ssn1.glmssn.EEE, Name = 'Obs')
@@ -57,7 +58,7 @@ preds$untran_lci <- 10^preds$lci
 # lwr2 <- link$linkinv(lwr)
 
 #Generate smooth confidence interval lines
-mean.df <- ddply(preds, .(log10_FSS_26Aug14), summarize, mean_fit = mean(fit), mean_uci = mean(uci), mean_lci = mean(lci))
+mean.df <- ddply(preds, .(log10_FSS_26Aug14), summarize, mean_fit = mean(unscaled_fit), mean_uci = mean(uci), mean_lci = mean(lci))
 ul <- loess.smooth(mean.df$log10_FSS_26Aug14, mean.df$mean_uci)
 ll <- loess.smooth(mean.df$log10_FSS_26Aug14, mean.df$mean_lci)
 i.for <- order(ul$y)
@@ -70,7 +71,7 @@ png('predInterval.png',width = 6, height = 6, res = 100, units = "in")
 plot.new()
 polygon(x.p,y.p,col = "light grey", border = FALSE)
 par(new = TRUE)
-plot(preds$log10_FSS_26Aug14, preds$fit, pch = 19, ylim = c(0,1), xlab = 'Scaled log10 FSS', ylab = 'Scaled log10 FSS Predicted')
+plot(preds$log10_FSS_26Aug14, preds$untran_fit, pch = 19, ylim = c(0,1), xlab = 'Scaled log10 FSS', ylab = 'Scaled log10 FSS Predicted')
 lines(loess.smooth(mean.df$log10_FSS_26Aug14, mean.df$mean_fit))
 lines(loess.smooth(mean.df$log10_FSS_26Aug14, mean.df$mean_uci))
 lines(loess.smooth(mean.df$log10_FSS_26Aug14, mean.df$mean_lci))
@@ -151,10 +152,10 @@ preds.1.dis <- getSSNdata.frame(ssn1.glmssn.EEE.1.preds, Name = 'preds')
 preds.1.dis$FSS_26Aug14_untran <- 10^(preds.1.dis $log10_FSS_26Aug14*(min.max[min.max$variable == "log10_FSS_26Aug14",'max_val']-min.max[min.max$variable == "log10_FSS_26Aug14",'min_val']) + min.max[min.max$variable == "log10_FSS_26Aug14",'min_val'])
 
 
-impaired.1 <- merge(preds.1.dis, impaired, by = 'STATION_KEY', all.y = TRUE)
-impaired.1$target.met <- ifelse(impaired.1$FSS_26Aug14_untran < impaired.1$TMDL_Target,1,0)
-impaired.1$pr <- (1-impaired.1$TMDL_Target/impaired.1$FSS_26Aug14_untran)*100
-View(arrange(impaired.1,HU_8_NAME))
+impaired.1 <- merge(preds.1.dis, ss, by = 'STATION_KEY', all.y = TRUE)
+impaired.1$target.met <- ifelse(impaired.1$FSS_26Aug14_untran < impaired.1$Q75TH,1,0)
+impaired.1$pr <- (1-impaired.1$Q75TH/impaired.1$FSS_26Aug14_untran)*100
+View(arrange(impaired.1,STATION_KEY))
 
 #### Run a scenario with zeros for all human influence ####
 ssn1.glmssn.EEE.2 <- ssn1.glmssn.EEE

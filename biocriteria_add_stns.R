@@ -167,12 +167,6 @@ bc_status <-  bugs.s[,c("STATION_KEY","biocriteria_status")]
 #Check against previous status determinations
 bc_status <- merge(bc_status, bc_old, all.x = TRUE, by = 'STATION_KEY', suffixes = c("",".OLD"))
 
-#Stations that now show impairment
-newImp <- bc_status[which(bc_status$biocriteria_status != bc_status$biocriteria_status.OLD & bc_status$biocriteria_status == 'Impaired'),]
-
-#Stations that now show attainment
-newAtt <- bc_status[which(bc_status$biocriteria_status != bc_status$biocriteria_status.OLD & bc_status$biocriteria_status.OLD == 'Impaired' & bc_status$biocriteria_status == 'Attaining'),]
-
 #bring in status, old status, correct FSS values (hopefully), original targets where calculated
 bugs.all <- merge(bugs.all, bc_status[,c('STATION_KEY','biocriteria_status')], all.x = TRUE, by = 'STATION_KEY')
 bugs.all <- merge(bugs.all, bc_old, all.x = TRUE, by = 'STATION_KEY',suffixes = c("",".OLD"))
@@ -271,7 +265,7 @@ bugs.all <- merge(bugs.all, sed_resid_stat, by = 'SVN')
 rm(sed_resid_stat,sed01,sed02,sed03)
 
 bugs.all.any.sed <- ddply(bugs.all, .(STATION_KEY), function(x) {ifelse(any(x$sediment_resid_status == "Impaired - Sediment Stressor"),x$anysed <- 1, x$anysed <- 0)})
-bugs.all.any.sed <- rename(bugs.all.any.sed, c("V1" = "ansysed"))
+bugs.all.any.sed <- rename(bugs.all.any.sed, c("V1" = "anysed"))
 bugs.all <- merge(bugs.all, bugs.all.any.sed, by = 'STATION_KEY', all.x = TRUE)
 
 table(bugs.all$sediment_resid_status)
@@ -303,3 +297,68 @@ write.csv(bugs.all,'allstns_new_status.csv')
 mc2 <- bugs.all[bugs.all$STATION_KEY %in% mc$STATION_KEY,]
 
 write.csv(mc2,'midcoast_new_status.csv')
+
+#### Following changes when incorporating new samples ####
+
+#Flow chart for what we want to highlight with the inclusion of additional samples in determining impairment and stressors
+# Asterisks indicate the categories we are interested in capturing
+# 
+#                                                             Existing Stations
+#                                                               /        \
+#                                                              /          \
+#                                                       No new sample    New Sample
+#                                                                           /  \
+#                                                                          /    \
+#                                                               No BC change   BC Change    
+#                                                                                /  |  \
+#                                                                               /   |   \
+#                                                                    *Attaining*   PC   Imp
+#                                                                                       / \
+#                                                                                   *Sed* Unk 
+#
+#
+#
+#                           New Stations
+#                             /   |   \
+#                            /    |    \
+#                         Att     PC   Imp
+#                                      / \
+#                                 *Sed*  Unk
+
+
+# BC Change
+length(unique(bugs.all[which(bugs.all$biocriteria_status != bugs.all$biocriteria_status.OLD),'STATION_KEY'])) #70
+
+# *Attaining*
+newAtt <- bugs.all[which(bugs.all$biocriteria_status != bugs.all$biocriteria_status.OLD  & bugs.all$biocriteria_status == 'Attaining'),]
+#--->In the midcoast only
+mc.newAtt <- newAtt[newAtt$STATION_KEY %in% mc$STATION_KEY,]
+length(unique(mc.newAtt$STATION_KEY)) #12
+
+#Specifically those that were impaired but now are attaining
+newAtt <- bugs.all[which(bugs.all$biocriteria_status != bugs.all$biocriteria_status.OLD & bugs.all$biocriteria_status.OLD == 'Impaired' & bugs.all$biocriteria_status == 'Attaining'),]
+#--->In the midcoast only
+mc.newAtt <- newAtt[newAtt$STATION_KEY %in% mc$STATION_KEY,]
+length(unique(mc.newAtt$STATION_KEY)) #2
+
+# Imp
+newImp <- bugs.all[which(bugs.all$biocriteria_status != bugs.all$biocriteria_status.OLD & bugs.all$biocriteria_status == 'Impaired'),]
+#--->In the midcoast only
+mc.newImp <- newImp[newImp$STATION_KEY %in% mc$STATION_KEY,]
+length(unique(mc.newImp$STATION_KEY)) #5
+
+# Existing Stations *Sed*
+newImp.sed <- newImp[newImp$ansysed == 1,]
+#--->In the midcoast only
+mc.newImp.sed <- newImp.sed[newImp.sed$STATION_KEY %in% mc$STATION_KEY,]
+length(unique(mc.newImp.sed$STATION_KEY)) #1
+
+# New stations *Sed*
+newSIS <- bugs.all[is.na(bugs.all$biocriteria_status.OLD) & bugs.all$sediment_resid_status == 'Impaired - Sediment Stressor',] 
+#--->In the midcoast only
+mc.newSIS <- newSIS[newSIS$STATION_KEY %in% mc$STATION_KEY,]
+length(unique(mc.newSIS$STATION_KEY)) #10
+
+mc2IS <- mc2[mc2$sediment_resid_status == 'Impaired - Sediment Stressor',c('SVN','STATION_KEY','SITE_NAME','Year_Sampled','FSS','Q75TH')]
+mc2IS <- merge(mc2IS, obs.complete[,c('SVN','HU_8_NAME','DATE')], by = 'SVN', all.x = TRUE)
+write.csv(mc2IS,'sed_stressor_update_04062015.csv')

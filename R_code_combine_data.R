@@ -42,7 +42,7 @@ tablename2 <- "ssn_sites_table_final"
 tablename3 <- "FSS_by_SVN"
 tablename4 <- "tbl_HASLIDAR_Station_watershed"
 tablename5 <- "tb_PPT_annual_avg_by_STATION_KEY"
-tablename6 <- "tbl_POPRCA2010_by_RID"
+tablename6 <- "tbl_POP_Dasy"
 channel <-odbcConnectAccess2007(indb)
 edgedf <- sqlFetch(channel, tablename1)
 obs <- sqlFetch(channel, tablename2)
@@ -60,7 +60,7 @@ colnames(obs)
 colnames(edgedf)
 
 ppt <- within(ppt, rm(OBJECTID))
-pop <- within(pop, rm(OBJECTID))
+pop <- pop[,c('rid','POPRCA','POPARCA')]
 
 edgedf <- merge(edgedf, pop, by="rid", all.x=TRUE)
 
