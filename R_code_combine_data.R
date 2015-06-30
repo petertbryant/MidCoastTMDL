@@ -248,12 +248,41 @@ colnames(comb)
 # -----------------------------------------------------------
 # Calculate stream power by first pulling in the flow data from nhdplus v21
 nhd <- read.dbf('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/Watershed_Characteristics/NHDplus_21/EROMExtension/EROM_MA0001.DBF')
-nhd.flow <- nhd[,c('Comid','Q0001A')]
+nhd.flow <- nhd[,c('Comid','Q0001E')]
+
+#Some corrections to incorrect NHD ComID mapping
+comb[comb$STATION_KEY %in% c(34699,34651,21798,30342,33390,
+                             33405,34617,34699,34721,35680,
+                             'dfw_39980','dfw_4215','dfw_5338'),'NHDP21_COMID'] <- c(23920648,23890106,23920900,23833719,23915693,
+                                                                                 23910475,23872145,23920646,23872689,23889934,23889792,23914419,23910587)
 
 #fill in based on similar area, rainfall and location
 comb[comb$STATION_KEY %in% c('23817','33323','33333','33355','dfw_49477','dfw_795','35786'),'NHDP21_COMID'] <- c(23872745,23890092,23890512,23881680,23876147,23914541,23876147)
 comb <- merge(comb, nhd.flow, by.x = "NHDP21_COMID", by.y = 'Comid', all.x = TRUE)
-comb$STRMPWR <- comb$XSLOPE_MAP * comb$Q0001A
+
+#Bring in NHD cumulative area
+nhd.cat <- read.dbf('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/Watershed_Characteristics/NHDplus_21/Catchments/Catchment.dbf')
+nhd.area <- read.dbf('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/Watershed_Characteristics/NHDplus_21/Attributes/CumulativeArea.dbf')
+comb <- merge(comb, nhd.area, by.x = 'NHDP21_COMID', by.y = 'ComID', all.x = TRUE)
+
+#bring in the pour point watershed areas
+pp <- read.dbf('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/SSN/Stations/watersheds/watersheds_ssn.dbf')
+pp.area <- pp[,c('STATION_KE','SQkm')]
+pp.area <- rename(pp.area, c('SQkm' = 'ppSQkm', 'STATION_KE' = 'STATION_KEY'))
+pp.area <- pp.area[pp.area$ppSQkm != 0,]
+comb <- merge(comb, pp.area, by = 'STATION_KEY')
+
+#This one had the catchment drawn wrong so this is just forcing it to the right value
+comb[comb$STATION_KEY == 34617,'ppSQkm'] <- comb[comb$STATION_KEY == 34617,'TotDASqKM']
+
+#Then we need to derive the scaling ratio based on watershed area (instead of using flow at the base of the NHD and because we don't have/need M values)
+comb$nhd_ratio <- 1 - ((comb$TotDASqKM - comb$ppSQkm)/(comb$TotDASqKM))
+
+#Use the ratio to scale the flow estimate
+comb$Q0001E_adj <- comb$Q0001E * comb$nhd_ratio
+
+#Calculate stream power
+comb$STRMPWR <- comb$XSLOPE_MAP * comb$Q0001E_adj
 
 rm(nhd.flow, nhd)
 # -----------------------------------------------------------
