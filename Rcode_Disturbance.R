@@ -72,3 +72,8 @@ for (scale in c('PPRCA','PPRSA')) {
 }
 
 out <- ryd[c('SVN','STATION_KE','rid_LSN04','Year_Sampled',newcols)]
+
+sqlSave(con2, out, tablename = 'PPRCA_PPRSA_Disturbance', rownames = FALSE, varTypes = c('SVN' = 'VARCHAR(255)',
+                                                                                         'STATION_KE' = 'VARCHAR(255)',
+                                                                                         'rid_LSN04' = 'INTEGER',
+                                                                                         'Year_Sampled' = 'INTEGER'))

@@ -5,9 +5,10 @@ library(plyr)
 options(stringsAsFactors = FALSE)
 
 con <- odbcConnectAccess("C:/users/pbryant/desktop/midcoasttmdl-gis/pprca_zonalstats.mdb")
+con2 <- odbcConnectAccess("//Deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/ssn/lsn04/tables.mdb")
 
-tablenames <- sqlTables(con, tableType = "TABLE")
-tablenames <- tablenames[grep("^PP",tablenames$TABLE_NAME),'TABLE_NAME']
+tablenames.all <- sqlTables(con, tableType = "TABLE")
+tablenames <- tablenames.all[grep("^PP",tablenames.all$TABLE_NAME),'TABLE_NAME']
 
 rid.change <- c('VALUE_' = 'rid_LSN04')
 
@@ -25,9 +26,10 @@ for (char in c('CLAY','COMP','EROD','KFACTWS','pop','SAND','SILT','SILT_CLAY','S
       tmp <- sqlFetch(con, tbls[i])
       if (nrow(tmp) > 0) {
         if (char == 'SILT_CLAY') {
-          newcol.name <- paste(strsplit(tbls[i],"_")[[1]][c(1,4,5)],collapse="_")
-          tmp <- rename(tmp, c('VALUE_1' = newcol.name, 'MEAN' = newcol.name, "SUM_" = newcol.name), warn_missing = FALSE)
-          tmp <- tmp[,c('STATION_KE',newcol.name)]
+          newcol.name1 <- paste(strsplit(tbls[i],"_")[[1]][c(1,4,5)],collapse="_")
+          newcol.name2 <- paste(ra,"NACOUNT",sep="_")
+          tmp <- rename(tmp, c('MEAN' = newcol.name1, "COUNT_" = newcol.name2), warn_missing = FALSE)
+          tmp <- tmp[,c('STATION_KE',newcol.name1,newcol.name2)]
         } else if (char == 'SUSCEP') {
           newcol.name1 <- paste(ra, "_SUSCEP4",sep="")
           newcol.name2 <- paste(ra, "_SUSCEP5",sep="")
@@ -65,8 +67,13 @@ for (char in c('CLAY','COMP','EROD','KFACTWS','pop','SAND','SILT','SILT_CLAY','S
             tmp[,agr] <- 0
           }
           tmp <- tmp[,c("STATION_KE",pri,odf,fed,urb,agr)]
-        } 
-        else {
+        } else if (char == 'pop') {
+          count.col <- paste(ra, "COUNT", sep = "_")
+          newcol.name <- paste(strsplit(tbls[i],"_")[[1]][c(1,4)],collapse="_")
+          tmp <- rename(tmp, c("SUM_" = newcol.name,
+                               "COUNT_" = count.col), warn_missing = FALSE)
+          tmp <- tmp[,c('STATION_KE',newcol.name,count.col)]
+        } else {
           newcol.name <- paste(strsplit(tbls[i],"_")[[1]][c(1,4)],collapse="_")
           tmp <- rename(tmp, c('VALUE_1' = newcol.name, 
                                'MEAN' = newcol.name, 
@@ -74,30 +81,40 @@ for (char in c('CLAY','COMP','EROD','KFACTWS','pop','SAND','SILT','SILT_CLAY','S
                                "LENGTH" = newcol.name), warn_missing = FALSE)
           tmp <- tmp[,c('STATION_KE',newcol.name)]
         }
+        
         ifelse(i == 1, tblFull <- tmp, tblFull <- rbind(tblFull, tmp))
       }
     }
     ifelse(ra == 'PPRCA', tblFull2 <- tblFull, tblFull2 <- merge(tblFull2, tblFull, by = 'STATION_KE', all = TRUE))
   } 
-  ifelse(char == 'CLAY', int <- tblFull2, int <- merge(int, tblFull2, by = 'STATION_KE', all = TRUE))
+  ifelse(char == 'CLAY', wcdf <- tblFull2, wcdf <- merge(wcdf, tblFull2, by = 'STATION_KE', all = TRUE))
 }
 
-int <- rename(int, c('PPRCA_s1' = 'PPRCA_ROADLEN',
+wcdf <- rename(wcdf, c('PPRCA_s1' = 'PPRCA_ROADLEN',
                      'PPRSA_s1' = 'PPRSA_ROADLEN'))
 
 roadx <- sqlFetch(con, 'PPRCA_ROADX')
 roadx <- roadx[,c('STATION_KE','PNT_COUNT')]
 roadx <- rename(roadx, c('PNT_COUNT' = 'PPRCA_ROADX'))
-int <- merge(int, roadx, by = 'STATION_KE', all = TRUE)
+wcdf <- merge(wcdf, roadx, by = 'STATION_KE', all = TRUE)
 
 splash <- sqlFetch(con, 'PPRCA_SPLASH')
 splash <- splash[,c('STATION_KE','PNT_COUNT')]
 splash <- rename(splash, c('PNT_COUNT' = 'PPRCA_SPLASH'))
-int <- merge(int, splash, by = 'STATION_KE', all = TRUE)
+wcdf <- merge(wcdf, splash, by = 'STATION_KE', all = TRUE)
 
 fish <- sqlFetch(con, 'PPRCA_TYPEF')
-fish <- fish[fish$Fishpres == 'Fish',c('STATION_KE','LENGTH')]
-fish <- rename(fish, c('LENGTH' = 'PPRCA_TYPEF'))
-int <- merge(int, fish, by = 'STATION_KE', all = TRUE)
+typef <- fish[fish$Fishpres == 'Fish',c('STATION_KE','LENGTH')]
+typef <- rename(typef, c('LENGTH' = 'PPRCA_TYPEF'))
+wcdf <- merge(wcdf, typef, by = 'STATION_KE', all = TRUE)
 
-rm(list = setdiff(ls(),'int'))
+fish <- ddply(fish, .(STATION_KE), summarize, PPRCA_FPA = sum(LENGTH))
+wcdf <- merge(wcdf, fish[,c("STATION_KE","PPRCA_FPA")], by = 'STATION_KE', all = TRUE)
+
+con2.tbls <- sqlTables(con2, tableType = "TABLE")
+
+if ("PPRCA_PPRSA_ZonalStats" %in% con2.tbls$TABLE_NAME) {
+  sqlDrop(con2, "PPRCA_PPRSA_ZonalStats")
+}
+
+sqlSave(con2, wcdf, tablename = 'PPRCA_PPRSA_ZonalStats', varTypes = c('STATION_KE' = 'VARCHAR(255)'), rownames = FALSE)
