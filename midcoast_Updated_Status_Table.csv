@@ -1,0 +1,27 @@
+Subbasin ,Stream ,Station Key,Site Name,Year Sampled,O/E Score,FSS,Reference Group,Sediment Stressor Benchmark,TMDL FSS Target
+Alsea ,Alsea River ,dfw_35004,Alsea River,2009,0.51,21,Group 4,20,14
+Alsea ,Flynn Creek ,dfw_2891,Flynn Cr.,2009,0.58,46,Group 4,20,14
+Alsea ,Oliver Creek ,34660,Oliver Cr at RM 0.63,2007,0.8,50,Group 4,20,14
+Alsea ,Sutton Creek ,dfw_39965,Sutton Cr.,2009,0.54,35,Group 4,20,14
+Siletz/Yaquina ,Deer Creek ,37179,Deer Creek at RM 2.41,2012,0.67,42,Group 4,20,14
+Siletz/Yaquina ,Montgomery Creek ,21792,Montgomery Cr,2003,0.96,35,Group 4,20,14
+Siletz/Yaquina ,South Fork Siletz River ,26818,Siletz River South Fork,2002,0.83,21,Group 3,9,7
+Siletz/Yaquina ,South Fork Siletz River ,33361,"Siletz R, S Fk",2006,0.84,9,Group 1,4,3
+Siletz/Yaquina ,Tributary to West Olalla Creek ,dfw_3285,West Olla Cr Trib A,2008,0.69,45,Group 4,20,14
+Siltcoos ,Fivemile Creek ,34695,Fivemile Cr at Mouth,2007,0.81,21,Group 4,20,14
+Siltcoos ,Fivemile Creek ,dfw_6041,Five Mile Cr,2008,0.64,25,Group 4,20,14
+Siuslaw,Sweet Creek ,29906,Sweet Cr (Siuslaw),2003,0.7,27,Group 4,20,14
+Siuslaw ,Bear Creek ,33329,Bear Cr,2009,0.84,21,Group 4,20,14
+Siuslaw ,Indian Creek ,26822,Indian Cr,2002,0.78,20,Group 4,20,14
+Siuslaw ,Indian Creek ,33320,Indian Cr,2006,0.79,20,Group 4,20,14
+Siuslaw ,Pittenger Creek ,dfw_2464,Pittenger Cr,2008,0.85,20,Group 4,20,14
+Siuslaw ,Russell Creek ,34645,Russell Cr at RM 0.20,2009,0.85,29,Group 4,20,14
+Siuslaw ,Simpson Creek ,33333,Simpson Cr,2006,0.76,23,Group 4,20,14
+Siuslaw ,Siuslaw River ,26816,Siuslaw R,2002,0.85,20,Group 2,11,8
+Siuslaw ,Siuslaw River ,26964,Siuslaw R,2002,0.7,29,Group 2,11,8
+Siuslaw ,Siuslaw River ,30403,Siuslaw River,2003,0.53,40,Group 2,11,8
+Siuslaw ,Siuslaw River ,25297,Siuslaw River at RM 76.2,2007,0.79,23,Group 4,20,14
+Siuslaw ,Siuslaw River ,34665,Siuslaw R at RM 57.02,2007,0.62,28,Group 4,20,14
+Siuslaw ,Sweet Creek ,dfw_36277,Sweet Cr.,2009,0.49,38,Group 4,20,14
+Siuslaw ,Tributary to Esmond Creek ,33327,"Esmond Cr, Trib A",2006,0.65,22,Group 4,20,14
+Siuslaw ,Wolf Creek ,dfw_2492,Wolf Cr at RM 3.12 (Umpqua),2008,0.85,11,Group 2,11,8

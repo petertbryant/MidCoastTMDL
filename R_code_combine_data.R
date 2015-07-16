@@ -364,7 +364,7 @@ obs.a <- within(obs.a, rm(fishpres, nhd_ratio, TotDASqKM, DivDASqKM))
 # -----------------------------------------------------------
 # Write the files
 
-write.csv(obs.a, 'ssn_RF_data.csv', row.names = FALSE)
+#write.csv(obs.a, 'ssn_RF_data.csv', row.names = FALSE)
 
 
 

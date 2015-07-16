@@ -35,7 +35,7 @@ bc_old <- read.csv('//deqhq1/tmdl/tmdl_wr/midcoast/models/sediment/target_develo
 targets <- read.csv('//deqhq1/tmdl/tmdl_wr/midcoast/models/sediment/target_development/final/R_output_bugs_CART_ALL_final_2013-06-15_trans.csv')
 
 #Data submitted to EPA for 2012 Integrated Report - Has updated FSS values
-FSS <- read.xlsx2('C:/users/pbryant/desktop/OE_Stress_Abunds_data quality_25feb15.xlsx', sheetName = 'all')
+FSS <- read.xlsx2('//deqhq1/tmdl/TMDL_WR/MidCoast/Data/BenthicMacros/Raw_From_Shannon/OE_Stress_Abunds_data quality_25feb15.xlsx', sheetName = 'all')
 
 #These are the input data for the CART calculated for ALL samples (except CTSI sites)
 chars <- read.csv('//deqhq1/tmdl/tmdl_wr/midcoast/data/benthicmacros/stationwork/r_inputs/r_input_cart_2013_06_15.csv')
@@ -292,11 +292,11 @@ bugs.all[,'NEW'] <- ifelse(bugs.all$NEW_STATION == 'NEW' | bugs.all$NEW_SAMPLE =
 
 bugs.all <- bugs.all[,!grepl('\\.y',names(bugs.all))]
 
-write.csv(bugs.all,'allstns_new_status.csv')
+#write.csv(bugs.all,'allstns_new_status.csv')
 
 mc2 <- bugs.all[bugs.all$STATION_KEY %in% mc$STATION_KEY,]
 
-write.csv(mc2,'midcoast_new_status.csv')
+#write.csv(mc2,'midcoast_new_status.csv')
 
 #### Following changes when incorporating new samples ####
 
@@ -361,4 +361,4 @@ length(unique(mc.newSIS$STATION_KEY)) #10
 
 mc2IS <- mc2[mc2$sediment_resid_status == 'Impaired - Sediment Stressor',c('SVN','STATION_KEY','SITE_NAME','Year_Sampled','FSS','Q75TH')]
 mc2IS <- merge(mc2IS, obs.complete[,c('SVN','HU_8_NAME','DATE')], by = 'SVN', all.x = TRUE)
-write.csv(mc2IS,'sed_stressor_update_04062015.csv')
+#write.csv(mc2IS,'sed_stressor_update_04062015.csv')
