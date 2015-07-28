@@ -1,0 +1,196 @@
+,var,col.num,keep,Category
+1,CLAY_ARCA,57,0,Lithology and soils
+2,CLAY_PARCA,134,1,Lithology and soils
+3,CLAY_PRCA,135,1,Lithology and soils
+4,CLAY_RCA,15,0,Lithology and soils
+5,CLAY_RSA,16,0,Lithology and soils
+6,COMP_ARCA,54,0,Lithology and soils
+7,COMP_ARSA,73,0,Lithology and soils
+8,COMP_PARCA,136,1,Lithology and soils
+9,COMP_PARSA,137,1,Lithology and soils
+10,COMP_PRCA,138,1,Lithology and soils
+11,COMP_PRSA,139,1,Lithology and soils
+12,COMP_RCA,17,0,Lithology and soils
+13,COMP_RSA,18,0,Lithology and soils
+14,DATE,131,1,Sample
+15,days_since_X100year,122,1,Precipitation
+16,days_since_X10year,119,1,Precipitation
+17,days_since_X25year,120,1,Precipitation
+18,days_since_X2year,118,1,Precipitation
+19,days_since_X50year,121,1,Precipitation
+20,days_since_X6month,117,1,Precipitation
+21,DIS_10YR_ARCA,71,0,Disturbance
+22,DIS_10YR_ARSA,83,0,Disturbance
+23,DIS_10YR_PARCA,140,1,Disturbance
+24,DIS_10YR_PARSA,141,1,Disturbance
+25,DIS_10YR_PRCA,142,1,Disturbance
+26,DIS_10YR_PRSA,143,1,Disturbance
+27,DIS_10YR_RCA,11,0,Disturbance
+28,DIS_10YR_RSA,14,0,Disturbance
+29,DIS_1YR_ARCA,69,0,Disturbance
+30,DIS_1YR_ARSA,81,0,Disturbance
+31,DIS_1YR_PARCA,144,1,Disturbance
+32,DIS_1YR_PARSA,145,1,Disturbance
+33,DIS_1YR_PRCA,146,1,Disturbance
+34,DIS_1YR_PRSA,147,1,Disturbance
+35,DIS_1YR_RCA,9,0,Disturbance
+36,DIS_1YR_RSA,12,0,Disturbance
+37,DIS_3YR_ARCA,70,0,Disturbance
+38,DIS_3YR_ARSA,82,0,Disturbance
+39,DIS_3YR_PARCA,148,1,Disturbance
+40,DIS_3YR_PARSA,149,1,Disturbance
+41,DIS_3YR_PRCA,150,1,Disturbance
+42,DIS_3YR_PRSA,151,1,Disturbance
+43,DIS_3YR_RCA,10,0,Disturbance
+44,DIS_3YR_RSA,13,0,Disturbance
+45,EROD_ARCA,55,0,Lithology and soils
+46,EROD_ARSA,74,0,Lithology and soils
+47,EROD_PARCA,152,1,Lithology and soils
+48,EROD_PARSA,153,1,Lithology and soils
+49,EROD_PRCA,154,1,Lithology and soils
+50,EROD_PRSA,155,1,Lithology and soils
+51,EROD_RCA,19,0,Lithology and soils
+52,EROD_RSA,20,0,Lithology and soils
+53,FPA_ARCA,68,0,Stream attributes
+54,FPA_RCA,50,0,Stream attributes
+55,FSS_26Aug14,130,1,Sample
+56,KFACT_ARCA,56,0,Lithology and soils
+57,KFACT_MARCA,156,1,Lithology and soils
+58,KFACT_MRCA,157,1,Lithology and soils
+59,KFACTWS_RCA,21,0,Lithology and soils
+60,KFACTWS_RSA,22,0,Lithology and soils
+61,LAT_RAW,6,1,Location
+62,LONG_RAW,7,1,Location
+63,MIN_Z,126,1,Location
+64,MONTH,133,1,Sample
+65,OWN_AGR_ARCA,66,0,Land use
+66,OWN_AGR_ARSA,80,0,Land use
+67,OWN_AGR_PARCA,158,1,Land use
+68,OWN_AGR_PARSA,159,1,Land use
+69,OWN_AGR_PRCA,160,1,Land use
+70,OWN_AGR_PRSA,161,1,Land use
+71,OWN_AGR_RCA,39,0,Land use
+72,OWN_AGR_RSA,44,0,Land use
+73,OWN_FED_ARCA,64,0,Land use
+74,OWN_FED_ARSA,78,0,Land use
+75,OWN_FED_PARCA,162,1,Land use
+76,OWN_FED_PARSA,163,1,Land use
+77,OWN_FED_PRCA,164,1,Land use
+78,OWN_FED_PRSA,165,1,Land use
+79,OWN_FED_RCA,37,0,Land use
+80,OWN_FED_RSA,42,0,Land use
+81,OWN_ODF_ARCA,63,0,Land use
+82,OWN_ODF_ARSA,77,0,Land use
+83,OWN_ODF_PARCA,166,1,Land use
+84,OWN_ODF_PARSA,167,1,Land use
+85,OWN_ODF_PRCA,168,1,Land use
+86,OWN_ODF_PRSA,169,1,Land use
+87,OWN_ODF_RCA,36,0,Land use
+88,OWN_ODF_RSA,41,0,Land use
+89,OWN_PRI_ARCA,62,0,Land use
+90,OWN_PRI_ARSA,76,0,Land use
+91,OWN_PRI_PARCA,170,1,Land use
+92,OWN_PRI_PARSA,171,1,Land use
+93,OWN_PRI_PRCA,172,1,Land use
+94,OWN_PRI_PRSA,173,1,Land use
+95,OWN_PRI_RCA,35,0,Land use
+96,OWN_PRI_RSA,40,0,Land use
+97,OWN_URB_ARCA,65,0,Land use
+98,OWN_URB_ARSA,79,0,Land use
+99,OWN_URB_PARCA,174,1,Land use
+100,OWN_URB_PARSA,175,1,Land use
+101,OWN_URB_PRCA,176,1,Land use
+102,OWN_URB_PRSA,177,1,Land use
+103,OWN_URB_RCA,38,0,Land use
+104,OWN_URB_RSA,43,0,Land use
+105,POP_ARCA,67,0,Land use
+106,POP_DARCA,178,1,Land use
+107,POP_RCA,23,0,Land use
+108,POP_RSA,24,0,Land use
+109,PPT_1971_2000,123,0,Precipitation
+110,PPT_1981_2010,124,1,Precipitation
+111,Q0001E_adj,128,1,Stream attributes
+112,rid,3,0,Stream attributes
+113,rid_LSN04,8,0,Stream attributes
+114,ROADLEN_ARCA,61,0,Land use
+115,ROADLEN_ARSA,75,0,Land use
+116,ROADLEN_DARCA,179,1,Land use
+117,ROADLEN_DARSA,180,1,Land use
+118,ROADLEN_DRCA,181,1,Land use
+119,ROADLEN_DRSA,182,1,Land use
+120,ROADLEN_RCA,45,0,Land use
+121,ROADLEN_RSA,46,0,Land use
+122,ROADX_ARCA,87,0,Land use
+123,ROADX_DARCA,183,1,Land use
+124,ROADX_DRCA,184,0,Land use
+125,ROADX_RCA,47,0,Land use
+126,SAND_ARCA,58,0,Lithology and soils
+127,SAND_PARCA,185,1,Lithology and soils
+128,SAND_PRCA,186,1,Lithology and soils
+129,SAND_RCA,25,0,Lithology and soils
+130,SAND_RSA,26,0,Lithology and soils
+131,SILT_ARCA,60,0,Lithology and soils
+132,SILT_CLAY_ARCA,59,0,Lithology and soils
+133,SILT_CLAY_PARCA,187,1,Lithology and soils
+134,SILT_CLAY_PRCA,188,1,Lithology and soils
+135,SILT_CLAY_RCA,29,0,Lithology and soils
+136,SILT_CLAY_RSA,30,0,Lithology and soils
+137,SILT_PARCA,189,1,Lithology and soils
+138,SILT_PRCA,190,1,Lithology and soils
+139,SILT_RCA,27,0,Lithology and soils
+140,SILT_RSA,28,0,Lithology and soils
+141,SINUMAP,4,1,Stream attributes
+142,SPLASH_ARCA,84,1,Land use
+143,SPLASH_RCA,48,0,Land use
+144,SQKM_ARCA,127,0,Stream attributes
+145,SQM_ARCA,53,1,Stream attributes
+146,SQM_ARSA,72,1,Stream attributes
+147,SQM_RCA,51,0,Stream attributes
+148,SQM_RSA,52,0,Stream attributes
+149,STATION_KEY,2,0,Sample
+150,STRMPWR,129,1,Stream attributes
+151,sum_1095_days,92,1,Precipitation
+152,sum_180_days,90,1,Precipitation
+153,sum_365_days,91,1,Precipitation
+154,sum_60_days,89,1,Precipitation
+155,SUSCEP4_ARCA,85,0,Landslide susceptibility
+156,SUSCEP4_PARCA,191,1,Landslide susceptibility
+157,SUSCEP4_PRCA,192,1,Landslide susceptibility
+158,SUSCEP4_RCA,31,0,Landslide susceptibility
+159,SUSCEP4_RSA,33,0,Landslide susceptibility
+160,SUSCEP5_ARCA,86,0,Landslide susceptibility
+161,SUSCEP5_PARCA,193,1,Landslide susceptibility
+162,SUSCEP5_PRCA,194,1,Landslide susceptibility
+163,SUSCEP5_RCA,32,0,Landslide susceptibility
+164,SUSCEP5_RSA,34,0,Landslide susceptibility
+165,SVN,1,0,Sample
+166,TYPEF_ARCA,88,0,Stream attributes
+167,TYPEF_PARCA,195,1,Stream attributes
+168,TYPEF_RCA,49,0,Stream attributes
+169,upDist,5,1,Stream attributes
+170,X100year_count_1095_days,116,1,Precipitation
+171,X100year_count_180_days,104,1,Precipitation
+172,X100year_count_365_days,110,1,Precipitation
+173,X100year_count_60_days,98,1,Precipitation
+174,X10year_count_1095_days,113,1,Precipitation
+175,X10year_count_180_days,101,1,Precipitation
+176,X10year_count_365_days,107,1,Precipitation
+177,X10year_count_60_days,95,1,Precipitation
+178,X25year_count_1095_days,114,1,Precipitation
+179,X25year_count_180_days,102,1,Precipitation
+180,X25year_count_365_days,108,1,Precipitation
+181,X25year_count_60_days,96,1,Precipitation
+182,X2year_count_1095_days,112,1,Precipitation
+183,X2year_count_180_days,100,1,Precipitation
+184,X2year_count_365_days,106,1,Precipitation
+185,X2year_count_60_days,94,1,Precipitation
+186,X50year_count_1095_days,115,1,Precipitation
+187,X50year_count_180_days,103,1,Precipitation
+188,X50year_count_365_days,109,1,Precipitation
+189,X50year_count_60_days,97,1,Precipitation
+190,X6month_count_1095_days,111,1,Precipitation
+191,X6month_count_180_days,99,1,Precipitation
+192,X6month_count_365_days,105,1,Precipitation
+193,X6month_count_60_days,93,1,Precipitation
+194,XSLOPE_MAP,125,1,Stream attributes
+195,YEAR,132,1,Sample
