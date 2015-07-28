@@ -51,7 +51,7 @@ ROADLEN_DRSA,ROADLEN_RSA,SQM_RCA,1000,density length m per sqkm,meters
 ROADX_DARCA,ROADX_ARCA,SQM_ARCA,1000,density crossings per sqkm,count
 ROADX_DRCA,ROADX_RCA,SQM_RCA,1000,density crossings per sqkm,count
 SAND_PARCA,SAND_ARCA,NACOUNT_ARCA,1,percent,sum of percents
-SAND_PRCA,SAND_PRCA,NACOUNT_RCA,1,percent,sum of percents
+SAND_PRCA,SAND_RCA,NACOUNT_RCA,1,percent,sum of percents
 SILT_CLAY_PARCA,SILT_CLAY_ARCA,NACOUNT_ARCA,1,percent,sum of percents
 SILT_CLAY_PRCA,SILT_CLAY_RCA,NACOUNT_RCA,1,percent,sum of percents
 SILT_PARCA,SILT_ARCA,NACOUNT_ARCA,1,percent,sum of percents
