@@ -1,10 +1,13 @@
+#This file needs to be run in 64 bit R
+
 library(randomForest)
 library(reshape)
 library(plyr)
 
 options(stringsAsFactors = FALSE)
-vars <- read.csv("VarNames_RF.csv")
+vars <- read.csv("VarNames_RF_v2.csv")
 bugs <- read.csv("ssn_RF_data.csv")
+
 
 #### Correlation Matrix Functions ####
 # source
@@ -49,27 +52,20 @@ panel.hist <- function(x, ...)
 # Since we have a large amount of variables random forest is run 50 times with a 
 # very high number of trees per forest (ntree). This yields a distribution of importance scores.
 # Removal is based on these distributions. We keep the variables with the highest scores.
-vars[vars$var == 'STATION_KEY','fss2.rf_keep'] <- 1
-vars.fss2.s1 <- vars[vars$fss2.rf_keep == 1,]
+
+vars.fss2.s1 <- vars[vars$keep == 1,]
 
 fss2.s1 <- bugs[,colnames(bugs) %in% vars.fss2.s1$var]
 
-fss2.s1 <- within(fss2.s1, rm('STATION_KEY'))
+fss2.s1$DATE <- as.POSIXct(fss2.s1$DATE)
 
-# keep a copy with all the data
-fss2.s1.na <- fss2.s1
-
-#There are mostly NA's in these variables since we don't have lidar in most of the coast range
-#and so aren't that useful. We'll remove them here.
-fss2.s1 <- fss2.s1[,!(colnames(fss2.s1) %in% c("PSUSCEP4_LI","PSUSCEP5_LI",
-                                               "PASUSCEP4_LI", "PASUSCEP5_LI"))]
-colnames(fss2.s1)
-
-# remove NAs in response variable
-fss2.s1 <- fss2.s1[(!is.na(fss2.s1$FSS_26Aug14)),]
-# remove any NAs - this has been taken care of prior to this but for good measure we'll leave it in
-#This removes the whole row where there is an NA. There are columns that are all NA due to scaling 
-fss2.s1 <- data.frame(na.omit(fss2.s1))
+# #The below steps were necessary during initial processing and are not necessary now that we are 
+# #using the modified dataset
+# #remove NAs in response variable
+# fss2.s1 <- fss2.s1[(!is.na(fss2.s1$FSS_26Aug14)),]
+# # remove any NAs - this has been taken care of prior to this but for good measure we'll leave it in
+# #This removes the whole row where there is an NA. There are columns that are all NA due to scaling 
+# fss2.s1 <- data.frame(na.omit(fss2.s1))
 
 # #Normalize the data to the same scale - Completed on 12/17 at 1618/1620. Did not affect rank order
 # Will not normalize to same scale at this point in the data processing since it affects the 
@@ -77,10 +73,12 @@ fss2.s1 <- data.frame(na.omit(fss2.s1))
 # fss2.s1$LONG_RAW <- abs(fss2.s1$LONG_RAW)
 # fss2.s1 <- as.data.frame(lapply(fss2.s1,function(x) {(x-min(x))/(max(x)-min(x))}))
 # 
-# #This introduces NAs for those variables that were all 0
-# fss2.s1 <- fss2.s1[,setdiff(names(fss2.s1),c("X2year_count_60_days","X10year_count_60_days", "X25year_count_60_days", "X50year_count_60_days",
-#                         "X100year_count_60_days", "X10year_count_180_days", "X25year_count_180_days",
-#                         "X50year_count_180_days", "X100year_count_180_days"))]
+#This removes those variables where all the values are 0
+fss2.s1 <- fss2.s1[,setdiff(names(fss2.s1),c("X2year_count_60_days","X10year_count_60_days", "X25year_count_60_days", "X50year_count_60_days",
+                        "X100year_count_60_days", "X10year_count_180_days", "X25year_count_180_days",
+                        "X50year_count_180_days", "X100year_count_180_days"))]
+#Need to convert Inf values to 0
+fss2.s1[,grep("X",names(fss2.s1))] <- as.data.frame(sapply(fss2.s1[,grep("X",names(fss2.s1))], function(x) {replace(x, is.infinite(x),0)}))
 
 # mtry value
 mtry.fss2.s1 <- as.integer(((ncol(fss2.s1)-1) / 3),0)
@@ -124,8 +122,8 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
 save(fss2.s1.vi, file=paste0("fss2_s1_vi_",timestamp,".RData"))
 save(fss2.s1.visd, file=paste0("fss2_s1_visd_",timestamp,".RData"))
 timestamp
-load("C:/users/pbryant/desktop/midcoasttmdl-modelruns/rf_runs/fss2_s1_vi_20141210_1515.RData")
-load("fss2_s1_visd_20141210_1515.RData")
+load("fss2_s1_vi_20150720_1627.RData")
+load("fss2_s1_visd_20150720_1627.RData")
 
 #### s1 boxplot ####
 fss2.s1.vi.l <- melt(fss2.s1.vi, id=c("var_name","var_index"))
@@ -153,74 +151,92 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
 save(fss2.s1.vi.median, file=paste0("fss2_s1_vi_median_",timestamp,".RData"))
 save(fss2.s1, file=paste0("fss2_s1_",timestamp,".RData"))
 timestamp
-load("C:/users/pbryant/desktop/midcoasttmdl-modelruns/rf_runs/fss2_s1_vi_median_20141210_1515.RData")
-load("C:/users/pbryant/desktop/midcoasttmdl-modelruns/rf_runs/fss2_s1_20141210_1515.RData")
+load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_vi_median_20150722_1035.RData")
+load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_20150722_1035.RData")
 
 #### Variable selection ####
 # Values drop off and then level out. Arbitrarily going with 50% of the variables.
 # grab all variable names with median values > 1.004880e-04 = 50% of the data
 # This 50% of the data reflects 50% of the original list of variables prior to scaling
 # Scaling had the effect of dropping variables that were all 0s anyway.
-fss2.s2.col <- fss2.s1.vi.median[fss2.s1.vi.median$median >= 1.004880e-04,][,1]
-fss2.s2.col <- c("FSS_26Aug14",fss2.s2.col)
+fss2.s2.col <- fss2.s1.vi.median[1:ceiling(nrow(fss2.s1.vi.median)/2),][,1]
+#fss2.s2.col <- c("FSS_26Aug14",(fss2.s1.vi.median[,'var_name']))
 fss2.s2 <- fss2.s1[,colnames(fss2.s1) %in% fss2.s2.col]
 
+fss2.s2.col <- vars[vars$var %in% names(fss2.s2),]
+#fss2.s2.col <- fss2.s2.col[fss2.s2.col$var != 'FSS_26Aug14',]
+fss2.s2.col <- merge(fss2.s2.col, fss2.s1.vi.median[,c('var_name','median')],by.x = 'var', by.y = 'var_name', all.x = TRUE)
+fss2.s2.col <- arrange(fss2.s2.col, desc(median))
+
+#By category
+all_keep <- c()
+for (j in 1:length(unique(fss2.s2.col$Category))) {
+  #pcor <- cor(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == unique(fss2.s2.col$Category)[j],'var']])
+  pcor <- cor(fss2.s2[,fss2.s2.col$var])
+  pnames <- attr(pcor, "dimnames")[[1]]
+  pkeep <- pnames
+  for (i in length(pnames):1) {
+    if (any(round(abs(pcor[i,][-i]),2) >= 0.3)) {
+      if (i != 1) {
+        pkeep <- pkeep[-i]
+        pcor <- pcor[-i,-i,drop=FALSE]
+      }
+    } 
+  }
+  all_keep <- c(all_keep, pkeep)
+}
+
+# #All together
+# pcor <- cor(fss2.s2[,fss2.s2.col$var])
+# pnames <- attr(pcor, "dimnames")[[1]]
+# pkeep <- pnames
+# for (i in length(pnames):1) {
+#   if (any(round(abs(pcor[i,][-i]),2) >= 0.3)) {
+#     if (i != 1) {
+#       pkeep <- pkeep[-i]
+#       pcor <- pcor[-i,-i,drop=FALSE]
+#     }
+#   } 
+# }
+
 #### Correlation plots ####
-names(fss2.s2.col) <- fss2.s2.col
+#names(fss2.s2.col) <- fss2.s2.col
 
 #Method: Look for r<=0.2. If lower importance variable has r>=0.2 with any higher importance variables select the highest 
 #importance variable unless that variable is already conceptually represented.
 
-# Precip  "sum_1095_days" "PPT_1981_2010" "sum_365_days"  "sum_180_days"  "sum_60_days"
+# Precip  
 png('precip_cor.png')
-pairs(fss2.s2[,fss2.s2.col[c("sum_1095_days", "PPT_1981_2010", "sum_365_days",  "sum_180_days","sum_60_days")]],
-      lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
+pairs(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == 'Precipitation','var']],lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 dev.off()
 # keep "sum_1095_days"
 
-# Disturb [1] "PDISRSA_1YR"  "PADISRSA_1YR" "PDISRCA_1YR"  "PDISRCA_3YR"  "PADISRCA_1YR" "PDISRCA_10YR" "PADISRCA_3YR"
-pairs(fss2.s2[,fss2.s2.col[c("PDISRSA_1YR", "PADISRSA_1YR", "PDISRCA_1YR",  "PDISRCA_3YR",  
-                             "PADISRCA_1YR", "PDISRCA_10YR", "PADISRCA_3YR")]],
-      lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
+#Disturbance
+pairs(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == 'Disturbance','var']],lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 # everything is coorelated
-# keep "PDISRSA_1YR",
+# keep "DIS_1YR_PARSA"
 
 # Lithology/soils
-#[1] "PALITHERODRCA"  "PALITHERODRSA"  "PASILTRCA"      "PACLAYRCA"      "PASILT_CLAYRCA" "PASANDRCA"      "MAKFACTRCA"     "PSILTRCA"      
-#[9] "PCLAYRCA"       "PLITHERODRSA"   "PLITHERODRCA"   "PSANDRCA"       "PSILT_CLAYRCA"  "MKFACTRCA"      "PALITHCOMPRCA"
-pairs(fss2.s2[,fss2.s2.col[c("PALITHERODRCA", "PALITHERODRSA", "PASILTRCA", "PACLAYRCA", 
-                             "PASILT_CLAYRCA", "PASANDRCA", "MAKFACTRCA", "PSILTRCA",      
-                             "PCLAYRCA", "PLITHERODRSA",  "PLITHERODRCA",  "PSANDRCA", 
-                             "PSILT_CLAYRCA", "MKFACTRCA", "PALITHCOMPRCA")]],
-      lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
+pairs(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == 'Lithology and soils','var']],lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 # almost everything is coorelated
-# Keep "PALITHERODRCA", "PASILTRCA", "PACLAYRCA"
+# Keep "EROD_PARCA", "SILT_CLAY_PARCA"
 
 # Ownership 
-#  [1] "DAPOPRCA2010" "APOPRCA2010"  "POWNRCA_PRI"  "PAOWNRSA_PRI" "POPRCA2010"   "POWNRSA_PRI"  "PAOWNRCA_AGR" "POWNRCA_FED"  "PAOWNRSA_FED"
-# [10] "PAOWNRCA_PRI" "POWNRSA_FED"  "PAOWNRCA_URB" "PAOWNRSA_AGR" "DAROADX"
-pairs(fss2.s2[,fss2.s2.col[c("DAPOPRCA2010", "APOPRCA2010", "POWNRCA_PRI", "PAOWNRSA_PRI", "POPRCA2010",
-                             "POWNRSA_PRI",  "PAOWNRCA_AGR", "POWNRCA_FED",  "PAOWNRSA_FED",
-                             "PAOWNRCA_PRI", "POWNRSA_FED",  "PAOWNRCA_URB", "PAOWNRSA_AGR", "DAROADX")]],
-      lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
-# Keep"DAPOPRCA2010","POWNRCA_PRI","PAOWNRCA_AGR,"DAROADX"
+pairs(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == 'Land use','var']],lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
+# Keep"ROADLEN_DRSA","OWN_FED_PRCA","POP_DARCA","OWN_PRI_PRCA","OWN_AGR_PARCA"
 
 #Susceptibility
-# "PASUSCEP5_DE" "PASUSCEP4_DE" "PSUSCEP4_DE"  "PSUSCEP5_DE" 
-pairs(fss2.s2[,fss2.s2.col[c("PASUSCEP5_DE", "PASUSCEP4_DE", "PSUSCEP4_DE",  "PSUSCEP5_DE")]],
-      lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
+pairs(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == 'Landslide susceptibility','var']],lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 #All correlated. 
-#Keep "PASUSCEP5_DE"
+#Keep "SUSCEP5_PARCA"
 
-# Others/The rest
-#[1] "STRMPWR"    "XSLOPE_MAP" "MIN_Z"      "LONG_RAW"   "LAT_RAW"    "upDist"     "afvArea"    "PATYPEF"    "ARCASQM"    "ARSASQM"   
-#[11] "Q0001A"   
-pairs(fss2.s2[,fss2.s2.col[c("STRMPWR", "XSLOPE_MAP", "MIN_Z", "LONG_RAW", "LAT_RAW", 
-                             "upDist", "afvArea", "PATYPEF", "ARCASQM",    "ARSASQM",   
-                           "Q0001A")]],
-      lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
-# udist and Long coorelated
-# keeep [1] "STRMPWR", "XSLOPE_MAP","MIN_Z","LAT_RAW"
+#Location
+pairs(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == 'Location','var']],lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
+#Keep "MIN_Z"
+
+#Stream attributes
+pairs(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == 'Stream attributes','var']],lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
+#Keep "STRMPWR","XSLOPE_MAP"
 
 keeps.s2 <- c("FSS_26Aug14",
               "sum_1095_days", 
@@ -306,7 +322,7 @@ boxplot(value ~ bymedian, data = fss2.s2.vi.l,
         col = "lightgray", horizontal = TRUE)
 lablist.y<-levels(bymedian)
 axis(2, labels = FALSE)
-text(y = 1:14, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
+text(y = 1:100, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
 dev.off()
 
 png('varImpALL_s2.png', width = 960, height = 960)

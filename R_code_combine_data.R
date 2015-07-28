@@ -1,7 +1,8 @@
 #############################################################
 # This script reads in various tables, cleans them, and
 # makes numerous calculations to preperae the data for the
-# random forest and ssn analysis.
+# random forest and ssn analysis. This file must be run in
+# 32-bit R.
 
 # Ryan Michie & Peter Bryant
 #############################################################
@@ -13,7 +14,7 @@ library(foreign)
 library(raster)
 library(stringr)
 options(stringsAsFactors = FALSE)
-options("scipen"=100, "digits"=4)
+options("scipen"=100)
 
 # -----------------------------------------------------------
 # Read in data 
@@ -101,7 +102,7 @@ for (arca in accumulated) {
 edgedf.wo <- edgedf[,names(edgedf[,setdiff(names(edgedf),c(accumulated,rca))])]
 
 #Bring together US areas with each station
-obs.a <- merge(edgedf.wo, obs[,c('rid','STATION_KEY')], by = 'rid')
+obs.a <- merge(edgedf.wo, obs[,c('rid','STATION_KEY', 'LAT_RAW', 'LONG_RAW')], by = 'rid')
 #This one just brings in the 'SVN' column to allow for matching to the disturbance areas which are to the sample date and not the station
 obs.a <- merge(obs.a, phab.bugs[,c('STATION_KEY','SVN','Date')], by = 'STATION_KEY', all.y = TRUE)
 #first we need to trim the svn string column cause there are extra spaces in there
@@ -355,16 +356,31 @@ for (i in 1:nrow(pvar2)) {
 # -----------------------------------------------------------
 
 #Clean up the columns in obs.a a bit
-obs.a <- within(obs.a, rm(fishpres, nhd_ratio, TotDASqKM, DivDASqKM))
+obs.a <- within(obs.a, rm(fishpres, nhd_ratio, TotDASqKM, DivDASqKM, Date, COUNT_ARCA, COUNT_ARSA, COUNT_RCA, COUNT_RSA,
+                          NACOUNT_ARCA, NACOUNT_RCA, NACOUNT_RSA, NASQM_ARCA, NASQM_RCA, NASQM_RSA, NHDP21_COMID))
 
 #The previous workflow identified columns with NA data and based on the 
 # number of NAs in the variable the determination for inclusion/exclusion was 
 #made. The variables in these current obs are the result of those determinations.
 
+#There is still a need to clean up the dataframe to just the variables we are relating
+#Here we will output a csv and mark which columns to keep and which to exclude for subsequent steps
+# Leave commented unless you changed something above because this file has been edited outside of the script.
+# old <- read.csv('VarNames_RF_v2.csv')
+# new <- data.frame(var = names(obs.a))
+# ready <- merge(new, old, by = 'var', all.x = TRUE)
+# x <- 1:length(names(obs.a))
+# names(obs.names) <- x
+# obs.names <- names(obs.a)
+# ready$col.num <- mapvalues(ready$var, from = obs.names, to = names(obs.names))
+# ready[ready$var %in% c('LAT_RAW', 'LONG_RAW'),'keep'] <- 1
+# write.csv(names(obs.a), 'VarNames_RF_v2.csv')
+
+
 # -----------------------------------------------------------
 # Write the files
 
-#write.csv(obs.a, 'ssn_RF_data.csv', row.names = FALSE)
+write.csv(obs.a, 'ssn_RF_data.csv', row.names = FALSE)
 
 
 
