@@ -7,7 +7,7 @@ options('scipen' = 100)
 ##################################################
 ### Create the Distance Matrix
 ###################################################
-createDistMat(ssn1, predpts = 'preds', o.write = TRUE, amongpreds = TRUE)
+createDistMat(ssn1, predpts = 'preds_up', o.write = TRUE, amongpreds = TRUE)
 
 ###################################################
 # map the stream network with observed sites
@@ -25,6 +25,10 @@ plot(ssn1.Torg)
 ###################################################
 ### Variable Selection Via Backward Deletion   ###
 ###################################################
+
+test <- glmssn(as.formula(obs.vars[,c('log10_FSS_26Aug14',names(obs.fss2))]),
+               ssn1,
+               CorModels = c('Exponential.Euclid','Exponential.taildown'))
 
 #### ssn1.glmssn1.G ####
 start.time <- Sys.time()

@@ -171,12 +171,11 @@ fss2.s2.col <- arrange(fss2.s2.col, desc(median))
 #By category
 all_keep <- c()
 for (j in 1:length(unique(fss2.s2.col$Category))) {
-  #pcor <- cor(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == unique(fss2.s2.col$Category)[j],'var']])
-  pcor <- cor(fss2.s2[,fss2.s2.col$var])
+  pcor <- cor(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == unique(fss2.s2.col$Category)[j],'var']])
   pnames <- attr(pcor, "dimnames")[[1]]
   pkeep <- pnames
   for (i in length(pnames):1) {
-    if (any(round(abs(pcor[i,][-i]),2) >= 0.3)) {
+    if (any(round(abs(pcor[i,][-i]),2) >= 0.2)) {
       if (i != 1) {
         pkeep <- pkeep[-i]
         pcor <- pcor[-i,-i,drop=FALSE]
@@ -186,8 +185,8 @@ for (j in 1:length(unique(fss2.s2.col$Category))) {
   all_keep <- c(all_keep, pkeep)
 }
 
-# #All together
-# pcor <- cor(fss2.s2[,fss2.s2.col$var])
+# # #All together
+# pcor <- cor(fss2.s1[,setdiff(fss2.s1.vi.median$var_name,"DATE")])
 # pnames <- attr(pcor, "dimnames")[[1]]
 # pkeep <- pnames
 # for (i in length(pnames):1) {
@@ -238,22 +237,15 @@ pairs(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == 'Location','var']],lower.pane
 pairs(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == 'Stream attributes','var']],lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
 #Keep "STRMPWR","XSLOPE_MAP"
 
-keeps.s2 <- c("FSS_26Aug14",
-              "sum_1095_days", 
-              "PDISRSA_1YR",
-              "PALITHERODRCA", "PASILTRCA", "PACLAYRCA",
-              "DAPOPRCA2010","POWNRCA_PRI","PAOWNRCA_AGR","DAROADX",
-              "PASUSCEP5_DE",
-              "STRMPWR", "XSLOPE_MAP","MIN_Z","LAT_RAW")
-
 #Further remove variables to reduce the influence of correlation on raising variable importance
-fss2.s2 <- fss2.s2[,colnames(fss2.s2) %in% keeps.s2]
+#fss2.s2 <- fss2.s2[,colnames(fss2.s2) %in% keeps.s2]
+fss2.s2 <- fss2.s2[,colnames(fss2.s2) %in% c('FSS_26Aug14',all_keep)]
 colnames(fss2.s2)
 
 
 # remove any NAs
 fss2.s2 <- data.frame(na.omit(fss2.s2))
-#write.csv(fss2.s2, 'fss2_s2_data.csv')
+#write.csv(fss2.s2, 'fss2_s2_data_testing.csv')
 #write.csv(fss2.s2, 'fss2_s2_data_scaled.csv')
 
 # --- #
