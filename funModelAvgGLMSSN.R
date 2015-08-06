@@ -1,25 +1,25 @@
-object<- rval.out
+object<- rval.out[rval.out$delta < 2,]
 fit = FALSE
 revised.var = TRUE
-if (!missing(subset)) {
-  cl <- match.call()
-  cl[[1L]] <- as.name("subset")
-  names(cl)[2L] <- "x"
-  object <- eval.parent(cl[1L:3L])
-}
-if (fit || !missing(...)) {
-  cl <- match.call()
-  cl$fit <- NULL
-  arg1 <- names(cl)[-(1L:2L)] %in% names(formals("model.avg.default"))
-  cl1 <- cl[c(TRUE, TRUE, !arg1)]
-  cl1[[1L]] <- as.name("get.models")
-  if (is.null(cl1[["subset"]])) 
-    cl1[["subset"]] <- NA
-  cl2 <- cl[c(TRUE, TRUE, arg1)]
-  cl2[[2L]] <- cl1
-  cl2[[1L]] <- as.name("model.avg")
-  return(eval(cl2, parent.frame()))
-}
+# if (!missing(subset)) {
+#   cl <- match.call()
+#   cl[[1L]] <- as.name("subset")
+#   names(cl)[2L] <- "x"
+#   object <- eval.parent(cl[1L:3L])
+# }
+# if (fit || !missing(...)) {
+#   cl <- match.call()
+#   cl$fit <- NULL
+#   arg1 <- names(cl)[-(1L:2L)] %in% names(formals("model.avg.default"))
+#   cl1 <- cl[c(TRUE, TRUE, !arg1)]
+#   cl1[[1L]] <- as.name("get.models")
+#   if (is.null(cl1[["subset"]])) 
+#     cl1[["subset"]] <- NA
+#   cl2 <- cl[c(TRUE, TRUE, arg1)]
+#   cl2[[2L]] <- cl1
+#   cl2[[1L]] <- as.name("model.avg")
+#   return(eval(cl2, parent.frame()))
+# }
 if (nrow(object) <= 1L) 
   stop("'object' consists of only one model")
 ct <- attr(object, "coefTables")

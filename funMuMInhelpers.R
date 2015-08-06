@@ -1,6 +1,19 @@
 library(MuMIn)
 library(SSN)
 
+`coefArray` <- function(object) {
+  coefNames <- fixCoefNames(unique(unlist(lapply(object, rownames),
+                                          use.names = FALSE)))
+  nCoef <- length(coefNames)
+  nModels <- length(object)
+  rval <- array(NA_real_, dim = c(nModels, 3L, nCoef),
+                dimnames = list(names(object), c("Estimate", "Std. Error", "df"), coefNames))
+  for(i in seq_along(object)) {
+    z <- object[[i]]
+    rval[i, seq_len(ncol(z)), ] <- t(z[match(coefNames, fixCoefNames(rownames(z))), ])
+  }
+  rval
+}
 
 
 AICc.glmssn <- function (object, ..., k = 2) 
@@ -54,7 +67,7 @@ matchCoef <- function(m1, m2,
                       beta = 0L,
                       terms1 = getAllTerms(m1, intercept = TRUE),
                       coef1 = NULL,
-                      allCoef = FALSE,
+                      allCoef = TRUE,
                       ...
 ) {
   if(is.null(coef1)) {
@@ -159,3 +172,68 @@ type2col <-
 
 `itemByType<-` <- function(x, type, i, value)
   `[<-.data.frame`(x, i, type2col(x, type), value)
+
+`.pdredge_process_model` <- function(modv, envir = get("pdredge_props", .GlobalEnv)) {
+  ### modv == list(call = clVariant, id = modelId)
+  result <- tryCatchWE(eval(modv$call, get("gmEnv", envir)))
+  if (inherits(result$value, "condition")) return(result)
+  
+  fit1 <- result$value
+#   if(get("nextra", envir) != 0L) {
+#     extraResult1 <- get("applyExtras", envir)(fit1)
+#     nextra <- get("nextra", envir)
+#     if(length(extraResult1) < nextra) {
+#       tmp <- rep(NA_real_, nextra)
+#       tmp[match(names(extraResult1), get("extraResultNames", envir))] <-
+#         extraResult1
+#       extraResult1 <- tmp
+#     }
+#   } else 
+    extraResult1 <- NULL
+  #ll <- .getLik(fit1)$logLik(fit1)
+  ll <- fit1$estimates$m2LL
+  aic <- AICc.glmssn(fit1)
+  mcoef <- matchCoef(fit1, all.terms = allTerms)
+  # beta = get("beta", envir), allCoef = TRUE)
+  #mcoef <- eval(get("matchCoefCall", envir))
+  
+  
+  list(value = c(mcoef, extraResult1, df = fit1$sampinfo$sample.size - fit1$sampinfo$rankX, ll = ll,
+                 ic = aic),
+       nobs = fit1$sampinfo$sample.size,
+       coefTable = attr(mcoef, "coefTable"),
+       warnings = result$warnings)
+  
+}
+
+`tryCatchWE` <- function (expr) {
+  Warnings <- NULL
+  list(value = withCallingHandlers(tryCatch(expr, error = function(e) e),
+                                   warning = function(w) {
+                                     Warnings <<- c(Warnings, list(w))
+                                     invokeRestart("muffleWarning")
+                                   }), warnings = Warnings)
+}
+
+`clusterVExport` <- local({
+  
+  `getv` <- function(obj, env = as.environment(1L))
+    for (i in names(obj)) assign(i, obj[[i]], envir = env)
+  function(cluster, ...) {
+    Call <- match.call()
+    Call$cluster <- NULL
+    Call <- Call[-1L]
+    vars <- list(...)
+    vnames <- names(vars)
+    #if(!all(sapply(Call, is.name))) warning("at least some elements do not have syntactic name")
+    if(is.null(vnames)) {
+      names(vars) <- vapply(Call, asChar, "")
+    } else if (any(vnames == "")) {
+      names(vars) <- ifelse(vnames == "", vapply(Call, asChar, ""), vnames)
+    }
+    get("clusterCall")(cluster, getv, vars)
+    # clusterCall(cluster, getv, vars)
+  }
+})
+
+.getRow <- function(X) clusterApply(cluster, X, fun = ".pdredge_process_model")
