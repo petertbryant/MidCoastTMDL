@@ -74,9 +74,15 @@ fss2.s1$DATE <- as.POSIXct(fss2.s1$DATE)
 # fss2.s1 <- as.data.frame(lapply(fss2.s1,function(x) {(x-min(x))/(max(x)-min(x))}))
 # 
 #This removes those variables where all the values are 0
-fss2.s1 <- fss2.s1[,setdiff(names(fss2.s1),c("X2year_count_60_days","X10year_count_60_days", "X25year_count_60_days", "X50year_count_60_days",
-                        "X100year_count_60_days", "X10year_count_180_days", "X25year_count_180_days",
-                        "X50year_count_180_days", "X100year_count_180_days"))]
+fss2.s1 <- fss2.s1[,setdiff(names(fss2.s1),c("X2year_count_60_days",
+                                             "X10year_count_60_days", 
+                                             "X25year_count_60_days", 
+                                             "X50year_count_60_days",
+                                             "X100year_count_60_days", 
+                                             "X10year_count_180_days", 
+                                             "X25year_count_180_days",
+                                             "X50year_count_180_days", 
+                                             "X100year_count_180_days"))]
 #Need to convert Inf values to 0
 fss2.s1[,grep("X",names(fss2.s1))] <- as.data.frame(sapply(fss2.s1[,grep("X",names(fss2.s1))], function(x) {replace(x, is.infinite(x),0)}))
 
@@ -128,13 +134,13 @@ load("fss2_s1_visd_20150720_1627.RData")
 #### s1 boxplot ####
 fss2.s1.vi.l <- melt(fss2.s1.vi, id=c("var_name","var_index"))
 
-png('varImpALL_scaled.png', width = 960, height = 960)
+#png('varImpALL.png', width = 960, height = 960)
 bymedian <- with(fss2.s1.vi.l, reorder(var_index, value, median))
 boxplot(value ~ bymedian, data = fss2.s1.vi.l,
         ylab = "Variable index", xlab = "% Increase MSE", 
         varwidth = TRUE,
         col = "lightgray", horizontal = TRUE)
-dev.off()
+#dev.off()
 
 #R2
 1-sum((fss2.s1$FSS_26Aug14-predict(fss2.s1.rf))^2)/sum((fss2.s1$FSS_26Aug14-mean(fss2.s1$FSS_26Aug14))^2)

@@ -55,8 +55,14 @@ svn.rm <- read.csv('//deqhq1/TMDL/TMDL_WR/MidCoast/Data/BenthicMacros/Raw_From_S
 precip <- read.csv('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/Watershed_Characteristics/Precip/R_output_Precip_samples_2014-09-08.csv')
 
 # Read in NHD ComIDs. We use the COMIDs to map to NHD catchment. This layer was created by doing a spatial join of NHDPlus21 Catchments with the updated obs layer that 
-# resolved issues with snapping the obs to LSN05 vs LSN04
+# resolved issues with snapping the obs to LSN05 vs LSN04. Also the flow values and the cumulative areas.
 nhd <- read.dbf('C:/users/pbryant/desktop/midcoasttmdl-gis/lsn05_watersheds/NHD21_obs_up.dbf', as.is = TRUE)
+nhd.flow <- read.dbf('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/Watershed_Characteristics/NHDplus_21/EROMExtension/EROM_MA0001.DBF')
+nhd.area <- read.dbf('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/Watershed_Characteristics/NHDplus_21/Attributes/CumulativeArea.dbf')
+
+#Read in slope files
+slope <- read.csv('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/Watershed_Characteristics/SLOPES/Final/slopesmerge.csv')
+ryan.slope <- read.csv('//Deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/Watershed_Characteristics/SLOPES/Final/slopes_ryan.txt')
 
 # -----------------------------------------------------------
 # Accumulate variables to each observation. This involves two steps.
@@ -243,8 +249,7 @@ rm(rm.col, svns.precip.rm)
 # -----------------------------------------------------------
 # Pull in the slope data, fix the col names, and append it together
 
-slope <- read.csv('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/Watershed_Characteristics/SLOPES/Final/slopesmerge.csv')
-ryan.slope <- read.csv('//Deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/Watershed_Characteristics/SLOPES/Final/slopes_ryan.txt')
+
 ryan.slope <- rename(ryan.slope, c('SLOPE_AVG_MAP' = 'XSLOPE_MAP', 'Z_Min' = 'MIN_Z', 'Z_Max' = 'MAX_Z', "REACHLEN" = 'RchLenFin'))
 
 ryan.slope <- cbind(ryan.slope, data.frame("Source" = rep(NA, nrow(ryan.slope)), 
@@ -295,7 +300,6 @@ nhd <- nhd[,c('SVN','NHDP21_COMID')]
 obs.a <- merge(obs.a, nhd, by = 'SVN', all.x = TRUE)
 
 # Calculate stream power by first pulling in the flow data from nhdplus v21
-nhd.flow <- read.dbf('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/Watershed_Characteristics/NHDplus_21/EROMExtension/EROM_MA0001.DBF')
 nhd.flow <- nhd.flow[,c('Comid','Q0001E')]
 
 #Some corrections to incorrect NHD ComID mapping
@@ -309,8 +313,6 @@ obs.a[obs.a$STATION_KEY %in% c('23817','33323','33333','33355','35786','dfw_3972
 obs.a <- merge(obs.a, nhd.flow, by.x = "NHDP21_COMID", by.y = 'Comid', all.x = TRUE)
 
 #Bring in NHD cumulative area
-#nhd.cat <- read.dbf('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/Watershed_Characteristics/NHDplus_21/Catchments/Catchment.dbf')
-nhd.area <- read.dbf('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/Watershed_Characteristics/NHDplus_21/Attributes/CumulativeArea.dbf')
 obs.a <- merge(obs.a, nhd.area, by.x = 'NHDP21_COMID', by.y = 'ComID', all.x = TRUE)
 
 #convert SQM_RCA to square kilometers
@@ -380,7 +382,7 @@ obs.a <- within(obs.a, rm(fishpres, nhd_ratio, TotDASqKM, DivDASqKM, Date, COUNT
 # -----------------------------------------------------------
 # Write the files
 
-write.csv(obs.a, 'ssn_RF_data.csv', row.names = FALSE)
+#write.csv(obs.a, 'ssn_RF_data.csv', row.names = FALSE)
 
 
 
