@@ -183,7 +183,8 @@ edge.accum <- edge.accum[!edge.accum %in% c('US_AEDGELEN','US_ATYPEN')]
 obs.a[!(names(obs.a) %in% "fishpres")][is.na(obs.a[!(names(obs.a) %in% 
                                                        "fishpres")])] <- 0
 
-#Loop through each variable at each accumulated scale and add the clipped pour point to the accumulated area that has had the lowest catchment area subtracted
+#Loop through each variable at each accumulated scale and add the clipped pour
+#point to the accumulated area that has had the lowest catchment area subtracted
 for (ra in c('PPRCA', 'PPRSA', 'OTHER')){
   if (ra == 'OTHER') {
     edge.accum.sub <- edge.accum[!grepl('RCA', edge.accum) & 
