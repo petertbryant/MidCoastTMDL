@@ -4,46 +4,12 @@ library(randomForest)
 library(reshape)
 library(plyr)
 
+source('funCorrelationPlots.R')
+
 options(stringsAsFactors = FALSE)
+
 vars <- read.csv("VarNames_RF_v2.csv")
 bugs <- read.csv("ssn_RF_data.csv")
-
-
-#### Correlation Matrix Functions ####
-# source
-# http://stackoverflow.com/questions/15271103/how-to-modify-this-correlation-matrix-plot
-#
-panel.cor <- function(x, y, digits=2, cex.cor)
-{
-  usr <- par("usr"); on.exit(par(usr))
-  par(usr = c(0, 1, 0, 1))
-  r <- abs(cor(x, y))
-  txt <- format(c(r, 0.123456789), digits=digits)[1]
-  test <- cor.test(x,y)
-  Signif <- ifelse(round(test$p.value,3)<0.001,"p<0.001",paste("p=",round(test$p.value,3)))  
-  text(0.5, 0.25, paste("r=",txt))
-  text(.5, .75, Signif)
-}
-
-panel.smooth<-function (x, y, col = "black", bg = NA, pch = 18, 
-                        cex = 0.8, col.smooth = "red", span = 2/3, iter = 3, ...) 
-{
-  points(x, y, pch = pch, col = col, bg = bg, cex = cex)
-  ok <- is.finite(x) & is.finite(y)
-  if (any(ok)) 
-    lines(stats::lowess(x[ok], y[ok], f = span, iter = iter), 
-          col = col.smooth, ...)
-}
-
-panel.hist <- function(x, ...)
-{
-  usr <- par("usr"); on.exit(par(usr))
-  par(usr = c(usr[1:2], 0, 1.5) )
-  h <- hist(x, plot = FALSE)
-  breaks <- h$breaks; nB <- length(breaks)
-  y <- h$counts; y <- y/max(y)
-  rect(breaks[-nB], 0, breaks[-1], y, col="gray", ...)
-}
 
 # ----------------------------------------------------------- #
 # FSS2 - Random forests excluding the physical habitat data ####
@@ -53,9 +19,9 @@ panel.hist <- function(x, ...)
 # very high number of trees per forest (ntree). This yields a distribution of importance scores.
 # Removal is based on these distributions. We keep the variables with the highest scores.
 
-vars.fss2.s1 <- vars[vars$keep == 1,]
+vars.fss2.s1 <- vars[vars$keep == 1, ]
 
-fss2.s1 <- bugs[,colnames(bugs) %in% vars.fss2.s1$var]
+fss2.s1 <- bugs[, colnames(bugs) %in% vars.fss2.s1$var]
 
 fss2.s1$DATE <- as.POSIXct(fss2.s1$DATE)
 
@@ -74,24 +40,28 @@ fss2.s1$DATE <- as.POSIXct(fss2.s1$DATE)
 # fss2.s1 <- as.data.frame(lapply(fss2.s1,function(x) {(x-min(x))/(max(x)-min(x))}))
 # 
 #This removes those variables where all the values are 0
-fss2.s1 <- fss2.s1[,setdiff(names(fss2.s1),c("X2year_count_60_days",
-                                             "X10year_count_60_days", 
-                                             "X25year_count_60_days", 
-                                             "X50year_count_60_days",
-                                             "X100year_count_60_days", 
-                                             "X10year_count_180_days", 
-                                             "X25year_count_180_days",
-                                             "X50year_count_180_days", 
-                                             "X100year_count_180_days"))]
+fss2.s1 <- fss2.s1[, setdiff(names(fss2.s1), c("X2year_count_60_days",
+                                               "X10year_count_60_days", 
+                                               "X25year_count_60_days", 
+                                               "X50year_count_60_days",
+                                               "X100year_count_60_days", 
+                                               "X10year_count_180_days", 
+                                               "X25year_count_180_days",
+                                               "X50year_count_180_days", 
+                                               "X100year_count_180_days"))]
 #Need to convert Inf values to 0
-fss2.s1[,grep("X",names(fss2.s1))] <- as.data.frame(sapply(fss2.s1[,grep("X",names(fss2.s1))], function(x) {replace(x, is.infinite(x),0)}))
+fss2.s1[, grep("X", names(fss2.s1))] <- as.data.frame(sapply(
+  fss2.s1[, grep("X",names(fss2.s1))], function(x) {
+    replace(x, is.infinite(x),0)
+    }
+  ))
 
 # mtry value
-mtry.fss2.s1 <- as.integer(((ncol(fss2.s1)-1) / 3),0)
+mtry.fss2.s1 <- as.integer(((ncol(fss2.s1) - 1) / 3), 0)
 
 # initialize the variable importance df to store the importance scores from each run
-fss2.s1.vi <- data.frame(matrix(, nrow = ncol(fss2.s1)-1, ncol = 50))
-fss2.s1.visd <- data.frame(matrix(, nrow = ncol(fss2.s1)-1, ncol = 50))
+fss2.s1.vi <- data.frame(matrix(nrow = ncol(fss2.s1) - 1, ncol = 50))
+fss2.s1.visd <- data.frame(matrix(nrow = ncol(fss2.s1) - 1, ncol = 50))
 
 fss2.s1.col <- colnames(fss2.s1)
 fss2.s1.col <- fss2.s1.col[!(fss2.s1.col == "FSS_26Aug14")]
@@ -108,31 +78,31 @@ for (i in 1:50) {
                              ntree = 2000, 
                              keep.forest = TRUE, 
                              importance = TRUE)
-  fss2.s1.vi[,i] <- fss2.s1.rf$importance[,1]
-  fss2.s1.visd[,i] <- fss2.s1.rf$importanceSD
+  fss2.s1.vi[, i] <- fss2.s1.rf$importance[, 1]
+  fss2.s1.visd[, i] <- fss2.s1.rf$importanceSD
 }
 print(Sys.time() - beg)
 
 # Add var names and index
-fss2.s1.vi[,51]<- fss2.s1.col
-fss2.s1.vi[,52]<-c(1:length(fss2.s1.col))
+fss2.s1.vi[, 51]<- fss2.s1.col
+fss2.s1.vi[, 52]<-c(1:length(fss2.s1.col))
 colnames(fss2.s1.vi)[51] <- "var_name"
 colnames(fss2.s1.vi)[52] <- "var_index"
-fss2.s1.visd[,51]<- fss2.s1.col
-fss2.s1.visd[,52]<-c(1:length(fss2.s1.col))
+fss2.s1.visd[, 51]<- fss2.s1.col
+fss2.s1.visd[, 52]<- c(1:length(fss2.s1.col))
 colnames(fss2.s1.visd)[51] <- "var_name"
 colnames(fss2.s1.visd)[52] <- "var_index"
 
 # Save the df with a timestamp so we don't accidently overwrite it.
 timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
-save(fss2.s1.vi, file=paste0("fss2_s1_vi_",timestamp,".RData"))
-save(fss2.s1.visd, file=paste0("fss2_s1_visd_",timestamp,".RData"))
+save(fss2.s1.vi, file = paste0("fss2_s1_vi_", timestamp, ".RData"))
+save(fss2.s1.visd, file = paste0("fss2_s1_visd_", timestamp, ".RData"))
 timestamp
 load("fss2_s1_vi_20150720_1627.RData")
 load("fss2_s1_visd_20150720_1627.RData")
 
 #### s1 boxplot ####
-fss2.s1.vi.l <- melt(fss2.s1.vi, id=c("var_name","var_index"))
+fss2.s1.vi.l <- melt(fss2.s1.vi, id = c("var_name", "var_index"))
 
 #png('varImpALL.png', width = 960, height = 960)
 bymedian <- with(fss2.s1.vi.l, reorder(var_index, value, median))
@@ -143,10 +113,12 @@ boxplot(value ~ bymedian, data = fss2.s1.vi.l,
 #dev.off()
 
 #R2
-1-sum((fss2.s1$FSS_26Aug14-predict(fss2.s1.rf))^2)/sum((fss2.s1$FSS_26Aug14-mean(fss2.s1$FSS_26Aug14))^2)
+1 - sum((fss2.s1$FSS_26Aug14 - predict(fss2.s1.rf))^2) / 
+  sum((fss2.s1$FSS_26Aug14 - mean(fss2.s1$FSS_26Aug14))^2)
 #0.5491
 
-fss2.s1.vi.median <- cast(fss2.s1.vi.l,var_name + var_index ~ ., value ='value', median)
+fss2.s1.vi.median <- cast(fss2.s1.vi.l, var_name + var_index ~ ., 
+                          value ='value', median)
 colnames(fss2.s1.vi.median )[3] <- "median"
 
 # sort the data so largest at the top
@@ -154,10 +126,11 @@ fss2.s1.vi.median <- fss2.s1.vi.median[with(fss2.s1.vi.median, order(-median)), 
 
 ## Save the precursors to s2 with a timestamp so we don't accidently overwrite it.
 timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
-save(fss2.s1.vi.median, file=paste0("fss2_s1_vi_median_",timestamp,".RData"))
-save(fss2.s1, file=paste0("fss2_s1_",timestamp,".RData"))
+save(fss2.s1.vi.median, file=paste0("fss2_s1_vi_median_", timestamp, ".RData"))
+save(fss2.s1, file=paste0("fss2_s1_", timestamp, ".RData"))
 timestamp
-load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_vi_median_20150722_1035.RData")
+load("C:/users/pbryant/desktop/midcoasttmdl/
+     fss2_s1_vi_median_20150722_1035.RData")
 load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_20150722_1035.RData")
 
 #### Variable selection ####
@@ -165,26 +138,28 @@ load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_20150722_1035.RData")
 # grab all variable names with median values > 1.004880e-04 = 50% of the data
 # This 50% of the data reflects 50% of the original list of variables prior to scaling
 # Scaling had the effect of dropping variables that were all 0s anyway.
-fss2.s2.col <- fss2.s1.vi.median[1:ceiling(nrow(fss2.s1.vi.median)/2),][,1]
+fss2.s2.col <- fss2.s1.vi.median[1:ceiling(nrow(fss2.s1.vi.median) / 2), ][, 1]
 #fss2.s2.col <- c("FSS_26Aug14",(fss2.s1.vi.median[,'var_name']))
-fss2.s2 <- fss2.s1[,colnames(fss2.s1) %in% fss2.s2.col]
+fss2.s2 <- fss2.s1[, colnames(fss2.s1) %in% fss2.s2.col]
 
 fss2.s2.col <- vars[vars$var %in% names(fss2.s2),]
 #fss2.s2.col <- fss2.s2.col[fss2.s2.col$var != 'FSS_26Aug14',]
-fss2.s2.col <- merge(fss2.s2.col, fss2.s1.vi.median[,c('var_name','median')],by.x = 'var', by.y = 'var_name', all.x = TRUE)
+fss2.s2.col <- merge(fss2.s2.col, fss2.s1.vi.median[, c('var_name','median')], 
+                     by.x = 'var', by.y = 'var_name', all.x = TRUE)
 fss2.s2.col <- arrange(fss2.s2.col, desc(median))
 
 #By category
 all_keep <- c()
 for (j in 1:length(unique(fss2.s2.col$Category))) {
-  pcor <- cor(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == unique(fss2.s2.col$Category)[j],'var']])
+  pcor <- cor(fss2.s2[, fss2.s2.col[fss2.s2.col$Category == 
+                                      unique(fss2.s2.col$Category)[j], 'var']])
   pnames <- attr(pcor, "dimnames")[[1]]
   pkeep <- pnames
   for (i in length(pnames):1) {
-    if (any(round(abs(pcor[i,][-i]),2) >= 0.2)) {
+    if (any(round(abs(pcor[i, ][-i]), 2) >= 0.2)) {
       if (i != 1) {
         pkeep <- pkeep[-i]
-        pcor <- pcor[-i,-i,drop=FALSE]
+        pcor <- pcor[-i, -i, drop=FALSE]
       }
     } 
   }
@@ -211,43 +186,59 @@ for (j in 1:length(unique(fss2.s2.col$Category))) {
 #importance variable unless that variable is already conceptually represented.
 
 # Precip  
-png('precip_cor.png')
-pairs(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == 'Precipitation','var']],lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
-dev.off()
+#png('precip_cor.png')
+pairs(fss2.s2[, fss2.s2.col[fss2.s2.col$Category == 'Precipitation', 'var']],
+      lower.panel = panel.smooth, upper.panel = panel.cor, 
+      diag.panel = panel.hist)
+#dev.off()
 # keep "sum_1095_days"
 
 #Disturbance
-pairs(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == 'Disturbance','var']],lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
+pairs(fss2.s2[ ,fss2.s2.col[fss2.s2.col$Category == 'Disturbance', 'var']],
+      lower.panel = panel.smooth, upper.panel = panel.cor, 
+      diag.panel = panel.hist)
 # everything is coorelated
 # keep "DIS_1YR_PARSA"
 
 # Lithology/soils
-pairs(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == 'Lithology and soils','var']],lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
+pairs(fss2.s2[, fss2.s2.col[fss2.s2.col$Category == 'Lithology and soils', 
+                            'var']], 
+      lower.panel = panel.smooth, upper.panel = panel.cor, 
+      diag.panel = panel.hist)
 # almost everything is coorelated
 # Keep "EROD_PARCA", "SILT_CLAY_PARCA"
 
 # Ownership 
-pairs(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == 'Land use','var']],lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
+pairs(fss2.s2[, fss2.s2.col[fss2.s2.col$Category == 'Land use', 'var']], 
+      lower.panel = panel.smooth, upper.panel = panel.cor, 
+      diag.panel = panel.hist)
 # Keep"ROADLEN_DRSA","OWN_FED_PRCA","POP_DARCA","OWN_PRI_PRCA","OWN_AGR_PARCA"
 
 #Susceptibility
-pairs(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == 'Landslide susceptibility','var']],lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
+pairs(fss2.s2[, fss2.s2.col[fss2.s2.col$Category == 'Landslide susceptibility', 
+                            'var']], 
+      lower.panel = panel.smooth, upper.panel = panel.cor,
+      diag.panel = panel.hist)
 #All correlated. 
 #Keep "SUSCEP5_PARCA"
 
 #Location
-pairs(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == 'Location','var']],lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
+pairs(fss2.s2[, fss2.s2.col[fss2.s2.col$Category == 'Location', 'var']], 
+      lower.panel = panel.smooth, upper.panel = panel.cor,
+      diag.panel = panel.hist)
 #Keep "MIN_Z"
 
 #Stream attributes
-pairs(fss2.s2[,fss2.s2.col[fss2.s2.col$Category == 'Stream attributes','var']],lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)
+pairs(fss2.s2[, fss2.s2.col[fss2.s2.col$Category == 'Stream attributes', 
+                            'var']],
+      lower.panel = panel.smooth, upper.panel = panel.cor,
+      diag.panel = panel.hist)
 #Keep "STRMPWR","XSLOPE_MAP"
 
 #Further remove variables to reduce the influence of correlation on raising variable importance
 #fss2.s2 <- fss2.s2[,colnames(fss2.s2) %in% keeps.s2]
-fss2.s2 <- fss2.s2[,colnames(fss2.s2) %in% c('FSS_26Aug14',all_keep)]
+fss2.s2 <- fss2.s2[, colnames(fss2.s2) %in% c('FSS_26Aug14', all_keep)]
 colnames(fss2.s2)
-
 
 # remove any NAs
 fss2.s2 <- data.frame(na.omit(fss2.s2))
@@ -262,8 +253,8 @@ colnames(fss2.s2)
 mtry.fss2.s2 <- as.integer(((ncol(fss2.s2)-1) / 3),0)
 
 # initialize the variable importance df
-fss2.s2.vi <- data.frame(matrix(, nrow = ncol(fss2.s2)-1, ncol = 50))
-fss2.s2.visd <- data.frame(matrix(, nrow = ncol(fss2.s2)-1, ncol = 50))
+fss2.s2.vi <- data.frame(matrix(nrow = ncol(fss2.s2) - 1, ncol = 50))
+fss2.s2.visd <- data.frame(matrix(nrow = ncol(fss2.s2) - 1, ncol = 50))
 
 fss2.s2.col <- colnames(fss2.s2)
 fss2.s2.col <- fss2.s2.col[!(fss2.s2.col == "FSS_26Aug14")]
@@ -276,48 +267,50 @@ for (i in 1:50) {
                              ntree = 1000, 
                              keep.forest = TRUE, 
                              importance = TRUE)
-  fss2.s2.vi[,i] <- importance(fss2.s2.rf, type = 1, conditional = TRUE)
-  fss2.s2.visd[,i] <- fss2.s2.rf$importanceSD
+  fss2.s2.vi[, i] <- importance(fss2.s2.rf, type = 1, conditional = TRUE)
+  fss2.s2.visd[, i] <- fss2.s2.rf$importanceSD
 }
 print(Sys.time() - beg)
 
 # Add var names and index
-fss2.s2.vi[,51]<- fss2.s2.col
-fss2.s2.vi[,52]<-c(1:length(fss2.s2.col))
+fss2.s2.vi[, 51]<- fss2.s2.col
+fss2.s2.vi[, 52]<-c(1:length(fss2.s2.col))
 colnames(fss2.s2.vi)[51] <- "var_name"
 colnames(fss2.s2.vi)[52] <- "var_index"
-fss2.s2.visd[,51]<- fss2.s2.col
-fss2.s2.visd[,52]<-c(1:length(fss2.s2.col))
+fss2.s2.visd[, 51]<- fss2.s2.col
+fss2.s2.visd[, 52]<-c(1:length(fss2.s2.col))
 colnames(fss2.s2.visd)[51] <- "var_name"
 colnames(fss2.s2.visd)[52] <- "var_index"
 
 # --- #
 # Save the df with a timestamp so we don't accidently overwrite it.
 timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
-save(fss2.s2.vi, file=paste0("fss2_s2_vi_",timestamp,".RData"))
-save(fss2.s2.visd, file=paste0("fss2_s2_visd_",timestamp,".RData"))
+save(fss2.s2.vi, file = paste0("fss2_s2_vi_", timestamp, ".RData"))
+save(fss2.s2.visd, file = paste0("fss2_s2_visd_", timestamp, ".RData"))
 timestamp
 load("fss2_s2_vi_20141027_2010.RData")
 load("fss2_s2_visd_20141027_2010.RData")
 
 #### s2 boxplot ####
 
-fss2.s2.vi.l <- melt(fss2.s2.vi, id=c("var_name","var_index"))
+fss2.s2.vi.l <- melt(fss2.s2.vi, id = c("var_name", "var_index"))
 
 # bymedian <- sort(sapply(fss2.s2.rm.rf.vi, median))
 # index.merge <- data.frame('variable' = names(bymedian), 'index' = 1:11)
 # fm <- melt(fss2.s2.rm.rf.vi)
 # fm <- merge(fm, index.merge, by = 'variable', all.x = TRUE)
 
-fss2.vars <- fss2.s1.vi[fss2.s1.vi$var_name %in% setdiff(names(fss2.s2),"FSS_26Aug14"),]
-fss2.s2.vi.l <- melt(fss2.vars, id=c("var_name","var_index"))
+fss2.vars <- fss2.s1.vi[fss2.s1.vi$var_name %in% setdiff(names(fss2.s2),
+                                                         "FSS_26Aug14"),]
+fss2.s2.vi.l <- melt(fss2.vars, id = c("var_name", "var_index"))
 png('varImp_s2.png', width = 960, height = 960)
 bymedian <- with(fss2.s2.vi.l, reorder(var_name, value, median))
-par(yaxt="n",mar=c(5, 8, 4, 5),cex=2)
+par(yaxt = "n",mar = c(5, 8, 4, 5), cex = 2)
 boxplot(value ~ bymedian, data = fss2.s2.vi.l,
         xlab = "% Increase MSE", 
         varwidth = TRUE,
-        col = "lightgray", horizontal = TRUE)
+        col = "lightgray", 
+        horizontal = TRUE)
 lablist.y<-levels(bymedian)
 axis(2, labels = FALSE)
 text(y = 1:100, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
@@ -325,38 +318,42 @@ dev.off()
 
 png('varImpALL_s2.png', width = 960, height = 960)
 bymedian <- with(fss2.s2.vi.l, reorder(var_name, value, median))
-par(yaxt="n",mar=c(5, 8, 4, 5),cex=2)
+par(yaxt="n", mar=c(5, 8, 4, 5), cex=2)
 boxplot(value ~ bymedian, data = fss2.s2.vi.l,
         xlab = "% Increase MSE", 
         varwidth = TRUE,
-        col = "lightgray", horizontal = TRUE)
+        col = "lightgray", 
+        horizontal = TRUE)
 lablist.y<-levels(bymedian)
 axis(2, labels = FALSE)
 text(y = 1:14, par("usr")[1], labels = lablist.y, pos = 2, xpd = TRUE)
 dev.off()
 
 #R2
-1-sum((fss2.s2$FSS_26Aug14-predict(fss2.s2.rf))^2)/sum((fss2.s2$FSS_26Aug14-mean(fss2.s2$FSS_26Aug14))^2)
+1 - sum((fss2.s2$FSS_26Aug14 - predict(fss2.s2.rf))^2) / 
+  sum((fss2.s2$FSS_26Aug14 - mean(fss2.s2$FSS_26Aug14))^2)
 #0.5658064
 #This corroborates the use of these variables by showing that with a smaller subest of variables
 #we achieve essentially the same R2. When we look at the bottom 2/3 of the variables we get a much smaller R2.
 
 #### Median df creation ####
 
-fss2.s2.vi.median <- cast(fss2.s2.vi.l,var_name + var_index ~ ., value ='value', median)
+fss2.s2.vi.median <- cast(fss2.s2.vi.l,var_name + var_index ~ ., 
+                          value ='value', median)
 colnames(fss2.s2.vi.median )[3] <- "median"
 
 # sort the data so largest at the top
-fss2.s2.vi.median <- fss2.s2.vi.median[with(fss2.s2.vi.median, order(-median)), ]
+fss2.s2.vi.median <- fss2.s2.vi.median[with(fss2.s2.vi.median, 
+                                            order(-median)), ]
 
 #### Partial Dependence Plots ####
 for (i in 1:length(fss2.s2.vi$var_name)) {
-  filename <- paste("partialPlot_", fss2.s2.vi$var_name[i], ".png",sep = "")
+  filename <- paste("partialPlot_", fss2.s2.vi$var_name[i], ".png", sep = "")
   png(filename, width = 960, height = 960)
   partialPlot(fss2.s2.rf, 
               fss2.s2, 
               x.var = fss2.s2.vi$var_name[i], 
               ylab = 'Mean FSS', 
-              ylim = c(9,18))
+              ylim = c(9, 18))
   dev.off()  
 }
