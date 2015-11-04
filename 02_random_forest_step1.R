@@ -56,6 +56,16 @@ fss2.s1[, grep("X", names(fss2.s1))] <- as.data.frame(sapply(
     }
   ))
 
+#Normalize by maximum range
+melted <- melt(fss2.s1[,names(fss2.s1[,-c(grep('_P',names(fss2.s1)),which(names(fss2.s1) %in% c('DATE')))])])
+min.max <- ddply(melted, .(variable), 
+                 summarize, 
+                 min_val = min(value), 
+                 max_val = max(value))
+fss2.s1[,-c(grep('_P',names(fss2.s1)),which(names(fss2.s1) %in% c('DATE')))] <- as.data.frame(lapply(
+  fss2.s1[,-c(grep('_P',names(fss2.s1)),which(names(fss2.s1) %in% c('DATE')))], function(x) {((x-min(x))/
+                                                                         (max(x)-min(x)))*100}))
+
 # mtry value
 mtry.fss2.s1 <- as.integer(((ncol(fss2.s1) - 1) / 3), 0)
 
@@ -98,28 +108,20 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
 save(fss2.s1.vi, file = paste0("fss2_s1_vi_", timestamp, ".RData"))
 save(fss2.s1.visd, file = paste0("fss2_s1_visd_", timestamp, ".RData"))
 timestamp
-load("fss2_s1_vi_20150720_1627.RData")
-load("fss2_s1_visd_20150720_1627.RData")
 
-#### s1 boxplot ####
+#### sort the variables by median importance ####
 fss2.s1.vi.l <- melt(fss2.s1.vi, id = c("var_name", "var_index"))
-
-#png('varImpALL.png', width = 960, height = 960)
-bymedian <- with(fss2.s1.vi.l, reorder(var_index, value, median))
-boxplot(value ~ bymedian, data = fss2.s1.vi.l,
-        ylab = "Variable index", xlab = "% Increase MSE", 
-        varwidth = TRUE,
-        col = "lightgray", horizontal = TRUE)
-#dev.off()
-
-#R2
-1 - sum((fss2.s1$FSS_26Aug14 - predict(fss2.s1.rf))^2) / 
-  sum((fss2.s1$FSS_26Aug14 - mean(fss2.s1$FSS_26Aug14))^2)
-#0.5491
 
 fss2.s1.vi.median <- cast(fss2.s1.vi.l, var_name + var_index ~ ., 
                           value ='value', median)
 colnames(fss2.s1.vi.median )[3] <- "median"
+
+#Take the median sd as well
+fss2.s1.visd.l <- melt(fss2.s1.visd, id = c("var_name", "var_index"))
+
+fss2.s1.visd.median <- cast(fss2.s1.visd.l, var_name + var_index ~ ., 
+                          value ='value', median)
+colnames(fss2.s1.visd.median )[3] <- "median_sd"
 
 # sort the data so largest at the top
 fss2.s1.vi.median <- fss2.s1.vi.median[with(fss2.s1.vi.median, order(-median)), ]

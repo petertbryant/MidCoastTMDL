@@ -9,22 +9,36 @@ load('ssn1_glmssn_EEE.Rdata')
 load('minmax.Rdata')
 
 #list of impaired stations
-impaired <- data.frame(STATION_KEY = c(21842,34660,21792,33361,26818,33418,33417,34695,26822,33320,33333,30403,34665,26816,25297,26964,29906,33327),
-                       TMDL_Target = c(14,14,14,3,7,rep(14,6),8,14,8,14,8,14,14))
-impaired$TMDL_Target_Scaled_log <- (log10(impaired$TMDL_Target)-min.max[min.max$variable == 'log10_FSS_26Aug14','min_val'])/(min.max[min.max$variable == 'log10_FSS_26Aug14','max_val']-min.max[min.max$variable == 'log10_FSS_26Aug14','min_val'])
+impaired <- data.frame(STATION_KEY = c(21842,34660,21792,33361,26818,33418,
+                                       33417,34695,26822,33320,33333,30403,
+                                       34665,26816,25297,26964,29906,33327),
+                       TMDL_Target = c(14,14,14,3,7,
+                                       rep(14,6),8,14,8,14,8,14,14))
+impaired$TMDL_Target_Scaled_log <- (log10(impaired$TMDL_Target) - 
+                                      min.max[min.max$variable == 
+                                                'log10_FSS_26Aug14' , 
+                                              'min_val']) / (
+                                                min.max[min.max$variable == 
+                                                          'log10_FSS_26Aug14', 
+                                                        'max_val'] - 
+                                                  min.max[min.max$variable == 
+                                                            'log10_FSS_26Aug14', 
+                                                          'min_val'])
 
 #Fill in the model variables into the prediction data frame
 obs <- getSSNdata.frame(ssn1.glmssn.EEE, Name = 'Obs')
 preds <- getSSNdata.frame(ssn1.glmssn.EEE, Name = "preds")
 pid.order <- preds$pid
 preds <- rename(preds, c('STATION_KE' = "STATION_KEY"))
-preds <- merge(preds, ddply(obs, .(STATION_KEY), summarise, sum_1095_days = mean(sum_1095_days),
-                                PALITHERODRCA = mean(PALITHERODRCA),
-                                PDISRSA_1YR = mean(PDISRSA_1YR),
-                                PASILTRCA = mean(PASILTRCA),
-                                DAPOPRCA2010 = mean(DAPOPRCA2010),
-                                POWNRCA_PRI = mean(POWNRCA_PRI),
-                                log10_FSS_26Aug14 = mean(log10_FSS_26Aug14)), by = 'STATION_KEY')
+preds <- merge(preds, ddply(obs, .(STATION_KEY), summarise, 
+                            sum_1095_days = mean(sum_1095_days),
+                            PALITHERODRCA = mean(PALITHERODRCA),
+                            PDISRSA_1YR = mean(PDISRSA_1YR),
+                            PASILTRCA = mean(PASILTRCA),
+                            DAPOPRCA2010 = mean(DAPOPRCA2010),
+                            POWNRCA_PRI = mean(POWNRCA_PRI),
+                            log10_FSS_26Aug14 = mean(log10_FSS_26Aug14)), 
+               by = 'STATION_KEY')
 preds <- preds[match(pid.order,preds$pid),]
 row.names(preds) <- preds$pid
 ssn1.glmssn.EEE <- putSSNdata.frame(preds, ssn1.glmssn.EEE, Name = "preds")

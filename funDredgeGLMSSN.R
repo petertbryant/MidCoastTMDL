@@ -4,7 +4,7 @@ library(parallel)
 library(snow)
 options(na.action = NULL)
 #global.model <- glm(as.formula(obs.vars[,c('log10_FSS_26Aug14',names(obs.fss2))]),data = obs.vars,na.action = NULL)
-#global.model <- glmssn(as.formula(obs.vars[,c('log10_FSS_26Aug14',"sum_1095_days","DIS_1YR_PARSA","OWN_FED_PRCA","POP_DARCA")]),ssn.object = ssn1,CorModels = c('Exponential.Euclid','Exponential.taildown'))
+global.model <- glmssn(as.formula(obs.vars[,c('log10_FSS_26Aug14',"sum_1095_days","DIS_1YR_PARSA","OWN_FED_PRCA","POP_DARCA")]),ssn.object = ssn1,CorModels = c('Exponential.Euclid','Exponential.taildown'))
 #save(file='ssn1_testing.Rdata',global.model)
 load('ssn1_testing.Rdata')
 #global.model <- test
@@ -46,8 +46,8 @@ nVars <- length(allTerms)
 nVariants <- 1L
 nVarying <- 0L
 nov <- as.integer(nVars - nFixed)
-#ncomb <- (2L^nov) * nVariants
-ncomb <- 3
+#ncomb <- (2L^nov) * nVariants #THIS IS IMPORTANT IN DETERMINING THE NUMBER OF COMBINATIONS DREDGE WILL RUN
+ncomb <- 3 
 nmax <- ncomb * nVariants
 rvNcol <- nVars + nVarying + 3L
 rvChunk <- 25L
@@ -82,7 +82,7 @@ clusterCall(cluster, eval, call("options", options("na.action")),
             env = 0L)
 clusterExport(cluster, lsf.str())
 clusterCall(cluster, function() {library(SSN); library(MuMIn)})
-clusterExport(cluster, 'ssn1')
+clusterExport(cluster, 'global.model')
 clusterExport(cluster, 'allTerms')
 matchCoefCall <- as.call(c(alist(matchCoef, fit1, all.terms = allTerms, 
                                  allCoef = TRUE), ct.args))
