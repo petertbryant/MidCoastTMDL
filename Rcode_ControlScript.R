@@ -40,9 +40,19 @@
 #Outputs: ssn object with transformed and scaled variables, minmax.Rdata = Min and max used for scaling. To be used for descaling.
 
 #Step 5:
-#source('funDredgeGLMSSN.R')
-#Inputs: ssn object, funMuMInhelpers.R
-#Output: rval.out = model.selection object
+#source('05_backward_stepwise_regression.R')
+#Inputs: ssn object, obs.fss2
+#Output: saves regression objects to folder
+
+#source('05a_forward_regression.R')
+#Inputs: ssn object, vars from pkeep
+#Output: saves regression objects to folder
+
+#source('05b_model_selection.R)
+#Inputs: ssn regression objects in folder
+#Outputs: Results as csv file with dAIC
+
+
 
 #source('funModelAvgGLMSSN.R')
 #Inputs: rval.out

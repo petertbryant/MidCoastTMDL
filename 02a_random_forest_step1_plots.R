@@ -1,3 +1,9 @@
+library(randomForest)
+library(reshape)
+library(plyr)
+
+source('funCorrelationPlots.R')
+
 #png('varImpALL.png', width = 960, height = 960)
 bymedian <- with(fss2.s1.vi.l, reorder(var_index, value, median))
 boxplot(value ~ bymedian, data = fss2.s1.vi.l,

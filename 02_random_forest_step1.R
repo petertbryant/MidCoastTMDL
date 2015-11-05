@@ -4,8 +4,6 @@ library(randomForest)
 library(reshape)
 library(plyr)
 
-source('funCorrelationPlots.R')
-
 options(stringsAsFactors = FALSE)
 
 vars <- read.csv("VarNames_RF_v2.csv")
@@ -69,8 +67,10 @@ fss2.s1[,-c(grep('_P',names(fss2.s1)),
                     c('DATE')))] <- as.data.frame(
                       lapply(fss2.s1[,-c(grep('_P', names(fss2.s1)), 
                                          which(names(fss2.s1) %in% c('DATE')))], 
-                             function(x) {((x - min(x)) / (max(x) - 
-                                                             min(x)))*100}))
+                             function(x) {((x) / (max(x)))*100}))
+
+#Run without overlap between stream power and slope and discharge
+fss2.s1 <- within(fss2.s1, rm(STRMPWR))
 
 # mtry value
 mtry.fss2.s1 <- as.integer(((ncol(fss2.s1) - 1) / 3), 0)
@@ -81,6 +81,7 @@ fss2.s1.visd <- data.frame(matrix(nrow = ncol(fss2.s1) - 1, ncol = 50))
 
 fss2.s1.col <- colnames(fss2.s1)
 fss2.s1.col <- fss2.s1.col[!(fss2.s1.col == "FSS_26Aug14")]
+
 
 #Run the randomForest
 # WARNING - Takes about 30 min
