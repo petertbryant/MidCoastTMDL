@@ -57,14 +57,20 @@ fss2.s1[, grep("X", names(fss2.s1))] <- as.data.frame(sapply(
   ))
 
 #Normalize by maximum range
-melted <- melt(fss2.s1[,names(fss2.s1[,-c(grep('_P',names(fss2.s1)),which(names(fss2.s1) %in% c('DATE')))])])
+melted <- melt(fss2.s1[,names(fss2.s1[,-c(grep('_P',names(fss2.s1)),
+                                          which(names(fss2.s1) %in% 
+                                                  c('DATE')))])])
 min.max <- ddply(melted, .(variable), 
                  summarize, 
                  min_val = min(value), 
                  max_val = max(value))
-fss2.s1[,-c(grep('_P',names(fss2.s1)),which(names(fss2.s1) %in% c('DATE')))] <- as.data.frame(lapply(
-  fss2.s1[,-c(grep('_P',names(fss2.s1)),which(names(fss2.s1) %in% c('DATE')))], function(x) {((x-min(x))/
-                                                                         (max(x)-min(x)))*100}))
+fss2.s1[,-c(grep('_P',names(fss2.s1)),
+            which(names(fss2.s1) %in% 
+                    c('DATE')))] <- as.data.frame(
+                      lapply(fss2.s1[,-c(grep('_P', names(fss2.s1)), 
+                                         which(names(fss2.s1) %in% c('DATE')))], 
+                             function(x) {((x - min(x)) / (max(x) - 
+                                                             min(x)))*100}))
 
 # mtry value
 mtry.fss2.s1 <- as.integer(((ncol(fss2.s1) - 1) / 3), 0)

@@ -15,9 +15,10 @@ ssn1 <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN05/lsn.
                   predpts = "preds_up", o.write = TRUE)
 #ssn1 <- importSSN('C:/users/pbryant/desktop/midcoasttmdl-gis/revisedssn/lsn05/lsn.ssn', o.write = TRUE)
 obs<- getSSNdata.frame(ssn1, Name = "Obs")
-vars <- c("STATION_KEY", "SVN", "DATE","YEAR",names(obs.fss2),'FSS_26Aug14')
+vars <- c("STATION_KEY", "SVN", "DATE","YEAR",'FSS_26Aug14')
 
 obs.vars <- obs.complete[,vars]
+obs.vars <- cbind(obs.vars, obs.fss2)
 
 obs.vars <- merge(obs[,c("SVN","rid", "ratio", "locID", "netID", "pid", 
                          "afvArea", "HU_6_NAME", "HU_8_NAME", "HU_10_NAME", 

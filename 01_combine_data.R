@@ -44,38 +44,46 @@ rm(indb, tablename1, tablename2, tablename3, tablename4, tablename5, tablename6,
    tablename7, channel, tablename8)
 
 # Read in physical habitat data
-phab.bugs <- read.csv('//Deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/
-                      Watershed_Characteristics/Station_Selection/
-                      Watershed_Char_phab_bugs_merge_SSN_FINAL.csv')
+phab.bugs <- read.csv(paste0('//Deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/',
+                      'Watershed_Characteristics/Station_Selection/',
+                      'Watershed_Char_phab_bugs_merge_SSN_FINAL.csv'))
 
 # Read in table describing how to calculate proportions
 pvar <- read.csv("var_proportion_table.csv")
 
 # Read in SVNs to remove per Shannon Hubler comments (see Dealing with Low Counts_SH_4 8 14_RM.xlsx)
-svn.rm <- read.csv('//deqhq1/TMDL/TMDL_WR/MidCoast/Data/BenthicMacros/
-                   Raw_From_Shannon/SVNs_to_Remove_2014_08_04.csv')
+svn.rm <- read.csv(paste0('//deqhq1/TMDL/TMDL_WR/MidCoast/Data/BenthicMacros/',
+                   'Raw_From_Shannon/SVNs_to_Remove_2014_08_04.csv'))
 
 # Read in precip data
-precip <- read.csv('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/
-                   Watershed_Characteristics/Precip/
-                   R_output_Precip_samples_2014-09-08.csv')
+precip <- read.csv(paste0('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/',
+                   'Watershed_Characteristics/Precip/',
+                   'R_output_Precip_samples_2014-09-08.csv'))
 
 # Read in NHD ComIDs. We use the COMIDs to map to NHD catchment. This layer was created by doing a spatial join of NHDPlus21 Catchments with the updated obs layer that 
 # resolved issues with snapping the obs to LSN05 vs LSN04. Also the flow values and the cumulative areas.
-nhd <- read.dbf('C:/users/pbryant/desktop/midcoasttmdl-gis/
-                lsn05_watersheds/NHD21_obs_up.dbf', as.is = TRUE)
-nhd.flow <- read.dbf('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/
-                     Watershed_Characteristics/NHDplus_21/
-                     EROMExtension/EROM_MA0001.DBF')
-nhd.area <- read.dbf('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/
-                     Watershed_Characteristics/NHDplus_21/
-                     Attributes/CumulativeArea.dbf')
+nhd <- read.dbf(paste0('C:/users/pbryant/desktop/midcoasttmdl-gis/',
+                'lsn05_watersheds/NHD21_obs_up.dbf'), as.is = TRUE)
+nhd.flow <- read.dbf(paste0('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/',
+                     'Watershed_Characteristics/NHDplus_21/',
+                     'EROMExtension/EROM_MA0001.DBF'))
+nhd.area <- read.dbf(paste0('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/',
+                     'Watershed_Characteristics/NHDplus_21/',
+                     'Attributes/CumulativeArea.dbf'))
 
 #Read in slope files
-slope <- read.csv('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/
-                  Watershed_Characteristics/SLOPES/Final/slopesmerge.csv')
-ryan.slope <- read.csv('//Deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/
-                       Watershed_Characteristics/SLOPES/Final/slopes_ryan.txt')
+slope <- read.csv(paste0('//deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/',
+                  'Watershed_Characteristics/SLOPES/Final/slopesmerge.csv'))
+
+ryan.slope <- read.csv(paste0('//Deqhq1/tmdl/TMDL_WR/MidCoast/Models/Sediment/',
+                       'Watershed_Characteristics/SLOPES/Final/slopes_ryan.txt'))
+
+#This file was derived by going through those slopes that were coming up as
+#negative or zero and pulling the newly added lidar to identify the reach
+#endpoints on the LiDAR identified flow path manually.
+slope_update <- read.csv(paste0('//Deqhq1/tmdl/TMDL_WR/MidCoast/Models/',
+                                'Sediment/Watershed_Characteristics/SLOPES/',
+                                'Final/Slopes_LiDAR_11052015_update.csv'))
 
 # -----------------------------------------------------------
 # Accumulate variables to each observation. This involves two steps.
@@ -302,6 +310,12 @@ slope <- rename(slope, c("SLOPE_AVG" = 'XSLOPE',
 slope.all <- rbind(slope, ryan.slope)
 slope.all <- slope.all[!duplicated(slope.all$STATION_KEY),]
 
+slope_update$MIN_Z <- slope_update$MIN_Z * .3048
+slope_update$MAX_Z <- slope_update$MAX_Z * .3048
+slope.all[slope.all$STATION_KEY %in% slope_update$STATION_KEY,
+          c('STATION_KEY','MIN_Z','MAX_Z')] <- slope_update[,c('STATION_KEY',
+                                                               'MIN_Z','MAX_Z')]
+
 slope.all$XSLOPE_MAP <- ((slope.all$MAX_Z - slope.all$MIN_Z) / 
                            slope.all$RchLenFin) * 100
 
@@ -318,10 +332,12 @@ slope.all <- rbind(slope.all, X13121)
 obs.a <- merge(obs.a, slope.all[,c('STATION_KEY','XSLOPE_MAP','MIN_Z')], 
                by = 'STATION_KEY', all.x = TRUE)
 
-#Fix the negative stream slope values
-obs.a[obs.a$XSLOPE_MAP < 0,'XSLOPE_MAP'] <- 0.001
 
-rm(slope, ryan.slope, X13121)
+
+#Remove the negative stream slope values
+obs.a <- obs.a[!obs.a$XSLOPE_MAP <= 0,]
+
+rm(slope, ryan.slope, slope_update, X13121)
 
 # -----------------------------------------------------------
 # Pull in the measured habitat data
