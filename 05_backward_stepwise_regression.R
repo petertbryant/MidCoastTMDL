@@ -14,6 +14,7 @@ options('scipen' = 100)
 ###################################################
 halt = FALSE
 cntr = 1
+th <- 0.05
 vars <- names(obs.fss2)
 
 while (halt == FALSE) {
@@ -26,7 +27,7 @@ while (halt == FALSE) {
                 CorModels = c("locID",'Exponential.Euclid','Exponential.taildown'),
                 addfunccol = "afvArea",
                 family = "Gaussian")
-  save_name <- paste0("ssn1_glmssn",cntr,'_20151019.Rdata')
+  save_name <- paste0("ssn1_glmssn",cntr,'_SLOPEQ_20151106.Rdata')
   save(tmp, file = save_name)
   
   sum_tab <- summary(tmp)$fixed.effects.estimates
@@ -37,17 +38,17 @@ while (halt == FALSE) {
   print(paste("elapsed time was", end.time - start.time))
   cat("\n\n")
   
-  if (max(sum_tab$prob.t) < 0.05) {halt = TRUE}
+  if (max(sum_tab$prob.t) < th) {halt = TRUE}
   
   rm(tmp)
   vars <- vars[!vars %in% var_to_remove]
   cntr = cntr + 1
 }
 
-ssn1_glmssn5 <- glmssn(log10_FSS_26Aug14 ~ MIN_Z + STRMPWR + DIS_1YR_PARSA +
-                         EROD_PARCA + OWN_AGR_PARCA + OWN_PRI_PRCA,
-                       EstMeth = "REML",
-                       ssn1,
-                       CorModels = c("locID",'Exponential.Euclid','Exponential.taildown'), 
-                       addfunccol = "afvArea")
-save(ssn1_glmssn5, file = 'ssn1_glmssn5_20151019.Rdata')
+# ssn1_glmssn5 <- glmssn(log10_FSS_26Aug14 ~ MIN_Z + STRMPWR + DIS_1YR_PARSA +
+#                          EROD_PARCA + OWN_AGR_PARCA + OWN_PRI_PRCA,
+#                        EstMeth = "REML",
+#                        ssn1,
+#                        CorModels = c("locID",'Exponential.Euclid','Exponential.taildown'), 
+#                        addfunccol = "afvArea")
+# save(ssn1_glmssn5, file = 'ssn1_glmssn5_20151019.Rdata')

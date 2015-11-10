@@ -5,8 +5,10 @@ library(plyr)
 options(stringsAsFactors = FALSE)
 
 vars <- read.csv("VarNames_RF_v2.csv")
-load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_vi_median_20151105_1341.RData")
-load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_20151105_1341.RData")
+# load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_vi_median_STRMPWR_20151105_1429.RData")
+# load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_STRMPWR_20151105_1429.RData")
+load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_vi_median_SLOPEQ_20151105_1430.RData")
+load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_SLOPEQ_20151105_1430.RData")
 
 #### Variable selection ####
 # Values drop off and then level out. Arbitrarily going with 50% of the variables.
@@ -59,15 +61,18 @@ all_keep <- pkeep
 
 #Further remove variables to reduce the influence of correlation on raising variable importance
 #fss2.s2 <- fss2.s2[,colnames(fss2.s2) %in% keeps.s2]
-fss2.s2 <- fss2.s2[, colnames(fss2.s2) %in% c('FSS_26Aug14', all_keep)]
+fss2.s2 <- fss2.s2[, all_keep]
 colnames(fss2.s2)
 
-#Test will all human influence variables - NOT YET RUN 10/30/2015
-fss2.s2 <- fss2.s1[, colnames(fss2.s1) %in% c('FSS_26Aug14', all_keep, 'OWN_FED_PRCA',
-                                              'POP_DARCA')]
+#Test will all human influence variables - NOT YET RUN 10/30/2015 - THESE ARE ALL IN THERE ALREADY EXCEPT FOR OWN_FED WHICH IS HIGHLY CORRELATED WITH OWN_PRI
+# fss2.s2 <- fss2.s1[, colnames(fss2.s1) %in% c('FSS_26Aug14', 'STRMPWR', 
+#                                               'PPT_1981_2010', 'OWN_FED_PRCA',
+#                                               'POP_DARCA', 'OWN_PRI_PRCA',
+#                                               'OWN_AGR_PARCA', 'ROADLEN_DRSA',
+#                                               'OWN_URB_PARCA')]
 
 # remove any NAs
 fss2.s2 <- data.frame(na.omit(fss2.s2))
-save(fss2.s2, file = 'fss2_s2_scaled.Rdata')
+# save(fss2.s2, file = 'fss2_s2_scaled.Rdata')
 #write.csv(fss2.s2, 'fss2_s2_data_testing.csv')
 #write.csv(fss2.s2, 'fss2_s2_data_scaled.csv')

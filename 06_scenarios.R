@@ -11,7 +11,7 @@ preds <- rename(preds, c('STATION_KE' = "STATION_KEY"))
 obs_sub <- obs[,c('STATION_KEY',all.vars(ssn1_glmssn5$args$formula))]
 obs_sub <- obs_sub[order(obs_sub$STATION_KEY, obs_sub$log10_FSS_26Aug14, decreasing = TRUE),]
 obs_sub <- obs_sub[!duplicated(obs_sub$STATION_KEY),]
-preds <- merge(preds, obs_sub, by = 'STATION_KEY')
+preds <- merge(preds, obs_sub, by = 'STATION_KEY', all.x = TRUE)
 preds <- preds[match(pid.order,preds$pid),]
 row.names(preds) <- preds$pid
 ssn1_glmssn5 <- putSSNdata.frame(preds, ssn1_glmssn5, Name = "preds_up")

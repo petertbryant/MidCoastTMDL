@@ -24,7 +24,7 @@ for (i in 1:length(vars)) {
                 CorModels = c("locID",'Exponential.Euclid','Exponential.taildown'),
                 addfunccol = "afvArea",
                 family = "Gaussian")
-  save_name <- paste0("ssn1_glmssn_forward",i,'_20151019.Rdata')
+  save_name <- paste0("ssn1_glmssn_forward",i,'_STRMPWR_20151106.Rdata')
   save(tmp, file = save_name)
   
   end.time <- Sys.time()

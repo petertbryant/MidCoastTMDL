@@ -9,7 +9,7 @@ obs.complete <- read.csv("ssn_RF_data.csv")
 obs.complete$SVN <- str_trim(obs.complete$SVN)
 #obs.fss2 <- read.csv('fss2_s2_data_testing.csv')
 #obs.fss2 <- within(obs.fss2, rm(X))
-load('fss2_s2_scaled.Rdata')
+#load('fss2_s2_scaled.Rdata')
 obs.fss2 <- fss2.s2
 ssn1 <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN05/lsn.ssn", 
                   predpts = "preds_up", o.write = TRUE)
@@ -65,6 +65,10 @@ obs.vars$log10_FSS_26Aug14 <- log10(obs.vars$FSS_26Aug14)
 #   obs.vars[,c(names(obs.fss2),'log10_FSS_26Aug14')], function(x) {(x-min(x))/
 #       (max(x)-min(x))}))
 # save(min.max, file = 'minmax.Rdata')
+max_log10_fss <- max(obs.vars$log10_FSS_26Aug14, na.rm = TRUE)
+
+obs.vars$log10_FSS_26Aug14 <- obs.vars$log10_FSS_26Aug14 / 
+  max(obs.vars$log10_FSS_26Aug14, na.rm = TRUE) * 100
 
 #### Put the data back into the ssn ####
 #Now that we have the transformed variables we put them back in the 
