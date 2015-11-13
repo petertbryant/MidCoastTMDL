@@ -301,8 +301,15 @@ for (i in 1:length(rca_names)) {
 
 #Headwater sites end up with 0 for ARCA2. This is inaccurate. The ARCA for these
 #sites is equivalent to the RCA. This affects 111 observations at this time (11-13-2015)
-obs.a[obs.a$SQM_ARCA2 == 0,'SQM_ARCA2'] <- obs.a[obs.a$SQM_ARCA2 == 0,'SQM_RCA']
-obs.a[obs.a$SQM_ARSA1 == 0,'SQM_ARSA1'] <- obs.a[obs.a$SQM_ARSA1 == 0,'SQM_RSA']
+obs.a[obs.a$SQM_ARCA2 == 0, 'SQM_ARCA2'] <- obs.a[obs.a$SQM_ARCA2 == 0, 
+                                                  'SQM_RCA']
+obs.a[obs.a$SQM_ARSA1 == 0, 'SQM_ARSA1'] <- obs.a[obs.a$SQM_ARSA1 == 0, 
+                                                  'SQM_RSA']
+obs.a[obs.a$NACOUNT_ARCA2 == 0, 'NACOUNT_ARCA2'] <- obs.a[obs.a$NACOUNT_ARCA2 
+                                                          == 0, 'NACOUNT_RCA']
+obs.a[obs.a$FPA_ARCA2 == 0, 'FPA_ARCA2'] <- obs.a[obs.a$FPA_ARCA2 == 0,
+                                                  'FPA_RCA']
+obs.a[obs.a$SQM_RCA1 == 0, 'SQM_RCA1'] <- obs.a[obs.a$SQM_RCA1 == 0, 'SQM_RCA']
 
 
 # -----------------------------------------------------------
@@ -479,6 +486,14 @@ for (i in 1:nrow(pvar2)) {
                              obs.a[, pvar2[i, 3]]) * pvar2[i, 4]
   #comb <- propor(comb, pvar[i,3], pvar[i,4], pvar[i,2])
 }
+
+#There are four stations that have FPA streams that do not line up with the edges
+# and therefore the RCA layer does not intersect the FPA streams resulting in 
+# 0 length recorded FPA length and may or may not be TYPEF. When calculating 
+# the percentages these crop up as NA because we are dividing by 0. They should 
+# be corrected to measure the appropriate length of stream that they encompass
+# however at his point we will include them as 0.
+obs.a[is.na(obs.a$TYPEF_PRCA), 'TYPEF_PRCA'] <- 0
 
 # -----------------------------------------------------------
 
