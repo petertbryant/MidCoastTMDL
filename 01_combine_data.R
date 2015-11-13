@@ -244,6 +244,60 @@ names(obs.a)[grep("^ARCA|^ARSA|^RCA|^RSA", names(obs.a))] <- sapply(
   strsplit(names(obs.a)[grep("^ARCA|^ARSA|^RCA|^RSA", names(obs.a))], "A_"),
   function(x) {paste(x[2], "_", x[1], "A", sep = "")})
 
+#This name needs to be fixed for consistency
+obs.a <- rename(obs.a, c('KFACTWS_RCA' = 'KFACT_RCA'))
+
+#To eliminate overlapping variables to achieve greater independence (and less
+#covariance) between variables for further modeling we want each spatial scale
+#to be non-overlapping
+arca_names <- grep('_ARCA', names(obs.a), value = TRUE)
+arca_names <- arca_names[!arca_names %in% c('COUNT_ARCA','NASQM_ARCA')]
+
+arsa_names <- grep('_ARSA', names(obs.a), value = TRUE)
+arsa_names <- arsa_names[!arsa_names %in% c('COUNT_ARSA')]
+
+#Start with ARCA1 and ARCA2
+for (i in 1:length(arca_names)) {
+  var <- strsplit(arca_names[i], "_AR")[[1]][1]
+  if (any(grepl(var, arsa_names))) {
+    new_name <- paste0(arca_names[i],"1")
+    sub <- arsa_names[grep(var, arsa_names)]
+  } else {
+    new_name <- paste0(arca_names[i],"2")
+    sub <- paste(var, "RCA", sep = "_")
+  }
+  obs.a[,new_name] <- obs.a[,arca_names[i]] - obs.a[,sub]
+}
+obs.a[,'SQM_ARCA2'] <- obs.a[,'SQM_ARCA'] - obs.a[,'SQM_RCA']
+
+#sort(grep('ARCA1|ARCA2',names(obs.a),value=TRUE))
+
+#Now onto ARSA1
+for (i in 1:length(arsa_names)) {
+  var <- strsplit(arsa_names[i], "_AR")[[1]][1]
+  new_name <- paste0(arsa_names[i],"1")
+  sub <- paste(var, "RSA", sep = "_")
+  obs.a[,new_name] <- obs.a[,arca_names[i]] - obs.a[,sub]
+}
+
+#sort(grep('ARSA1',names(obs.a),value=TRUE))
+
+#And then RCA1
+rca_names <- paste(unlist(lapply(arsa_names, 
+                                 function(x) {
+                                   strsplit(x, "_AR")[[1]][1]}
+                                 )
+                          ), "RCA", sep = "_")
+for (i in 1:length(rca_names)) {
+  var <- strsplit(rca_names[i], "_RC")[[1]][1]
+  new_name <- paste0(rca_names[i],"1")
+  sub <- paste(var, "RSA", sep = "_")
+  if (any(sub %in% names(obs.a))) {
+    obs.a[,new_name] <- obs.a[,rca_names[i]] - obs.a[,sub] 
+  }
+}
+
+#sort(grep('_RCA1',names(obs.a),value=TRUE))
 
 # -----------------------------------------------------------
 #PRECIP
@@ -422,28 +476,18 @@ for (i in 1:nrow(pvar2)) {
 
 # -----------------------------------------------------------
 
+#Now we need to keep the columns we want for modeling
+to_remove <- grep('_ARCA|_RCA|_ARSA|_RSA', names(obs.a))
+to_remove <- setdiff(to_remove, grep('^SQM_ARCA$',names(obs.a))) # grep('^SQM_.(1|2)', names(obs.a), value = TRUE)
+obs.a <- obs.a[,-to_remove]
+
 #Clean up the columns in obs.a a bit
 obs.a <- within(obs.a, rm(fishpres, nhd_ratio, TotDASqKM, DivDASqKM, Date, 
-                          COUNT_ARCA, COUNT_ARSA, COUNT_RCA, COUNT_RSA,
-                          NACOUNT_ARCA, NACOUNT_RCA, NACOUNT_RSA, NASQM_ARCA, 
-                          NASQM_RCA, NASQM_RSA, NHDP21_COMID))
+                          NHDP21_COMID, PPT_1971_2000))
 
 #The previous workflow identified columns with NA data and based on the 
 # number of NAs in the variable the determination for inclusion/exclusion was 
 #made. The variables in these current obs are the result of those determinations.
-
-#There is still a need to clean up the dataframe to just the variables we are relating
-#Here we will output a csv and mark which columns to keep and which to exclude for subsequent steps
-# Leave commented unless you changed something above because this file has been edited outside of the script.
-# old <- read.csv('VarNames_RF_v2.csv')
-# new <- data.frame(var = names(obs.a))
-# ready <- merge(new, old, by = 'var', all.x = TRUE)
-# x <- 1:length(names(obs.a))
-# names(obs.names) <- x
-# obs.names <- names(obs.a)
-# ready$col.num <- mapvalues(ready$var, from = obs.names, to = names(obs.names))
-# ready[ready$var %in% c('LAT_RAW', 'LONG_RAW'),'keep'] <- 1
-# write.csv(names(obs.a), 'VarNames_RF_v2.csv')
 
 
 # -----------------------------------------------------------
