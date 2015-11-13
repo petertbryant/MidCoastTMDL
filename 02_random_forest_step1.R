@@ -6,8 +6,7 @@ library(plyr)
 
 options(stringsAsFactors = FALSE)
 
-vars <- read.csv("VarNames_RF_v2.csv")
-bugs <- read.csv("ssn_RF_data.csv")
+ssn_RF_data <- read.csv("ssn_RF_data.csv")
 
 # ----------------------------------------------------------- #
 # FSS2 - Random forests excluding the physical habitat data ####
@@ -17,9 +16,8 @@ bugs <- read.csv("ssn_RF_data.csv")
 # very high number of trees per forest (ntree). This yields a distribution of importance scores.
 # Removal is based on these distributions. We keep the variables with the highest scores.
 
-vars.fss2.s1 <- vars[vars$keep == 1, ]
-
-fss2.s1 <- bugs[, colnames(bugs) %in% vars.fss2.s1$var]
+fss2.s1 <- ssn_RF_data[, !colnames(ssn_RF_data) %in% c('SVN','STATION_KEY',
+                                                       'rid','rid_LSN04')]
 
 fss2.s1$DATE <- as.POSIXct(fss2.s1$DATE)
 
@@ -54,6 +52,21 @@ fss2.s1[, grep("X", names(fss2.s1))] <- as.data.frame(sapply(
     }
   ))
 
+#Soil characteristics are known complements of each other. We are going
+#to select the size class representative of fine sediment <0.05mm
+fss2.s1 <- fss2.s1[, -grep('^SAND|^CLAY|^SILT_P', names(fss2.s1))]
+
+#COMP and EROD are components of susceptibility. We will exclude them to 
+#eliminate the overlap of the known relationship
+fss2.s1 <- fss2.s1[, -grep('COMP|EROD', names(fss2.s1))]
+
+#SLOPE and Q0001E_adj are precursors to the calculated STRMPWR
+#based on previous runs of the model with these variables used independently
+#SLOPE and Q0001E_adj arrived at a model with lower AIC suggesting they
+#produce a more likely model. Both may be run but for now we will use the
+#component variables instead of the calculated variavle
+fss2.s1 <- within(fss2.s1, rm(STRMPWR))
+
 #Normalize by maximum range
 melted <- melt(fss2.s1[,names(fss2.s1[,-c(grep('_P',names(fss2.s1)),
                                           which(names(fss2.s1) %in% 
@@ -68,9 +81,6 @@ fss2.s1[,-c(grep('_P',names(fss2.s1)),
                       lapply(fss2.s1[,-c(grep('_P', names(fss2.s1)), 
                                          which(names(fss2.s1) %in% c('DATE')))], 
                              function(x) {((x) / (max(x)))*100}))
-
-#Run without overlap between stream power and slope and discharge
-fss2.s1 <- within(fss2.s1, rm(STRMPWR))
 
 # mtry value
 mtry.fss2.s1 <- as.integer(((ncol(fss2.s1) - 1) / 3), 0)

@@ -22,7 +22,7 @@ EROD_PARSA,EROD_ARSA1,SQM_ARSA1,100,percent,square meters
 EROD_PRCA,EROD_RCA1,SQM_RCA1,100,percent,square meters
 EROD_PRSA,EROD_RSA,SQM_RSA,100,percent,square meters
 KFACT_MARCA,KFACT_ARCA2,NACOUNT_ARCA2,1,mean,sum of means
-KFACT_MRCA,KFACTWS_RCA,NACOUNT_RCA,1,mean,sum of means
+KFACT_MRCA,KFACT_RCA,NACOUNT_RCA,1,mean,sum of means
 OWN_AGR_PARCA,OWN_AGR_ARCA1,SQM_ARCA1,100,percent,square meters
 OWN_AGR_PARSA,OWN_AGR_ARSA1,SQM_ARSA1,100,percent,square meters
 OWN_AGR_PRCA,OWN_AGR_RCA1,SQM_RCA1,100,percent,square meters

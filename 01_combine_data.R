@@ -277,7 +277,7 @@ for (i in 1:length(arsa_names)) {
   var <- strsplit(arsa_names[i], "_AR")[[1]][1]
   new_name <- paste0(arsa_names[i],"1")
   sub <- paste(var, "RSA", sep = "_")
-  obs.a[,new_name] <- obs.a[,arca_names[i]] - obs.a[,sub]
+  obs.a[,new_name] <- obs.a[,arsa_names[i]] - obs.a[,sub]
 }
 
 #sort(grep('ARSA1',names(obs.a),value=TRUE))
@@ -298,6 +298,12 @@ for (i in 1:length(rca_names)) {
 }
 
 #sort(grep('_RCA1',names(obs.a),value=TRUE))
+
+#Headwater sites end up with 0 for ARCA2. This is inaccurate. The ARCA for these
+#sites is equivalent to the RCA. This affects 111 observations at this time (11-13-2015)
+obs.a[obs.a$SQM_ARCA2 == 0,'SQM_ARCA2'] <- obs.a[obs.a$SQM_ARCA2 == 0,'SQM_RCA']
+obs.a[obs.a$SQM_ARSA1 == 0,'SQM_ARSA1'] <- obs.a[obs.a$SQM_ARSA1 == 0,'SQM_RSA']
+
 
 # -----------------------------------------------------------
 #PRECIP
@@ -485,6 +491,10 @@ obs.a <- obs.a[,-to_remove]
 obs.a <- within(obs.a, rm(fishpres, nhd_ratio, TotDASqKM, DivDASqKM, Date, 
                           NHDP21_COMID, PPT_1971_2000))
 
+#In examining the data there appears to be an error in the way the contributing
+#watershed was calculated for this headwater site. Will be removed for now.
+obs.a <- obs.a[obs.a$STATION_KEY != '35786',]
+
 #The previous workflow identified columns with NA data and based on the 
 # number of NAs in the variable the determination for inclusion/exclusion was 
 #made. The variables in these current obs are the result of those determinations.
@@ -493,7 +503,7 @@ obs.a <- within(obs.a, rm(fishpres, nhd_ratio, TotDASqKM, DivDASqKM, Date,
 # -----------------------------------------------------------
 # Write the files
 
-#write.csv(obs.a, 'ssn_RF_data.csv', row.names = FALSE)
+write.csv(obs.a, 'ssn_RF_data.csv', row.names = FALSE)
 
 
 
