@@ -53,7 +53,7 @@ for (char in c('CLAY','COMP','EROD','KFACTWS','pop','SAND','SILT','SILT_CLAY','S
                                'VALUE_8' = fed, 
                                "VALUE_9" = urb,
                                "VALUE_10" = agr), warn_missing = FALSE)
-          tmp[,pri] <- tmp$VALUE_1 + tmp$VALUE_3
+          tmp[,pri] <- sum(tmp$VALUE_1, tmp$VALUE_3, na.rm = TRUE)
           if (!odf %in% names(tmp)) {
             tmp[,odf] <- 0
           } 
@@ -113,8 +113,8 @@ wcdf <- merge(wcdf, fish[,c("STATION_KE","PPRCA_FPA")], by = 'STATION_KE', all =
 
 con2.tbls <- sqlTables(con2, tableType = "TABLE")
 
-if ("PPRCA_PPRSA_ZonalStats" %in% con2.tbls$TABLE_NAME) {
-  sqlDrop(con2, "PPRCA_PPRSA_ZonalStats")
-}
-
-sqlSave(con2, wcdf, tablename = 'PPRCA_PPRSA_ZonalStats', varTypes = c('STATION_KE' = 'VARCHAR(255)'), rownames = FALSE)
+# if ("PPRCA_PPRSA_ZonalStats" %in% con2.tbls$TABLE_NAME) {
+#   sqlDrop(con2, "PPRCA_PPRSA_ZonalStats")
+# }
+# 
+# sqlSave(con2, wcdf, tablename = 'PPRCA_PPRSA_ZonalStats', varTypes = c('STATION_KE' = 'VARCHAR(255)'), rownames = FALSE)

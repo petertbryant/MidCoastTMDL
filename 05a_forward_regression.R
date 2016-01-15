@@ -19,12 +19,12 @@ for (i in 1:length(vars)) {
   print(paste("Starting model fit", i, "at", start.time))
   
   tmp <- glmssn(as.formula(obs.vars[,c('log10_FSS_26Aug14',vars[1:i])]),
-                EstMeth = "REML",
+                EstMeth = "ML",
                 ssn1,
                 CorModels = c("locID",'Exponential.Euclid','Exponential.taildown'),
                 addfunccol = "afvArea",
                 family = "Gaussian")
-  save_name <- paste0("ssn1_glmssn_forward",i,'_STRMPWR_20151106.Rdata')
+  save_name <- paste0("ssn1_glmssn",i,'_forward_HWFAC_ML_20151230.Rdata')
   save(tmp, file = save_name)
   
   end.time <- Sys.time()

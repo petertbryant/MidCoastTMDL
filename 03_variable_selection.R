@@ -4,11 +4,11 @@ library(plyr)
 
 options(stringsAsFactors = FALSE)
 
-vars <- read.csv("VarNames_RF_v2.csv")
+#vars <- read.csv("VarNames_RF_v2.csv")
 # load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_vi_median_STRMPWR_20151105_1429.RData")
 # load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_STRMPWR_20151105_1429.RData")
-load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_vi_median_SLOPEQ_20151105_1430.RData")
-load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_SLOPEQ_20151105_1430.RData")
+load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_vi_median_20151216_0913.RData")
+load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_20151216_0913.RData")
 
 #### Variable selection ####
 # Values drop off and then level out. Arbitrarily going with 50% of the variables.
@@ -18,13 +18,13 @@ load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_SLOPEQ_20151105_1430.RData")
 fss2.s2.col <- fss2.s1.vi.median[1:ceiling(nrow(fss2.s1.vi.median) / 2), ][, 1]
 fss2.s1.vi.median <- fss2.s1.vi.median[1:ceiling(nrow(fss2.s1.vi.median) / 2), ]
 #fss2.s2.col <- c("FSS_26Aug14",(fss2.s1.vi.median[,'var_name']))
-fss2.s2 <- fss2.s1[, colnames(fss2.s1) %in% fss2.s2.col]
+fss2.s2 <- fss2.s1[, colnames(fss2.s1) %in% c(fss2.s2.col,'HDWTR')]
 
-fss2.s2.col <- vars[vars$var %in% names(fss2.s2),]
-#fss2.s2.col <- fss2.s2.col[fss2.s2.col$var != 'FSS_26Aug14',]
-fss2.s2.col <- merge(fss2.s2.col, fss2.s1.vi.median[, c('var_name','median')], 
-                     by.x = 'var', by.y = 'var_name', all.x = TRUE)
-fss2.s2.col <- arrange(fss2.s2.col, desc(median))
+# fss2.s2.col <- vars[vars$var %in% names(fss2.s2),]
+# #fss2.s2.col <- fss2.s2.col[fss2.s2.col$var != 'FSS_26Aug14',]
+# fss2.s2.col <- merge(fss2.s2.col, fss2.s1.vi.median[, c('var_name','median')], 
+#                      by.x = 'var', by.y = 'var_name', all.x = TRUE)
+# fss2.s2.col <- arrange(fss2.s2.col, desc(median))
 
 #By category
 correlation_threshold <- 0.4
@@ -61,7 +61,7 @@ all_keep <- pkeep
 
 #Further remove variables to reduce the influence of correlation on raising variable importance
 #fss2.s2 <- fss2.s2[,colnames(fss2.s2) %in% keeps.s2]
-fss2.s2 <- fss2.s2[, all_keep]
+fss2.s2 <- fss2.s2[, c(all_keep,'HDWTR')]
 colnames(fss2.s2)
 
 #Test will all human influence variables - NOT YET RUN 10/30/2015 - THESE ARE ALL IN THERE ALREADY EXCEPT FOR OWN_FED WHICH IS HIGHLY CORRELATED WITH OWN_PRI

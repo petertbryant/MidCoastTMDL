@@ -497,6 +497,11 @@ obs.a[is.na(obs.a$TYPEF_PRCA), 'TYPEF_PRCA'] <- 0
 
 # -----------------------------------------------------------
 
+#Add a factor for headwater sites to further reduce potential colinearity
+#We can identify these where the accumulated area is equivalent to the
+#catchment area.
+obs.a$HDWTR <- ifelse(obs.a$SQM_ARCA == obs.a$SQM_RCA, 1, 0)
+
 #Now we need to keep the columns we want for modeling
 to_remove <- grep('_ARCA|_RCA|_ARSA|_RSA', names(obs.a))
 to_remove <- setdiff(to_remove, grep('^SQM_ARCA$',names(obs.a))) # grep('^SQM_.(1|2)', names(obs.a), value = TRUE)

@@ -73,6 +73,7 @@ obs.vars$log10_FSS_26Aug14 <- obs.vars$log10_FSS_26Aug14 /
 #### Put the data back into the ssn ####
 #Now that we have the transformed variables we put them back in the 
 #SSN object
+obs.vars$HDWTR <- as.factor(obs.vars$HDWTR)
 obs.vars <- obs.vars[match(obs$pid, obs.vars$pid),]
 row.names(obs.vars) <- obs.vars$pid
 ssn1 <- putSSNdata.frame(obs.vars, ssn1, Name = 'Obs')
