@@ -53,7 +53,16 @@ for (char in c('CLAY','COMP','EROD','KFACTWS','pop','SAND','SILT','SILT_CLAY','S
                                'VALUE_8' = fed, 
                                "VALUE_9" = urb,
                                "VALUE_10" = agr), warn_missing = FALSE)
-          tmp[,pri] <- sum(tmp$VALUE_1, tmp$VALUE_3, na.rm = TRUE)
+          tmp[,pri] <- if ('VALUE_1' %in% names(tmp) & 'VALUE_3' %in% 
+                           names(tmp)) {
+            tmp$VALUE_1 + tmp$VALUE_3 
+            } else if ('VALUE_1' %in% names(tmp)) {
+              tmp$VALUE_1
+              } else if ('VALUE_3' %in% names(tmp)) {
+                tmp$VALUE_3
+              } else {
+                0
+              }
           if (!odf %in% names(tmp)) {
             tmp[,odf] <- 0
           } 
@@ -110,6 +119,12 @@ wcdf <- merge(wcdf, typef, by = 'STATION_KE', all = TRUE)
 
 fish <- ddply(fish, .(STATION_KE), summarize, PPRCA_FPA = sum(LENGTH))
 wcdf <- merge(wcdf, fish[,c("STATION_KE","PPRCA_FPA")], by = 'STATION_KE', all = TRUE)
+
+#These are all percentages so if they were missing that value, the resulting
+#percentage of the area with that value is 0.
+#Not sure that this is needed. These are actually areas not percentages yet.
+#That is done in 01_combine_data.R. Let's leave alone at this point. It wasn't here to begin with.
+#wcdf[is.na(wcdf)] <- 0
 
 con2.tbls <- sqlTables(con2, tableType = "TABLE")
 
