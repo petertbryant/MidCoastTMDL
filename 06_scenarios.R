@@ -1,14 +1,18 @@
 library(SSN)
 library(plyr)
 library(RODBC)
+library(ggplot2)
+library(reshape2)
+options(stringsAsFactors = FALSE)
+
 con <- odbcConnectAccess('//deqlab1/biomon/Databases/Biomon_Phoenix.mdb')
 refOG <- sqlFetch(con, 'STATION 2015_calculated')
 ref <- refOG[!is.na(refOG$F2014_REF),]
 ref <- ref[ref$F2014_REF == 'Y',]
 #load('ssn1_glmssn9_HWFAC_ML_20151216.Rdata')
 #fit <- ssn1_glmssn_9_REML
-fit <- glmssn(log10_FSS_26Aug14 ~ sum_1095_days + XSLOPE_MAP + MIN_Z + OWN_PRI_PRCA + 
-                POP_DARCA + HDWTR, 
+fit <- glmssn(log10_FSS_26Aug14 ~ STRMPWR + EROD_PARCA + MIN_Z + OWN_FED_PRCA + 
+                SQM_ARCA + OWN_URB_PARCA + ROADLEN_DARCA + SILT_CLAY_PRCA, 
               EstMeth = "REML",
               ssn1,
               CorModels = c("locID",'Exponential.Euclid','Exponential.taildown'),
@@ -59,13 +63,26 @@ ggplot(data = preds, aes(x = FSS_u, y = fit_u)) +
 
 #get the data frame and build the scenario
 preds.0 <- getSSNdata.frame(fit, Name = "preds_up")
-preds.0$POP_DARCA <- 0
-preds.0$OWN_PRI_PRCA <- 0
-preds.0$sum_1095_days <- median(obs$sum_1095_days, na.rm = TRUE)
-preds.0$XSLOPE_MAP <- preds.0$XSLOPE_MAP * 1.05
+preds.0[preds.0$STATION_KEY %in% impaired$STATION_KEY, 
+        'ROADLEN_DARCA'] <- quantile(
+          preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'ROADLEN_DARCA'], 
+          seq(0,1,.25))[2]
+preds.0[preds.0$STATION_KEY %in% impaired$STATION_KEY, 
+        'OWN_URB_PARCA'] <- quantile(
+          preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'OWN_URB_PARCA'], 
+          seq(0,1,.25))[2]
+
+ref_OWN_FED_PRCA <- quantile(
+  preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'OWN_FED_PRCA'], 
+  seq(0,1,.25))[2]
+if (preds.0[preds.0$STATION_KEY %in% 
+            impaired$STATION_KEY, 'OWN_FED_PRCA'] < ref_OWN_FED_PRCA) {
+  preds.0[preds.0$STATION_KEY %in% 
+            impaired$STATION_KEY, 'OWN_FED_PRCA'] <- ref_OWN_FED_PRCA
+}
 #preds.0$OWN_AGR_PARCA <- 0
-preds.0 <- preds.0[match(pid.order,preds.0$pid),]
-row.names(preds.0) <- preds.0$pid
+#preds.0 <- preds.0[match(pid.order,preds.0$pid),]
+#row.names(preds.0) <- preds.0$pid
 fit_0 <- putSSNdata.frame(preds.0, fit, Name = "preds_up")
 
 #Run the prediction
@@ -85,6 +102,8 @@ preds.0$FSS_target <- 10^(preds.0$log10_FSS_26Aug14/100 * max_log10_fss)
 preds.0$Sed_Stressor <- ifelse(preds.0$FSS > preds.0$FSS_target,TRUE,FALSE)
 preds.0$pr_target <- abs(((preds.0$FSS_target - preds.0$FSS)/preds.0$FSS) * 100)
 preds.0$predSE_untran <- 10^(preds.0$log10_FSS_26Aug14.predSE/100 * max_log10_fss)
+preds.0$untran_uci <- 10^(preds.0$uci/100 * max_log10_fss)
+preds.0$untran_lci <- 10^(preds.0$lci/100 * max_log10_fss)
 preds.0 <- preds.0[!is.na(preds.0$FSS),]
 ss <- preds.0[preds.0$STATION_KEY %in% impaired$STATION_KEY & preds.0$Sed_Stressor,]
 ss[order(ss$pr_target),]
@@ -111,13 +130,16 @@ impaired.0 <- merge(impaired.0, preds_obs, by = 'pid', all.x = TRUE)
 df <- melt(impaired.0[,], id.vars = "STATION_KEY",
      measure.vars = c('untran_FSS', 'untran_uci', 'untran_lci', 'FSS.y'))
 
+df <- melt(ss, id.vars = "STATION_KEY", measure.vars = c('FSS', 'FSS_target',
+                                                         'untran_uci', 'untran_lci'))
+
 hline.data <- data.frame(z = impaired.0[,"TMDL.FSS.Target"], 
                          STATION_KEY = impaired.0[,c('STATION_KEY')])
 impaired.0$STATION_KEY %in% c(21792,37179,25297)
 ggplot(df, 
        aes(x = 1, y = value, color = variable)) + 
-  geom_point(size = c(3, 8, 8, 3), shape = c(19, 95, 95, 19)) + 
-  scale_color_discrete(labels = c("Predicted BSTI at 0 Anthro", "UCI", "LCI", "Observed BSTI")) +
+  geom_point(size = c(3, 3, 8, 8), shape = c(19, 19, 95, 95)) + 
+  scale_color_discrete(labels = c("Predicted BSTI at 0 Anthro","Observed BSTI","UCI", "LCI")) +
   facet_wrap(~ STATION_KEY) +
   geom_hline(aes(yintercept = z), hline.data) 
 

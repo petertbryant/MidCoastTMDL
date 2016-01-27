@@ -27,7 +27,7 @@ while (halt == FALSE) {
                 CorModels = c("locID",'Exponential.Euclid','Exponential.taildown'),
                 addfunccol = "afvArea",
                 family = "Gaussian")
-  save_name <- paste0("ssn1_glmssn",cntr,'_HWFAC_ML_20151216.Rdata')
+  save_name <- paste0("ssn1_glmssn",cntr,'_ML_RUN3.Rdata')
   save(tmp, file = save_name)
   
   sum_tab <- summary(tmp)$fixed.effects.estimates
@@ -45,12 +45,12 @@ while (halt == FALSE) {
   cntr = cntr + 1
 }
 
-ssn1_glmssn_9_REML <- glmssn(ssn1_glmssn9$args$formula,
-                             EstMeth = "REML",
-                             ssn1,
-                             CorModels = c("locID",'Exponential.Euclid','Exponential.taildown'),
-                             addfunccol = "afvArea",
-                             family = "Gaussian")
+# ssn1_glmssn_9_REML <- glmssn(ssn1_glmssn9$args$formula,
+#                              EstMeth = "REML",
+#                              ssn1,
+#                              CorModels = c("locID",'Exponential.Euclid','Exponential.taildown'),
+#                              addfunccol = "afvArea",
+#                              family = "Gaussian")
 
 # ssn1_glmssn5 <- glmssn(log10_FSS_26Aug14 ~ MIN_Z + STRMPWR + DIS_1YR_PARSA +
 #                          EROD_PARCA + OWN_AGR_PARCA + OWN_PRI_PRCA,

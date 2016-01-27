@@ -1,34 +1,38 @@
 library(SSN)
 
-name_vec <- paste0("ssn1_glmssn", 1:13, "_forward_HWFAC_ML_20151230.Rdata")
-name_vec <- c(name_vec, paste0("ssn1_glmssn", 1:9, "_HWFAC_ML_20151216.Rdata"))
-for (i in 1:length(name_vec)) {
+name_vec <- paste0("ssn1_glmssn", 1:10, "_ML_RUN1.Rdata")
+name_vec <- c(name_vec,paste0("ssn1_glmssn", 1:9, "_ML_RUN2.Rdata"))
+name_vec <- c(name_vec,paste0("ssn1_glmssn",1:8,"_ML_RUN3.Rdata"))
+#name_vec <- c(name_vec, paste0("ssn1_glmssn", 1:9, "_HWFAC_ML_20151216.Rdata"))
+for (i in 20:length(name_vec)) {
   load(name_vec[i])
-  assign(gsub("_HWFAC_ML_[0-9]{8}.Rdata","",name_vec[i]), tmp)
+  assign(paste0(gsub("[0-9]+_ML_RUN1.Rdata|{0-9}._ML_RUN3.Rdata",
+                     "",name_vec[i]),i), tmp)
 }
 #load("ssn1_glmssn5_20151019.Rdata")
-models <- list(ssn1_glmssn1_forward, ssn1_glmssn2_forward, 
-               ssn1_glmssn3_forward, ssn1_glmssn4_forward, 
-               ssn1_glmssn5_forward, ssn1_glmssn6_forward,
-               ssn1_glmssn7_forward, ssn1_glmssn8_forward,
-               ssn1_glmssn9_forward, ssn1_glmssn10_forward,
-               ssn1_glmssn11_forward, ssn1_glmssn12_forward,
-               ssn1_glmssn13_forward,
-               ssn1_glmssn1, ssn1_glmssn2, 
-               ssn1_glmssn3, ssn1_glmssn4,
-               ssn1_glmssn5, ssn1_glmssn6,
-               ssn1_glmssn7, ssn1_glmssn8,
-               ssn1_glmssn9)
+# ssn1_glmssn1_forward, ssn1_glmssn2_forward, 
+# ssn1_glmssn3_forward, ssn1_glmssn4_forward, 
+# ssn1_glmssn5_forward, ssn1_glmssn6_forward,
+# ssn1_glmssn7_forward, ssn1_glmssn8_forward,
+# ssn1_glmssn9_forward, ssn1_glmssn10_forward,
+# ssn1_glmssn11_forward, ssn1_glmssn12_forward,
+# ssn1_glmssn13_forward,
+models <- list(ssn1_glmssn1,ssn1_glmssn2,ssn1_glmssn3,ssn1_glmssn4,
+               ssn1_glmssn5,ssn1_glmssn6,ssn1_glmssn7,ssn1_glmssn8,
+               ssn1_glmssn9,ssn1_glmssn10,ssn1_glmssn11,ssn1_glmssn12,
+               ssn1_glmssn13,ssn1_glmssn14,ssn1_glmssn15,ssn1_glmssn16,
+               ssn1_glmssn17,ssn1_glmssn18,ssn1_glmssn19,ssn1_glmssn20,
+               ssn1_glmssn21,ssn1_glmssn22,ssn1_glmssn23,ssn1_glmssn24,
+               ssn1_glmssn25,ssn1_glmssn26,ssn1_glmssn27)
 results <- InfoCritCompare(models)
 results$dAIC <- min(results$AIC) - results$AIC
 results[order(results$dAIC, decreasing = TRUE),]
 
+save(results, file = "back_results_RUN1_and_RUN2_and_RUN3.Rdata")
 
 
-save(results,file = "back_for_ward_results_HWFAC_20151230.Rdata")
-
-results[1:13, 'method'] <- 'forward'
-results[14:22, 'method'] <- 'backward'
+# results[1:13, 'method'] <- 'forward'
+# results[14:22, 'method'] <- 'backward'
 
 load('back_for_ward_results_SLOPEQ_20151106.Rdata')
 results$track <- paste("SLOPEQ",c(paste0("f",c(1:5,7:13)), paste0("b",1:8)))

@@ -58,14 +58,16 @@ fss2.s1 <- fss2.s1[, -grep('^SAND|^CLAY|^SILT_P', names(fss2.s1))]
 
 #COMP and EROD are components of susceptibility. We will exclude them to 
 #eliminate the overlap of the known relationship
-fss2.s1 <- fss2.s1[, -grep('COMP|EROD', names(fss2.s1))]
+#fss2.s1 <- fss2.s1[, -grep('COMP|EROD', names(fss2.s1))]
+fss2.s1 <- fss2.s1[, -grep('SUSCEP', names(fss2.s1))]
 
 #SLOPE and Q0001E_adj are precursors to the calculated STRMPWR
 #based on previous runs of the model with these variables used independently
 #SLOPE and Q0001E_adj arrived at a model with lower AIC suggesting they
 #produce a more likely model. Both may be run but for now we will use the
 #component variables instead of the calculated variavle
-fss2.s1 <- within(fss2.s1, rm(STRMPWR))
+#fss2.s1 <- within(fss2.s1, rm(STRMPWR))
+fss2.s1 <- within(fss2.s1, rm(Q0001E_adj, XSLOPE_MAP))
 
 #Normalize by maximum range
 melted <- melt(fss2.s1[,names(fss2.s1[,-c(grep('_P',names(fss2.s1)),
@@ -122,8 +124,10 @@ colnames(fss2.s1.visd)[52] <- "var_index"
 
 # Save the df with a timestamp so we don't accidently overwrite it.
 timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
-save(fss2.s1.vi, file = paste0("fss2_s1_vi_", timestamp, ".RData"))
-save(fss2.s1.visd, file = paste0("fss2_s1_visd_", timestamp, ".RData"))
+vi_name <- paste0("fss2_s1_vi_", timestamp, ".RData")
+vi_sd_name <- paste0("fss2_s1_visd_", timestamp, ".RData")
+save(fss2.s1.vi, file = vi_name)
+save(fss2.s1.visd, file = vi_sd_name)
 timestamp
 
 #### sort the variables by median importance ####
@@ -145,7 +149,9 @@ fss2.s1.vi.median <- fss2.s1.vi.median[with(fss2.s1.vi.median, order(-median)), 
 
 ## Save the precursors to s2 with a timestamp so we don't accidently overwrite it.
 timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
-save(fss2.s1.vi.median, file=paste0("fss2_s1_vi_median_", timestamp, ".RData"))
-save(fss2.s1, file=paste0("fss2_s1_", timestamp, ".RData"))
+vi_median_name <- paste0("fss2_s1_vi_median_", timestamp, ".RData")
+fss2_s1_name <- paste0("fss2_s1_", timestamp, ".RData")
+save(fss2.s1.vi.median, file = vi_median_name)
+save(fss2.s1, file = fss2_s1_name)
 timestamp
 

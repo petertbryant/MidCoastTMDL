@@ -4,11 +4,8 @@ library(plyr)
 
 options(stringsAsFactors = FALSE)
 
-#vars <- read.csv("VarNames_RF_v2.csv")
-# load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_vi_median_STRMPWR_20151105_1429.RData")
-# load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_STRMPWR_20151105_1429.RData")
-load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_vi_median_20151216_0913.RData")
-load("C:/users/pbryant/desktop/midcoasttmdl/fss2_s1_20151216_0913.RData")
+load(vi_median_name)
+load(fss2_s1_name)
 
 #### Variable selection ####
 # Values drop off and then level out. Arbitrarily going with 50% of the variables.
