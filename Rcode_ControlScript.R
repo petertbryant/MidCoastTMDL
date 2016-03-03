@@ -6,6 +6,11 @@
 #Outputs: VarNames_RF_V2.csv, ssn_RF_data.csv
 
 #### START AT STEP 2 FOR CURRENT MODEL RUNS ####
+
+#RUN1: No STRMPWR, using Q0001E_adj and XSLOPE_MAP instead since STRMPWR = Q*SLOPE
+#RUN2: No Q0001E_adj or XSLOPE_MAP, using STRMPWR instead to test for better predictor
+RUN <- 1
+
 #Step 2:
 #source('02_random_forest_step1.R')
 #Inputs: VarNames_RF_V2.csv, ssn_RF_data.csv

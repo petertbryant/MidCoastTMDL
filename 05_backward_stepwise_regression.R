@@ -7,7 +7,7 @@ options('scipen' = 100)
 ##################################################
 ### Create the Distance Matrix
 ###################################################
-#createDistMat(ssn1, predpts = 'preds_up', o.write = TRUE, amongpreds = TRUE)
+#createDistMat(ssn1, predpts = 'preds', o.write = TRUE, amongpreds = TRUE)
 
 ###################################################
 ### Variable Selection Via Backward Deletion   ###
@@ -15,19 +15,19 @@ options('scipen' = 100)
 halt = FALSE
 cntr = 1
 th <- 0.05
-vars <- names(obs.fss2)
+vars <- names(obs.bsti)
 
 while (halt == FALSE) {
   start.time <- Sys.time()
   print(paste("Starting model fit", cntr, "at", start.time))
   
-  tmp <- glmssn(as.formula(obs.vars[,c('log10_FSS_26Aug14',vars)]),
+  tmp <- glmssn(as.formula(obs.vars[,c('log10_BSTI',vars)]),
                 EstMeth = "ML",
                 ssn1,
                 CorModels = c("locID",'Exponential.Euclid','Exponential.taildown'),
                 addfunccol = "afvArea",
                 family = "Gaussian")
-  save_name <- paste0("ssn1_glmssn",cntr,'_ML_RUN3.Rdata')
+  save_name <- paste0("ssn1_glmssn",cntr,'_RUN',RUN,'_ML.Rdata')
   save(tmp, file = save_name)
   
   sum_tab <- summary(tmp)$fixed.effects.estimates

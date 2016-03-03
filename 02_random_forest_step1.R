@@ -7,7 +7,7 @@ library(plyr)
 options(stringsAsFactors = FALSE)
 
 ssn_RF_data <- read.csv("ssn_RF_data.csv")
-
+RUN <- 1
 # ----------------------------------------------------------- #
 # FSS2 - Random forests excluding the physical habitat data ####
 # ----------------------------------------------------------- #
@@ -16,27 +16,27 @@ ssn_RF_data <- read.csv("ssn_RF_data.csv")
 # very high number of trees per forest (ntree). This yields a distribution of importance scores.
 # Removal is based on these distributions. We keep the variables with the highest scores.
 
-fss2.s1 <- ssn_RF_data[, !colnames(ssn_RF_data) %in% c('SVN','STATION_KEY',
+bsti <- ssn_RF_data[, !colnames(ssn_RF_data) %in% c('SVN','STATION_KEY',
                                                        'rid','rid_LSN04')]
 
-fss2.s1$DATE <- as.POSIXct(fss2.s1$DATE)
+bsti$DATE <- as.POSIXct(bsti$DATE)
 
 # #The below steps were necessary during initial processing and are not necessary now that we are 
 # #using the modified dataset
 # #remove NAs in response variable
-# fss2.s1 <- fss2.s1[(!is.na(fss2.s1$FSS_26Aug14)),]
+# bsti <- bsti[(!is.na(bsti$BSTI)),]
 # # remove any NAs - this has been taken care of prior to this but for good measure we'll leave it in
 # #This removes the whole row where there is an NA. There are columns that are all NA due to scaling 
-# fss2.s1 <- data.frame(na.omit(fss2.s1))
+# bsti <- data.frame(na.omit(bsti))
 
 # #Normalize the data to the same scale - Completed on 12/17 at 1618/1620. Did not affect rank order
 # Will not normalize to same scale at this point in the data processing since it affects the 
 # value of the %inc MSE because the scale of the response is so small. 
-# fss2.s1$LONG_RAW <- abs(fss2.s1$LONG_RAW)
-# fss2.s1 <- as.data.frame(lapply(fss2.s1,function(x) {(x-min(x))/(max(x)-min(x))}))
+# bsti$LONG_RAW <- abs(bsti$LONG_RAW)
+# bsti <- as.data.frame(lapply(bsti,function(x) {(x-min(x))/(max(x)-min(x))}))
 # 
 #This removes those variables where all the values are 0
-fss2.s1 <- fss2.s1[, setdiff(names(fss2.s1), c("X2year_count_60_days",
+bsti <- bsti[, setdiff(names(bsti), c("X2year_count_60_days",
                                                "X10year_count_60_days", 
                                                "X25year_count_60_days", 
                                                "X50year_count_60_days",
@@ -46,53 +46,55 @@ fss2.s1 <- fss2.s1[, setdiff(names(fss2.s1), c("X2year_count_60_days",
                                                "X50year_count_180_days", 
                                                "X100year_count_180_days"))]
 #Need to convert Inf values to 0
-fss2.s1[, grep("X", names(fss2.s1))] <- as.data.frame(sapply(
-  fss2.s1[, grep("X",names(fss2.s1))], function(x) {
+bsti[, grep("X", names(bsti))] <- as.data.frame(sapply(
+  bsti[, grep("X",names(bsti))], function(x) {
     replace(x, is.infinite(x),0)
     }
   ))
 
 #Soil characteristics are known complements of each other. We are going
 #to select the size class representative of fine sediment <0.05mm
-fss2.s1 <- fss2.s1[, -grep('^SAND|^CLAY|^SILT_P', names(fss2.s1))]
+bsti <- bsti[, -grep('^SAND|^CLAY|^SILT_P', names(bsti))]
 
-#COMP and EROD are components of susceptibility. We will exclude them to 
-#eliminate the overlap of the known relationship
-#fss2.s1 <- fss2.s1[, -grep('COMP|EROD', names(fss2.s1))]
-fss2.s1 <- fss2.s1[, -grep('SUSCEP', names(fss2.s1))]
+#COMP is a complement of EROD and has high correlation. Although EROD is 
+#a component of the derivation of SUSCEP it maintains low correlation < 0.4
+bsti <- bsti[, -grep('COMP', names(bsti))]
 
 #SLOPE and Q0001E_adj are precursors to the calculated STRMPWR
 #based on previous runs of the model with these variables used independently
 #SLOPE and Q0001E_adj arrived at a model with lower AIC suggesting they
 #produce a more likely model. Both may be run but for now we will use the
 #component variables instead of the calculated variavle
-#fss2.s1 <- within(fss2.s1, rm(STRMPWR))
-fss2.s1 <- within(fss2.s1, rm(Q0001E_adj, XSLOPE_MAP))
+if (RUN == 1) {
+  bsti <- within(bsti, rm(STRMPWR))
+} else if (RUN == 2) {
+  bsti <- within(bsti, rm(Q0001E_adj, XSLOPE_MAP))
+}
 
 #Normalize by maximum range
-melted <- melt(fss2.s1[,names(fss2.s1[,-c(grep('_P',names(fss2.s1)),
-                                          which(names(fss2.s1) %in% 
+melted <- melt(bsti[,names(bsti[,-c(grep('_P',names(bsti)),
+                                          which(names(bsti) %in% 
                                                   c('DATE')))])])
 min.max <- ddply(melted, .(variable), 
                  summarize, 
                  min_val = min(value), 
                  max_val = max(value))
-fss2.s1[,-c(grep('_P',names(fss2.s1)),
-            which(names(fss2.s1) %in% 
+bsti[,-c(grep('_P',names(bsti)),
+            which(names(bsti) %in% 
                     c('DATE')))] <- as.data.frame(
-                      lapply(fss2.s1[,-c(grep('_P', names(fss2.s1)), 
-                                         which(names(fss2.s1) %in% c('DATE')))], 
+                      lapply(bsti[,-c(grep('_P', names(bsti)), 
+                                         which(names(bsti) %in% c('DATE')))], 
                              function(x) {((x) / (max(x)))*100}))
 
 # mtry value
-mtry.fss2.s1 <- as.integer(((ncol(fss2.s1) - 1) / 3), 0)
+mtry.bsti <- as.integer(((ncol(bsti) - 1) / 3), 0)
 
 # initialize the variable importance df to store the importance scores from each run
-fss2.s1.vi <- data.frame(matrix(nrow = ncol(fss2.s1) - 1, ncol = 50))
-fss2.s1.visd <- data.frame(matrix(nrow = ncol(fss2.s1) - 1, ncol = 50))
+bsti.vi <- data.frame(matrix(nrow = ncol(bsti) - 1, ncol = 50))
+bsti.visd <- data.frame(matrix(nrow = ncol(bsti) - 1, ncol = 50))
 
-fss2.s1.col <- colnames(fss2.s1)
-fss2.s1.col <- fss2.s1.col[!(fss2.s1.col == "FSS_26Aug14")]
+bsti.col <- colnames(bsti)
+bsti.col <- bsti.col[!(bsti.col == "BSTI")]
 
 
 #Run the randomForest
@@ -101,57 +103,49 @@ beg <- Sys.time()
 print(beg)
 set.seed(100)
 for (i in 1:50) {
-  fss2.s1.rf <- randomForest(FSS_26Aug14 ~ ., 
-                             data = fss2.s1,
-                             mtry = mtry.fss2.s1,
+  bsti.rf <- randomForest(BSTI ~ ., 
+                             data = bsti,
+                             mtry = mtry.bsti,
                              ntree = 2000, 
                              keep.forest = TRUE, 
                              importance = TRUE)
-  fss2.s1.vi[, i] <- fss2.s1.rf$importance[, 1]
-  fss2.s1.visd[, i] <- fss2.s1.rf$importanceSD
+  bsti.vi[, i] <- bsti.rf$importance[, 1]
+  bsti.visd[, i] <- bsti.rf$importanceSD
 }
 print(Sys.time() - beg)
 
 # Add var names and index
-fss2.s1.vi[, 51]<- fss2.s1.col
-fss2.s1.vi[, 52]<-c(1:length(fss2.s1.col))
-colnames(fss2.s1.vi)[51] <- "var_name"
-colnames(fss2.s1.vi)[52] <- "var_index"
-fss2.s1.visd[, 51]<- fss2.s1.col
-fss2.s1.visd[, 52]<- c(1:length(fss2.s1.col))
-colnames(fss2.s1.visd)[51] <- "var_name"
-colnames(fss2.s1.visd)[52] <- "var_index"
-
-# Save the df with a timestamp so we don't accidently overwrite it.
-timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
-vi_name <- paste0("fss2_s1_vi_", timestamp, ".RData")
-vi_sd_name <- paste0("fss2_s1_visd_", timestamp, ".RData")
-save(fss2.s1.vi, file = vi_name)
-save(fss2.s1.visd, file = vi_sd_name)
-timestamp
+bsti.vi[, 51]<- bsti.col
+bsti.vi[, 52]<-c(1:length(bsti.col))
+colnames(bsti.vi)[51] <- "var_name"
+colnames(bsti.vi)[52] <- "var_index"
+bsti.visd[, 51]<- bsti.col
+bsti.visd[, 52]<- c(1:length(bsti.col))
+colnames(bsti.visd)[51] <- "var_name"
+colnames(bsti.visd)[52] <- "var_index"
 
 #### sort the variables by median importance ####
-fss2.s1.vi.l <- melt(fss2.s1.vi, id = c("var_name", "var_index"))
+bsti.vi.l <- melt(bsti.vi, id = c("var_name", "var_index"))
 
-fss2.s1.vi.median <- cast(fss2.s1.vi.l, var_name + var_index ~ ., 
+bsti.vi.median <- cast(bsti.vi.l, var_name + var_index ~ ., 
                           value ='value', median)
-colnames(fss2.s1.vi.median )[3] <- "median"
+colnames(bsti.vi.median )[3] <- "median"
 
 #Take the median sd as well
-fss2.s1.visd.l <- melt(fss2.s1.visd, id = c("var_name", "var_index"))
+bsti.visd.l <- melt(bsti.visd, id = c("var_name", "var_index"))
 
-fss2.s1.visd.median <- cast(fss2.s1.visd.l, var_name + var_index ~ ., 
+bsti.visd.median <- cast(bsti.visd.l, var_name + var_index ~ ., 
                           value ='value', median)
-colnames(fss2.s1.visd.median )[3] <- "median_sd"
+colnames(bsti.visd.median )[3] <- "median_sd"
 
 # sort the data so largest at the top
-fss2.s1.vi.median <- fss2.s1.vi.median[with(fss2.s1.vi.median, order(-median)), ]
+bsti.vi.median <- bsti.vi.median[with(bsti.vi.median, order(-median)), ]
 
 ## Save the precursors to s2 with a timestamp so we don't accidently overwrite it.
 timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
-vi_median_name <- paste0("fss2_s1_vi_median_", timestamp, ".RData")
-fss2_s1_name <- paste0("fss2_s1_", timestamp, ".RData")
-save(fss2.s1.vi.median, file = vi_median_name)
-save(fss2.s1, file = fss2_s1_name)
+vi_median_name <- paste0("bsti_vi_median_", timestamp, ".RData")
+bsti_name <- paste0("bsti_", timestamp, ".RData")
+save(bsti.vi.median, file = vi_median_name)
+save(bsti, file = bsti_name)
 timestamp
 

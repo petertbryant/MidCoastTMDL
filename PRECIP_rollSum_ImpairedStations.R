@@ -21,7 +21,7 @@ for(i in 1:nrow(sam_df)) {
 dfdall <- dfdall[!is.na(dfdall$datestr),]
 dfdall$datestr <- factor(as.character(dfdall$datestr))
 
-save(dfdall, file = 'precip_daily_sum_1095_days.Rdata')
+save(dfdall, file = 'C:/users/pbryant/desktop/midcoasttmdl-gis/precip_daily_sum_1095_days.Rdata')
 
 #plot of all sites
 boxplot(dfdall$sum_1095_days~dfdall$STATION_KEY,las=2)

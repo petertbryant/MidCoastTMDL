@@ -22,23 +22,25 @@ options("scipen"=100)
 indb <- "//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN04/Tables.mdb"
 tablename1 <- "ssn_edges_table_final"
 tablename2 <- "ssn_sites_table_final"
-tablename3 <- "FSS_by_SVN"
+tablename3 <- "BSTI_by_SVN"
 tablename4 <- "PPRCA_PPRSA_Disturbance"
 #tablename4 <- "tbl_HASLIDAR_Station_watershed"
 tablename5 <- "tb_PPT_annual_avg_by_STATION_KEY"
 tablename6 <- "tbl_POP_Dasy"
 tablename7 <- "PPRCA_PPRSA_ZonalStats"
 tablename8 <- 'FPA_Streams'
+tablename9 <- "FSS_by_SVN"
 channel <-odbcConnectAccess2007(indb)
 edgedf <- sqlFetch(channel, tablename1)
 obs <- sqlFetch(channel, tablename2)
-fss <- sqlFetch(channel, tablename3)
+bsti <- sqlFetch(channel, tablename3)
 dis <- sqlFetch(channel, tablename4)
 #haslidar <- sqlFetch(channel, tablename4)
 ppt <- sqlFetch(channel, tablename5)
 pop <- sqlFetch(channel, tablename6)
 pp.zstats <- sqlFetch(channel, tablename7)
 fpa <- sqlFetch(channel, tablename8)
+fss <- sqlFetch(channel, tablename9)
 close(channel)
 rm(indb, tablename1, tablename2, tablename3, tablename4, tablename5, tablename6, 
    tablename7, channel, tablename8)
@@ -463,11 +465,16 @@ obs.a$STRMPWR <- obs.a$XSLOPE_MAP * obs.a$Q0001E_adj
 
 rm(nhd.flow, nhd)
 # -----------------------------------------------------------
-#Pull in updated FSS values and remove the SVNs that have low counts
+#Pull in updated bsti values and remove the SVNs that have low counts
 #Post revision we are using the output from the list of stations already filtered for low count
-obs.a <- merge(obs.a, fss[, c('SVN', 'FSS_26Aug14')], by = 'SVN', all.x = TRUE)
+bsti <- rename(bsti, c('Sample' = "SVN"))
+bsti <- merge(bsti, fss, by = 'SVN', all = TRUE)
+bsti[is.na(bsti$BSTI),'BSTI'] <- bsti[is.na(bsti$BSTI),'FSS_26Aug14']
+obs.a <- merge(obs.a, bsti[, c('SVN', 'BSTI')], by = 'SVN', all.x = TRUE)
+obs.a <- obs.a[!duplicated(obs.a$SVN),]
 
-rm(fss)
+
+rm(bsti, fss)
 # -----------------------------------------------------------
 # Clean up date columns and formatting
 
