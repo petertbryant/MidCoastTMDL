@@ -86,7 +86,7 @@ ggplot(data = preds, aes(x = BSTI_u, y = fit_u)) +
 for (i in 1:length(unique(preds$STATION_KEY))) {
   preds.0 <- getSSNdata.frame(fit, Name = "preds")
   
-  stn <- unique(preds$STATION_KEY)[i]
+  stn <- as.character(unique(preds$STATION_KEY)[i])
   
   #RUN1
   preds.0[preds.0$STATION_KEY == stn, 
@@ -97,16 +97,17 @@ for (i in 1:length(unique(preds$STATION_KEY))) {
           'OWN_URB_PARCA'] <- quantile(
             preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'OWN_URB_PARCA'], 
             seq(0,1,.25))[2]
-  preds.0[preds.0$STATION_KEY == stn, 
-          'DIS_3YR_PRSA'] <- quantile(
-            preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'DIS_3YR_PRSA'], 
-            seq(0,1,.25))[4]
+  
+  ref_DIS_3YR_PRSA <- quantile(
+    preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'DIS_3YR_PRSA'], 
+    seq(0,1,.25))[4]
+  preds.0[preds.0$STATION_KEY == stn & preds.0$DIS_3YR_PRSA > ref_DIS_3YR_PRSA, 
+          'DIS_3YR_PRSA'] <- ref_DIS_3YR_PRSA
+    
   ref_OWN_FED_PRCA <- quantile(
     preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'OWN_FED_PRCA'], 
     seq(0,1,.25))[2]
-  
-  preds.0[preds.0$STATION_KEY == stn & 
-            preds.0$OWN_FED_PRCA < ref_OWN_FED_PRCA, 
+  preds.0[preds.0$STATION_KEY == stn & preds.0$OWN_FED_PRCA < ref_OWN_FED_PRCA, 
           'OWN_FED_PRCA'] <- ref_OWN_FED_PRCA
   
   #Run the fit
@@ -128,19 +129,6 @@ for (i in 1:length(unique(preds$STATION_KEY))) {
   } else {
     ssid <- rbind(ssid, tmp)
   }
-    
-  #Build data frame of estimates to use in deriving Target Curve equation
-  tmp_betahat <- dcast(data.frame(STATION_KEY = stn,
-                                  variable = rownames(fit_0_preds$estimates$betahat), 
-                                  betahat = fit_0_preds$estimates$betahat), 
-                       STATION_KEY ~ variable, 
-                       value.var = "betahat")
-  if (i == 1) {
-    betahat <- tmp_betahat
-  } else {
-    betahat <- rbind(betahat, tmp_betahat)
-  }
-  
 }
 
 #SSN for target Identification
@@ -181,15 +169,17 @@ dfdall$sum_1095_days <- dfdall$sum_1095_days /
 #each 10th percentile of rainfall
 for (j in 1:length(unique(ss$STATION_KEY))) {
   stn <- unique(ss$STATION_KEY)[j]
+
+  rfq <- quantile(dfdall[dfdall$STATION_KEY == stn, 'sum_1095_days'], 
+                  seq(0, 1, 0.01))
+
   #Set up list of dataframes to score prediction outputs based on percentile distribution
   #df_list <- list('0%','10%','20%','30%','40%','50%','60%','70%','80%','90%','100%')
   df_list <- as.list(names(rfq))
   names(df_list) <- names(rfq)
   df_list <- lapply(df_list, function(x) X <- NULL)
   
-  rfq <- quantile(dfdall[dfdall$STATION_KEY == stn, 'sum_1095_days'], 
-                  seq(0, 1, 0.01))
-  for (i in 1:length(df_list)) {
+    for (i in 1:length(df_list)) {
     #get the data frame and build the scenario
     preds.0 <- getSSNdata.frame(fit, Name = "preds")
     
@@ -202,14 +192,16 @@ for (j in 1:length(unique(ss$STATION_KEY))) {
             'OWN_URB_PARCA'] <- quantile(
               preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'OWN_URB_PARCA'], 
               seq(0,1,.25))[2]
-    preds.0[preds.0$STATION_KEY == stn, 
-            'DIS_3YR_PRSA'] <- quantile(
-              preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'DIS_3YR_PRSA'], 
-              seq(0,1,.25))[4]
+    
+    ref_DIS_3YR_PRSA <- quantile(
+      preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'DIS_3YR_PRSA'], 
+      seq(0,1,.25))[4]
+    preds.0[preds.0$STATION_KEY == stn & preds.0$DIS_3YR_PRSA > ref_DIS_3YR_PRSA, 
+            'DIS_3YR_PRSA'] <- ref_DIS_3YR_PRSA
+    
     ref_OWN_FED_PRCA <- quantile(
       preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'OWN_FED_PRCA'], 
       seq(0,1,.25))[2]
-    
     preds.0[preds.0$STATION_KEY == stn & 
               preds.0$OWN_FED_PRCA < ref_OWN_FED_PRCA, 
             'OWN_FED_PRCA'] <- ref_OWN_FED_PRCA
@@ -246,6 +238,11 @@ for (j in 1:length(unique(ss$STATION_KEY))) {
   }
 }
 
+#Percent reduction 
+rf <- obs[obs$STATION_KEY == 21792, 'sum_1095_days']
+bsti_target <- (10^(df_bm[31,3] + df_bm[31,4] * rf))
+bsti_obs <- 10^(obs[obs$STATION_KEY == 21792, 'log10_BSTI']/100*max_log10_bsti)
+(1 - (bsti_target / bsti_obs)) * 100
 
 # #Untransform bsti and keep track of which percentile the prediction was made with
 # for (i in 1:length(df_list)) {
@@ -264,20 +261,34 @@ save(df_quant, file = "tmdl_target_curve_data.Rdata")
 to_plot <- df_quant[df_quant$STATION_KEY %in% ss$STATION_KEY,]
 plot(to_plot$quant, ss$bsti_untran)
 
-for (i in 1:length(ss$STATION_KEY)) {
-  to_plot <- df_quant[df_quant$STATION_KEY == ss$STATION_KEY[i],]
+betahat <-dcast(data.frame(variable = rownames(fit$estimates$betahat), 
+                           betahat = fit$estimates$betahat), 
+                . ~ variable, 
+                value.var = "betahat")[,-1]
+ss$SITE_NAME <- as.character(ss$SITE_NAME)
+for (i in 1:nrow(ss)) {
+  to_plot <- df_quant[df_quant$STATION_KEY == ss[i, 'STATION_KEY'],]
   # g = ggplot(data = to_plot, aes(x = sum_1095_days, y = bsti_untran)) + 
   #         geom_point() + ggtitle(ss$STATION_KEY[i]) + ylim(0, 50) 
   #g = g + geom_smooth(method = 'loess') 
   #g = g + geom_line()
-  rf_range <- range(dfdall[dfdall$STATION_KEY == ss$STATION_KEY[i], 'sum_1095_days'])
-  bm_list <- simplify_target_equation(betahat, ss, ss$STATION_KEY[i])
+  rf_range <- range(dfdall[dfdall$STATION_KEY == ss[i, 'STATION_KEY'], 'sum_1095_days'])
+  bm_list <- simplify_target_equation(betahat, ss, ss[i, 'STATION_KEY'])
   g = ggplot() + stat_function(data = data.frame(x = rf_range), 
                         aes(x, color = 'red'), 
-                        fun = function(x) 10^(b_untran+m_untran*x))
+                        fun = function(x) 10^(bm_list$b_u + bm_list$m_u * x))
   g = g + geom_point(data = to_plot, aes(x = sum_1095_days, y = bsti_untran)) + 
-    ylim(0, 50) + ggtitle(ss$STATION_KEY[i])
+    ylim(0, 50) + ggtitle(paste(ss[i, c('STATION_KEY','SITE_NAME')], collapse = " - "))
   print(g)
+  
+  tmp_df_bm <- as.data.frame(bm_list)
+  tmp_df_bm <- cbind(ss[i ,c('STATION_KEY','SITE_NAME')], tmp_df_bm)
+  
+  if (i == 1) {
+    df_bm <- tmp_df_bm
+  } else {
+    df_bm <- rbind(df_bm, tmp_df_bm)
+  }
   # df_ob <- data.frame('s' = ss$STATION_KEY[i],
   #            'o' = ssid[ssid$STATION_KEY == ss$STATION_KEY[i],'BSTI'],
   #            'p' = preds[preds$STATION_KEY %in% ss$STATION_KEY[i],'sum_1095_days'])
