@@ -15,7 +15,12 @@ simplify_target_equation <- function(betahat, ss, station) {
   b_u <- (b*max_log10_bsti)/100
   m_u <- (betahat$sum_1095_days*max_log10_bsti)/100
   
-  return(list("b_u" = b_u, "m_u" = m_u))
+  
+  x <- list("b_u" = b_u, "m_u" = m_u, "Z" = Z)
+  attr(x, 'inter') <- inter
+  attr(x, 'inter2') <- inter2
+  
+  return(x)
   options(warn = 0)
 }
 

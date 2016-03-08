@@ -81,6 +81,78 @@ ggplot(data = preds, aes(x = BSTI_u, y = fit_u)) +
   stat_smooth(aes(x = BSTI_u, y = lci_u), se = FALSE) + 
   scale_y_continuous(limits = c(-10,100))
 
+#### ####
+#### ####
+#### ####
+#### ####
+#### ####
+
+source('C:/Users/pbryant/Desktop/MidCoastTMDL/fun_simplify_target_equation.R')
+
+betahat <-dcast(data.frame(variable = rownames(fit$estimates$betahat), 
+                           betahat = fit$estimates$betahat), 
+                . ~ variable, 
+                value.var = "betahat")[,-1]
+
+#Test to see if changing each one individually affects prediction estimation
+preds.0 <- getSSNdata.frame(fit, Name = "preds")
+preds.0[, 'ROADLEN_DRSA'] <- quantile(
+          preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'ROADLEN_DRSA'], 
+          seq(0,1,.25))[4]
+preds.0[, 'OWN_URB_PARCA'] <- quantile(
+          preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'OWN_URB_PARCA'], 
+          seq(0,1,.25))[2]
+
+ref_DIS_3YR_PRSA <- quantile(
+  preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'DIS_3YR_PRSA'], 
+  seq(0,1,.25))[4]
+preds.0[preds.0$DIS_3YR_PRSA > ref_DIS_3YR_PRSA, 
+        'DIS_3YR_PRSA'] <- ref_DIS_3YR_PRSA
+
+ref_OWN_FED_PRCA <- quantile(
+  preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'OWN_FED_PRCA'], 
+  seq(0,1,.25))[2]
+preds.0[preds.0$OWN_FED_PRCA < ref_OWN_FED_PRCA, 
+        'OWN_FED_PRCA'] <- ref_OWN_FED_PRCA
+
+#Run the fit
+fit_0 <- putSSNdata.frame(preds.0, fit, Name = "preds")
+
+#Run the prediction
+fit_0_preds <- predict.glmssn(fit_0, predpointsID = "preds", 
+                              newdata = 'preds')
+
+#Check the results
+ssid_all <- getSSNdata.frame(fit_0_preds, Name = 'preds')
+
+for (i in 1:nrow(ssid_all)) {
+  bm_list <- simplify_target_equation(betahat, ssid_all, ssid_all[i, 'STATION_KEY'])
+  tmp_df_bm <- as.data.frame(bm_list)
+  tmp_df_bm <- cbind(ssid_all[i ,c('STATION_KEY','SITE_NAME')], tmp_df_bm)
+
+  if (i == 1) {
+    df_bm <- tmp_df_bm
+  } else {
+    df_bm <- rbind(df_bm, tmp_df_bm)
+  }
+}
+
+ssid <- merge(ssid, preds_obs, by = 'pid')
+ssid$BSTI <- as.integer(10^(ssid$log10_BSTI_obs/100 * max_log10_bsti))
+ssid$BSTI_target <- as.integer(round(10^(ssid$log10_BSTI/100 * max_log10_bsti)))
+ssid$Sed_Stressor <- ifelse(ssid$BSTI > ssid$BSTI_target,TRUE,FALSE)
+ssid$pr_target <- round(abs(((ssid$BSTI - ssid$BSTI_target)/ssid$BSTI) * 100),1)
+#ssid$predSE_untran <- 10^(ssid$log10_BSTI.predSE/100 * max_log10_bsti)
+ssid$STATION_KEY <- as.character(ssid$STATION_KEY)
+ssid <- ssid[order(ssid$STATION_KEY, decreasing = TRUE),]
+ss <- ssid[ssid$STATION_KEY %in% impaired$STATION_KEY & ssid$Sed_Stressor,]
+
+df_bm_ss <- df_bm[df_bm$STATION_KEY %in% ss$STATION_KEY,]
+write.csv(df_bm_ss, file = 'b_values_sediment_stressor_sites.csv', row.names = FALSE)
+#### ####
+#### ####
+#### ####
+#### ####
 #Generate predictions at critical conditions for human influence
 #and at the observed rainfall amounts at each station individually
 for (i in 1:length(unique(preds$STATION_KEY))) {
@@ -140,7 +212,25 @@ ssid$pr_target <- round(abs(((ssid$BSTI_target - ssid$BSTI)/ssid$BSTI) * 100),1)
 ssid$predSE_untran <- 10^(ssid$log10_BSTI.predSE/100 * max_log10_bsti)
 ssid$STATION_KEY <- as.character(ssid$STATION_KEY)
 ssid <- ssid[order(ssid$STATION_KEY, decreasing = TRUE),]
-write.csv(ssid, 'sedstressor_ssn_identified.csv', row.names = FALSE)
+#write.csv(ssid, 'sedstressor_ssn_identified.csv', row.names = FALSE)
+ssid <- read.csv('sedstressor_ssn_identified.csv')
+
+for (i in 1:nrow(ssid)) {
+  bm_list <- simplify_target_equation(betahat, ssid, ssid[i, 'STATION_KEY'])
+  tmp_df_bm <- as.data.frame(bm_list)
+  tmp_df_bm <- cbind(ssid[i ,c('STATION_KEY','SITE_NAME')], tmp_df_bm)
+  
+  if (i == 1) {
+    df_bm_ssid_one <- tmp_df_bm
+  } else {
+    df_bm_ssid_one <- rbind(df_bm_ssid_one, tmp_df_bm)
+  }
+}
+
+junk <- merge(df_bm_ssid_all, df_bm_ssid_one, by = 'STATION_KEY', suffixes = c('.all','.one'))
+
+
+
 # ssid$untran_uci <- 10^(ssid$uci/100 * max_log10_bsti)
 # ssid$untran_lci <- 10^(ssid$lci/100 * max_log10_bsti)
 #ssid <- ssid[!is.na(ssid$BSTI),]
@@ -258,41 +348,42 @@ df_quant$quant <- factor(df_quant$quant, levels = c('0%', '10%', '20%', '30%',
                                                     '40%', '50%', '60%', '70%', 
                                                     '80%', '90%', '100%'))
 save(df_quant, file = "tmdl_target_curve_data.Rdata")
+load("tmdl_target_curve_data.Rdata")
 to_plot <- df_quant[df_quant$STATION_KEY %in% ss$STATION_KEY,]
 plot(to_plot$quant, ss$bsti_untran)
 
-betahat <-dcast(data.frame(variable = rownames(fit$estimates$betahat), 
-                           betahat = fit$estimates$betahat), 
-                . ~ variable, 
-                value.var = "betahat")[,-1]
+
 ss$SITE_NAME <- as.character(ss$SITE_NAME)
 for (i in 1:nrow(ss)) {
   to_plot <- df_quant[df_quant$STATION_KEY == ss[i, 'STATION_KEY'],]
+  to_plot$sum_1095_days <- min.max[min.max$variable == 'sum_1095_days', "max_val"]*(to_plot$sum_1095_days/100)
   # g = ggplot(data = to_plot, aes(x = sum_1095_days, y = bsti_untran)) + 
   #         geom_point() + ggtitle(ss$STATION_KEY[i]) + ylim(0, 50) 
   #g = g + geom_smooth(method = 'loess') 
   #g = g + geom_line()
   rf_range <- range(dfdall[dfdall$STATION_KEY == ss[i, 'STATION_KEY'], 'sum_1095_days'])
+  rf_range <- min.max[min.max$variable == 'sum_1095_days', "max_val"]*(rf_range/100)
   bm_list <- simplify_target_equation(betahat, ss, ss[i, 'STATION_KEY'])
   g = ggplot() + stat_function(data = data.frame(x = rf_range), 
                         aes(x, color = 'red'), 
-                        fun = function(x) 10^(bm_list$b_u + bm_list$m_u * x))
+                        fun = function(x) 10^(bm_list$b_u + (-5.228741e-05 * x))) #bm_list$m_u
   g = g + geom_point(data = to_plot, aes(x = sum_1095_days, y = bsti_untran)) + 
-    ylim(0, 50) + ggtitle(paste(ss[i, c('STATION_KEY','SITE_NAME')], collapse = " - "))
-  print(g)
+    ylim(0, 50) + ggtitle(paste(ss[i, c('STATION_KEY','SITE_NAME')], collapse = " - ")) +
+    xlab("3 year sum of rainfall (mm)") + ylab("BSTI")
+  #print(g)
   
-  tmp_df_bm <- as.data.frame(bm_list)
-  tmp_df_bm <- cbind(ss[i ,c('STATION_KEY','SITE_NAME')], tmp_df_bm)
-  
-  if (i == 1) {
-    df_bm <- tmp_df_bm
-  } else {
-    df_bm <- rbind(df_bm, tmp_df_bm)
-  }
-  # df_ob <- data.frame('s' = ss$STATION_KEY[i],
-  #            'o' = ssid[ssid$STATION_KEY == ss$STATION_KEY[i],'BSTI'],
-  #            'p' = preds[preds$STATION_KEY %in% ss$STATION_KEY[i],'sum_1095_days'])
-  # print(g + geom_point(data = df_ob, aes(x = p, y = o), color = "orange"))
+  # tmp_df_bm <- as.data.frame(bm_list)
+  # tmp_df_bm <- cbind(ss[i ,c('STATION_KEY','SITE_NAME')], tmp_df_bm)
+  # 
+  # if (i == 1) {
+  #   df_bm <- tmp_df_bm
+  # } else {
+  #   df_bm <- rbind(df_bm, tmp_df_bm)
+  # }
+  df_ob <- data.frame('s' = ss$STATION_KEY[i],
+             'o' = ssid[ssid$STATION_KEY == ss$STATION_KEY[i],'BSTI'],
+             'p' = min.max[min.max$variable == 'sum_1095_days', "max_val"]*(preds[preds$STATION_KEY %in% ss$STATION_KEY[i],'sum_1095_days'])/100)
+  print(g + geom_point(data = df_ob, aes(x = p, y = o), color = "orange") + theme(legend.position = "none"))
 }
 
 #preds.0$BSTI_untran <- 10^(preds.0$log10_BSTI)
