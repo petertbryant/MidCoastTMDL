@@ -31,26 +31,9 @@ bsti.s2 <- bsti[, colnames(bsti) %in% c(bsti.s2.col,'HDWTR')]
 #                      by.x = 'var', by.y = 'var_name', all.x = TRUE)
 # bsti.s2.col <- arrange(bsti.s2.col, desc(median))
 
-#By category
-correlation_threshold <- 0.4
-all_keep <- c()
-# for (j in 1:length(unique(bsti.s2.col$Category))) {
-#   pcor <- cor(bsti.s2[, bsti.s2.col[bsti.s2.col$Category == 
-#                                       unique(bsti.s2.col$Category)[j], 'var']])
-#   pnames <- attr(pcor, "dimnames")[[1]]
-#   pkeep <- pnames
-#   for (i in length(pnames):1) {
-#     if (any(round(abs(pcor[i, ][-i]), 2) >= correlation_threshold)) {
-#       if (i != 1) {
-#         pkeep <- pkeep[-i]
-#         pcor <- pcor[-i, -i, drop=FALSE]
-#       }
-#     } 
-#   }
-#   all_keep <- c(all_keep, pkeep)
-# }
 
 # # #All together
+correlation_threshold <- 0.4
 pcor <- cor(bsti[,setdiff(bsti.vi.median$var_name,"DATE")])
 pnames <- attr(pcor, "dimnames")[[1]]
 pkeep <- pnames
@@ -62,11 +45,10 @@ for (i in length(pnames):1) {
     }
   } 
 }
-all_keep <- pkeep
 
 #Further remove variables to reduce the influence of correlation on raising variable importance
 #bsti.s2 <- bsti.s2[,colnames(bsti.s2) %in% keeps.s2]
-bsti.s2 <- bsti.s2[, c(all_keep,'HDWTR')]
+bsti.s2 <- bsti.s2[, c(pkeep,'HDWTR')]
 colnames(bsti.s2)
 
 #Test will all human influence variables - NOT YET RUN 10/30/2015 - THESE ARE ALL IN THERE ALREADY EXCEPT FOR OWN_FED WHICH IS HIGHLY CORRELATED WITH OWN_PRI
