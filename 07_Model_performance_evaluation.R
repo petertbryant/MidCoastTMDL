@@ -1,3 +1,26 @@
+#Check model fit with unmodified prediction variables
+fit_preds <- predict.glmssn(fit, predpointsID = "preds", 
+                            newdata = 'preds')
+preds <- getSSNdata.frame(fit_preds, Name = 'preds')
+preds <- merge(preds, preds_obs, by = 'pid')
+critval <- qnorm(0.975)
+preds$uci <- preds$log10_BSTI + (critval * preds$log10_BSTI.predSE)
+preds$lci <- preds$log10_BSTI - (critval * preds$log10_BSTI.predSE)
+preds$BSTI_u <- 10^(preds$log10_BSTI_obs/100 * max_log10_bsti)
+preds$fit_u <- 10^(preds$log10_BSTI/100 * max_log10_bsti)
+preds$uci_u <- 10^(preds$uci/100 * max_log10_bsti)
+preds$lci_u <- 10^(preds$lci/100 * max_log10_bsti)
+
+ggplot(data = preds, aes(x = BSTI_u, y = fit_u)) + 
+  geom_point() + 
+  xlim(0, 75) + 
+  ylim(0, 75) +
+  geom_abline(intercept = 0, slope = 1) +
+  stat_smooth(aes(x = BSTI_u, y = uci_u), se = FALSE) +
+  stat_smooth(aes(x = BSTI_u, y = lci_u), se = FALSE) + 
+  scale_y_continuous(limits = c(-10,100))
+
+
 ###################################################
 ### check the residuals   
 ###################################################
