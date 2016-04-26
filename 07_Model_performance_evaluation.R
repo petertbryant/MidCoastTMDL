@@ -1,24 +1,25 @@
-#Check model fit with unmodified prediction variables
-fit_preds <- predict.glmssn(fit, predpointsID = "preds", 
-                            newdata = 'preds')
-preds <- getSSNdata.frame(fit_preds, Name = 'preds')
-preds <- merge(preds, preds_obs, by = 'pid')
-critval <- qnorm(0.975)
-preds$uci <- preds$log10_BSTI + (critval * preds$log10_BSTI.predSE)
-preds$lci <- preds$log10_BSTI - (critval * preds$log10_BSTI.predSE)
-preds$BSTI_u <- 10^(preds$log10_BSTI_obs/100 * max_log10_bsti)
-preds$fit_u <- 10^(preds$log10_BSTI/100 * max_log10_bsti)
-preds$uci_u <- 10^(preds$uci/100 * max_log10_bsti)
-preds$lci_u <- 10^(preds$lci/100 * max_log10_bsti)
-
-ggplot(data = preds, aes(x = BSTI_u, y = fit_u)) + 
-  geom_point() + 
-  xlim(0, 75) + 
-  ylim(0, 75) +
-  geom_abline(intercept = 0, slope = 1) +
-  stat_smooth(aes(x = BSTI_u, y = uci_u), se = FALSE) +
-  stat_smooth(aes(x = BSTI_u, y = lci_u), se = FALSE) + 
-  scale_y_continuous(limits = c(-10,100))
+# #Check model fit with unmodified prediction variables
+# fit_preds <- predict.glmssn(fit, predpointsID = "preds", 
+#                             newdata = 'preds')
+# preds <- getSSNdata.frame(fit_preds, Name = 'preds')
+# preds <- merge(preds, preds_obs, by = 'pid')
+# critval <- qnorm(0.975)
+# max_log10_bsti <- min.max[min.max$variable == 'BSTI','max_val']
+# preds$uci <- preds$log10_BSTI + (critval * preds$log10_BSTI.predSE)
+# preds$lci <- preds$log10_BSTI - (critval * preds$log10_BSTI.predSE)
+# preds$BSTI_u <- 10^(preds$log10_BSTI_obs/100 * max_log10_bsti)
+# preds$fit_u <- 10^(preds$log10_BSTI/100 * max_log10_bsti)
+# preds$uci_u <- 10^(preds$uci/100 * max_log10_bsti)
+# preds$lci_u <- 10^(preds$lci/100 * max_log10_bsti)
+# 
+# ggplot(data = preds, aes(x = BSTI_u, y = fit_u)) + 
+#   geom_point() + 
+#   xlim(0, 75) + 
+#   ylim(0, 75) +
+#   geom_abline(intercept = 0, slope = 1) +
+#   stat_smooth(aes(x = BSTI_u, y = uci_u), se = FALSE) +
+#   stat_smooth(aes(x = BSTI_u, y = lci_u), se = FALSE) + 
+#   scale_y_continuous(limits = c(-10,100))
 
 
 ###################################################
@@ -30,11 +31,12 @@ plot(fit_resid)
 
 resids <- getSSNdata.frame(fit_resid, Name = "Obs")
 
+plot(Torgegram(fit_resid, "log10_BSTI"))
 
 ###################################################
 ### plot the residuals
 ###################################################
-png('residuals.png', width = 6, height = 6, units = 'in', res = 200)
+#png('residuals.png', width = 6, height = 6, units = 'in', res = 200)
 par(mfrow = c(2, 2))
 hist(fit_resid, xlab = "Residuals")
 #hist(ssn1, "log10_FSS_26Aug14", xlab = 'Observed log10 FSS')
@@ -42,13 +44,13 @@ plot(resids$"_fit_",resids$"_resid_", xlab = 'Predicted log10 BSTI', ylab = 'Raw
 plot(resids$"_fit_",resids$"_resid.stand_", xlab = 'Predicted log10 BSTI', ylab = 'Standardized residuals')
 qqnorm(resids$"_resid.stand_", ylab = 'Standardized residuals')
 abline(0,1)
-dev.off()
+#dev.off()
 
 ###################################################
 ### cross validation
 ###################################################
 cv.out <- CrossValidationSSN(fit)
-png('LOOCV.png', width = 6, height = 4, units = 'in', res = 100)
+#png('LOOCV.png', width = 6, height = 4, units = 'in', res = 100)
 par(mfrow = c(1, 2))
 plot(fit$sampinfo$z,
      cv.out[, "cv.pred"], pch = 19,
@@ -57,7 +59,7 @@ abline(0, 1)
 plot( na.omit( getSSNdata.frame(ssn1)[, "BSTI"]),
       cv.out[, "cv.se"], pch = 19,
       xlab = "Observed Data", ylab = "LOOCV Prediction SE")
-dev.off()
+#dev.off()
 
 ###################################################
 ### likelihood ratio test

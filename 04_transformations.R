@@ -82,7 +82,7 @@ preds <- getSSNdata.frame(ssn1, Name = "preds")
 
 pid.order <- preds$pid
 preds <- rename(preds, c('STATION_KE' = "STATION_KEY"))
-obs_sub <- obs[,c('STATION_KEY',all_keep,'log10_BSTI','HDWTR')]
+obs_sub <- obs[,c('STATION_KEY',pkeep,'log10_BSTI','HDWTR')]
 obs_sub <- obs_sub[order(obs_sub$STATION_KEY, obs_sub$log10_BSTI, decreasing = TRUE),]
 obs_sub <- obs_sub[!duplicated(obs_sub$STATION_KEY),]
 preds <- merge(preds, obs_sub, by = 'STATION_KEY', all.x = TRUE)
