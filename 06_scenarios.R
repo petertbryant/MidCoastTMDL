@@ -50,7 +50,7 @@ impaired <- impaired[grep('Imp',impaired$biocriteria_status), ]
 impaired <- impaired[order(impaired$STATION_KEY, decreasing = TRUE),]
 #write.csv(impaired, 'mc_biocrite_impaired.csv')
 obs <- getSSNdata.frame(fit, Name = 'Obs')
-preds <- getSSNdata.frame(fit, Name = "preds")
+preds_obs <- getSSNdata.frame(fit, Name = "preds")
 
 #Takes the highest BSTI score from each station
 obs_sub <- obs[,c('STATION_KEY',all.vars(fit$args$formula))]
@@ -58,7 +58,7 @@ obs_sub <- obs_sub[order(obs_sub$STATION_KEY, obs_sub$log10_BSTI, decreasing = T
 obs_sub <- obs_sub[!duplicated(obs_sub$STATION_KEY),]
 
 #Preserve observed BSTI values in the prediction data set
-preds_obs <- preds[,c('pid','log10_BSTI')]
+preds_obs <- preds_obs[,c('pid','log10_BSTI')]
 preds_obs <- rename(preds_obs, c('log10_BSTI' = 'log10_BSTI_obs'))
 
 
@@ -129,6 +129,19 @@ ssid$pr_target <- round(abs(((ssid$BSTI - ssid$BSTI_target)/ssid$BSTI) * 100),1)
 ssid$STATION_KEY <- as.character(ssid$STATION_KEY)
 ssid <- ssid[order(ssid$STATION_KEY, decreasing = TRUE),]
 ss <- ssid[ssid$STATION_KEY %in% impaired$STATION_KEY & ssid$Sed_Stressor,]
+
+#CART vs SSN condition compare
+ss2 <- ssid[ssid$STATION_KEY %in% impaired$STATION_KEY,]
+cc <- merge(impaired, ss2, by = 'STATION_KEY')
+cc_sub <- cc[,c('STATION_KEY','SITE_NAME.x','FSS','Q90TH','sediment_resid_status','BSTI','BSTI_target','Sed_Stressor')]
+cc_sub$CART_Sed_Stressor <- ifelse(cc_sub$BSTI > cc_sub$Q90TH,TRUE,FALSE)
+cc_sub$agree <- ifelse(cc_sub$Sed_Stressor & cc_sub$CART_Sed_Stressor, TRUE, 
+                       ifelse(!cc_sub$Sed_Stressor & !cc_sub$CART_Sed_Stressor, TRUE, FALSE))
+cc_sub <- within(cc_sub, rm(FSS, sediment_resid_status))
+cc_sub <- cc_sub[!duplicated(cc_sub$STATION_KEY),]
+cc_sub <- plyr::rename(cc_sub, c('SITE_NAME.x' = 'SITE_NAME', 'Q90TH'= 'CART_Target', 'BSTI_target' = 'SSN_Target', 'Sed_Stressor' = 'SSN_Sed_Stressor'))
+cc_sub <- cc_sub[,c('STATION_KEY','SITE_NAME','BSTI','CART_Target','CART_Sed_Stressor','SSN_Target','SSN_Sed_Stressor','agree')]
+write.csv(cc_sub, file = 'ssn_cart_compare.csv', row.names = FALSE)
 
 df_bm_ss <- df_bm[df_bm$STATION_KEY %in% ss$STATION_KEY,]
 write.csv(df_bm_ss, file = 'b_values_sediment_stressor_sites.csv', row.names = FALSE)

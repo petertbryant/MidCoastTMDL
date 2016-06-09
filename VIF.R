@@ -7,7 +7,7 @@ vif_func<-function(in_frame,ob.ssn){
     tmp.ssn <- glmssn(form_in, 
                       ob.ssn,
                       EstMeth = "ML",
-                      CorModels = c("locID","Exponential.tailup", "Exponential.taildown", "Exponential.Euclid"),
+                      CorModels = c("locID", "Exponential.taildown", "Exponential.Euclid"),
                       addfunccol = "afvArea",
                       family = "Gaussian")
     ssn.summary <- summary(tmp.ssn)
@@ -17,6 +17,15 @@ vif_func<-function(in_frame,ob.ssn){
   }
   return(vif_init)
 }
+#Results as of 6/1/2016
+# [,1]            [,2]              
+# new.row "sum_1095_days" "1.03853030149902"
+# new.row "XSLOPE_MAP"    "1.24849081476122"
+# new.row "MIN_Z"         "1.20184395749167"
+# new.row "KFACT_MARCA"   "1.20688961173005"
+# new.row "OWN_FED_PRCA"  "1.04060276676216"
+# new.row "DIS_3YR_PRSA"  "1.0596417709169" 
+# new.row "ROADLEN_DRSA"  "1.04194686427075"
 #   
 #   for(val in names(in_frame)){
 #     form_in<-formula(paste(val,' ~ .'))

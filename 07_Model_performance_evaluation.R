@@ -50,16 +50,16 @@ abline(0,1)
 ### cross validation
 ###################################################
 cv.out <- CrossValidationSSN(fit)
-#png('LOOCV.png', width = 6, height = 4, units = 'in', res = 100)
+# png('CV.png', width = 6, height = 4, units = 'in', res = 100)
 par(mfrow = c(1, 2))
 plot(fit$sampinfo$z,
      cv.out[, "cv.pred"], pch = 19,
-     xlab = "Observed Data", ylab = "LOOCV Prediction", ylim = c(0,105))
+     xlab = "Observed Data", ylab = "CV Prediction", ylim = c(0,105))
 abline(0, 1)
 plot( na.omit( getSSNdata.frame(ssn1)[, "BSTI"]),
       cv.out[, "cv.se"], pch = 19,
-      xlab = "Observed Data", ylab = "LOOCV Prediction SE")
-#dev.off()
+      xlab = "Observed Data", ylab = "CV Prediction SE")
+# dev.off()
 
 ###################################################
 ### likelihood ratio test
