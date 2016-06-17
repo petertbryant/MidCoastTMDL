@@ -49,17 +49,19 @@ abline(0,1)
 ###################################################
 ### cross validation
 ###################################################
-cv.out <- CrossValidationSSN(fit)
-# png('CV.png', width = 6, height = 4, units = 'in', res = 100)
+#cv.out <- CrossValidationSSN(fit)
+cv.out <- kfold_CrossValidationSSN(fit)
+#cv.out$cv.pred.rounded <- round(cv.out$cv.pred)
+png('CV.png', width = 6, height = 4, units = 'in', res = 100)
 par(mfrow = c(1, 2))
 plot(fit$sampinfo$z,
-     cv.out[, "cv.pred"], pch = 19,
+     round(cv.out[, "cv.pred"]), pch = 19,
      xlab = "Observed Data", ylab = "CV Prediction", ylim = c(0,105))
 abline(0, 1)
-plot( na.omit( getSSNdata.frame(ssn1)[, "BSTI"]),
+plot( na.omit( getSSNdata.frame(ssn1)[, "log10_BSTI"]),
       cv.out[, "cv.se"], pch = 19,
       xlab = "Observed Data", ylab = "CV Prediction SE")
-# dev.off()
+dev.off()
 
 ###################################################
 ### likelihood ratio test
