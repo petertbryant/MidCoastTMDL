@@ -11,23 +11,37 @@ obs.complete$SVN <- str_trim(obs.complete$SVN)
 #obs.bsti <- within(obs.bsti, rm(X))
 #load('fss2_s2_scaled.Rdata')
 obs.bsti <- bsti.s2
-ssn1 <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN06/lsn.ssn", 
-                  predpts = "preds", o.write = TRUE)
+
+#in order to separate the obs data frame we have to build a new ssn object
+#this is done in arcGIS
+#but first we need to know which obs to put in which data frame
+#Split the observations up to generate an estimate and prediction set
+# lng_rng <- seq_along(obs.complete$SVN)
+# set.seed(100)
+# lng_est <- sample(lng_rng, 500)
+# set.seed(100)
+# lng_prd <- sample(lng_rng[-1 * lng_est], 260)
+# #Generate character vector for use in subsetting in arcgis context
+# paste(obs.complete[lng_est, 'SVN'], collapse = "','")
+# paste(obs.complete[lng_prd, 'SVN'], collapse = "','")
+# #Actually subset the data itself too
+# obs_est <- obs.complete[lng_est, ]
+# obs_prd <- obs.complete[lng_prd, ]
+
+ssn1 <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN07/lsn.ssn",
+                  predpts = "obs_prd", o.write = TRUE)
+#only needs to be run once - RAN 07-01-2016
+#createDistMat(ssn1, o.write = TRUE)
+# ssn2 <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN06/lsn.ssn",
+#                   predpts = "preds", o.write = TRUE)
 #ssn1 <- importSSN('C:/users/pbryant/desktop/midcoasttmdl-gis/revisedssn/lsn05/lsn.ssn', o.write = TRUE)
 obs<- getSSNdata.frame(ssn1, Name = "Obs")
+
+#Put together a data frame of the selected predictors and identifying information
 vars <- c("STATION_KEY", "SVN", "DATE","YEAR",'BSTI')
+obs.complete.vars <- obs.complete[,vars]
+obs.complete.vars <- cbind(obs.complete.vars, obs.bsti)
 
-obs.vars <- obs.complete[,vars]
-obs.vars <- cbind(obs.vars, obs.bsti)
-
-obs.vars <- merge(obs[,c("SVN","rid", "ratio", "locID", "netID", "pid", "upDist",
-                         "afvArea", "HU_6_NAME", "HU_8_NAME", "HU_10_NAME", 
-                         "HU_12_NAME", "HU_08", "LONG_RAW", "NHDHigh",
-                         "NHDh_Reach", "NHDP21_Rea", "NHDP12_COM", "HU_10", 
-                         "HU_12")],
-                  obs.vars, 
-                  by = "SVN",
-                  all.x = TRUE)
 #obs.vars <- obs.vars[!is.na(obs.vars$STRMPWR),]
 
 #RID crosswalk by SVN
@@ -44,7 +58,7 @@ obs.vars <- merge(obs[,c("SVN","rid", "ratio", "locID", "netID", "pid", "upDist"
 #obs.vars.sub <- obs.vars[!duplicated(obs.vars$STATION_KEY),]
 
 #### Response TRANSFORMATION####
-names(obs.vars)
+names(obs.complete.vars)
 ####FSS_26Aug14####
 # hist(obs.vars.sub$FSS_26Aug14)
 # plot(density(obs.vars.sub$FSS_26Aug14))
@@ -53,7 +67,7 @@ names(obs.vars)
 # shapiro.test(log10(obs.vars.sub$FSS_26Aug14))
 # ks.test(log10(obs.vars.sub$FSS_26Aug14), "pnorm")
 #log should be just fine
-obs.vars$log10_BSTI <- log10(obs.vars$BSTI)
+obs.complete.vars$log10_BSTI <- log10(obs.complete.vars$BSTI)
 
 #### Variable Scaling #### 
 # melted <- melt(obs.vars[,c(names(obs.bsti),'log10_FSS_26Aug14')])
@@ -65,9 +79,20 @@ obs.vars$log10_BSTI <- log10(obs.vars$BSTI)
 #   obs.vars[,c(names(obs.bsti),'log10_FSS_26Aug14')], function(x) {(x-min(x))/
 #       (max(x)-min(x))}))
 # save(min.max, file = 'minmax.Rdata')
-max_log10_bsti <- max(obs.vars$log10_BSTI, na.rm = TRUE)
+max_log10_bsti <- max(obs.complete.vars$log10_BSTI, na.rm = TRUE)
 
-obs.vars$log10_BSTI <- obs.vars$log10_BSTI / max_log10_bsti * 100
+obs.complete.vars$log10_BSTI <- obs.complete.vars$log10_BSTI / max_log10_bsti * 100
+
+#Merge the selected predictors with the critical columns by SVN so they match
+#to the correct sample
+obs.vars <- merge(obs[,c("SVN","rid", "ratio", "locID", "netID", "pid", "upDist",
+                         "afvArea", "HU_6_NAME", "HU_8_NAME", "HU_10_NAME", 
+                         "HU_12_NAME", "HU_08", "LONG_RAW", "NHDHigh",
+                         "NHDh_Reach", "NHDP21_Rea", "NHDP12_COM", "HU_10", 
+                         "HU_12")],
+                  obs.complete.vars, 
+                  by = "SVN",
+                  all.x = TRUE)
 
 #### Put the data back into the ssn ####
 #Now that we have the transformed variables we put them back in the 
@@ -78,17 +103,25 @@ row.names(obs.vars) <- obs.vars$pid
 ssn1 <- putSSNdata.frame(obs.vars, ssn1, Name = 'Obs')
 
 obs <- getSSNdata.frame(ssn1, Name = 'Obs')
-preds <- getSSNdata.frame(ssn1, Name = "preds")
+preds <- getSSNdata.frame(ssn1, Name = "obs_prd")
 
 pid.order <- preds$pid
 preds <- rename(preds, c('STATION_KE' = "STATION_KEY"))
-obs_sub <- obs[,c('STATION_KEY',pkeep,'log10_BSTI','HDWTR')]
-obs_sub <- obs_sub[order(obs_sub$STATION_KEY, obs_sub$log10_BSTI, decreasing = TRUE),]
-obs_sub <- obs_sub[!duplicated(obs_sub$STATION_KEY),]
-preds <- merge(preds, obs_sub, by = 'STATION_KEY', all.x = TRUE)
-preds <- preds[match(pid.order,preds$pid),]
-row.names(preds) <- preds$pid
-ssn1 <- putSSNdata.frame(preds, ssn1, Name = "preds")
+# obs_sub <- obs[,c('STATION_KEY',pkeep,'log10_BSTI','HDWTR')]
+# obs_sub <- obs_sub[order(obs_sub$STATION_KEY, obs_sub$log10_BSTI, decreasing = TRUE),]
+# obs_sub <- obs_sub[!duplicated(obs_sub$STATION_KEY),]
+# preds <- merge(preds, obs_sub, by = 'STATION_KEY', all.x = TRUE)
+preds.vars <- merge(preds[,c("SVN","rid", "ratio", "locID", "netID", "pid", "upDist",
+                         "afvArea", "HU_6_NAME", "HU_8_NAME", "HU_10_NAME", 
+                         "HU_12_NAME", "HU_08", "LONG_RAW", "NHDHigh",
+                         "NHDh_Reach", "NHDP21_Rea", "NHDP12_COM", "HU_10", 
+                         "HU_12")],
+                  obs.complete.vars, 
+                  by = "SVN",
+                  all.x = TRUE)
+preds.vars <- preds.vars[match(pid.order,preds.vars$pid),]
+row.names(preds.vars) <- preds.vars$pid
+ssn1 <- putSSNdata.frame(preds.vars, ssn1, Name = "obs_prd")
 
 #save the ssn object to the github folder
 #writeSSN(ssn1, filename = 'bugs.ssn')

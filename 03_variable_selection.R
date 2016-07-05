@@ -5,8 +5,8 @@ library(plyr)
 options(stringsAsFactors = FALSE)
 
 #RUN1
-vi_median_name <- "bsti_vi_median_20160205_0954.Rdata"
-bsti_name <- "bsti_20160205_0954.Rdata"
+vi_median_name <- "bsti_vi_median_20160701_1539.Rdata"
+bsti_name <- "bsti_20160701_1539.Rdata"
 
 #RUN2
 # vi_median_name <- "bsti_vi_median_20160205_1147.Rdata"

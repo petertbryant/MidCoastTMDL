@@ -86,6 +86,21 @@ bsti[,-c(grep('_P',names(bsti)),
                                          which(names(bsti) %in% c('DATE')))], 
                              function(x) {((x) / (max(x)))*100}))
 
+#OR standardize using mean and two times standard deviation to aid in coefficient interpretation
+stdpreds <- function(newset,originalset) {
+  xnames <- colnames(newset)
+  sx <- matrix(rep(NA,ncol(newset)*nrow(newset)),nrow=nrow(newset))
+  for(i in 1:ncol(newset)) {
+    var <- with(originalset,get(xnames[i]))
+    sx[,i] <- (newset[,i]-mean(var))/(2*sd(var))
+  }
+  colnames(sx) <- colnames(newset)
+  return(sx)
+}
+
+bsti_std <- (as.data.frame(stdpreds(bsti, bsti)))
+lapply(bsti_std, hist)
+
 # mtry value
 mtry.bsti <- as.integer(((ncol(bsti) - 1) / 3), 0)
 

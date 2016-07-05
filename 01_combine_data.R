@@ -114,6 +114,9 @@ pp.zstats$PPRSA_SQM <- pp.zstats$PPRSA_COUNT * 900
 pp.zstats$PPRCA_NASQM <- pp.zstats$PPRCA_NACOUNT * 900
 pp.zstats$PPRSA_NASQM <- pp.zstats$PPRSA_NACOUNT * 900
 
+#All the names need to be in caps for future grepping to work
+names(pp.zstats) <- toupper(names(pp.zstats))
+
 # remove all the NAs in the accumulated fields except fishpres, replace with zero
 edgedf[!(names(edgedf) %in% "fishpres")][is.na(edgedf[!(names(edgedf) %in% 
                                                           "fishpres")])] <- 0
@@ -213,8 +216,7 @@ for (ra in c('PPRCA', 'PPRSA', 'OTHER')){
       ppcol <- paste(ra, "_SILT", sep = "")
     } else if (ra == 'OTHER') {
       ppcol <- paste('PPRCA', search, sep="_")
-      }
-    else {
+    } else {
       ppcol <- grep(paste(ra, search, sep = '_'), names(obs.a), value=TRUE)  
     }
     if (ra == 'OTHER') {
