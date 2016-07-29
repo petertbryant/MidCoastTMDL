@@ -6,44 +6,36 @@ library(reshape2)
 
 options(stringsAsFactors = FALSE)
 
-# #This workspace makes it so you don't have to re-run steps 02-04.
-# load('06_scenarios_inputs_02192016.Rdata')
+# #Run Step 3
+# source('03_variable_selection.R')
 # 
-# rm(list = setdiff(ls(), c('ssn1', 'max_log10_bsti', 'min.max')))
+# #Run Step 4
+# source('04_transformations.R')
+# 
+# #Bring in results from Step 5
+# load('back_results_20160715.Rdata')
+# 
+# # Re-fit model with REML per advice of Jay ver Hoef
+# fit <- glmssn(as.formula(results[9,'formula']),
+#               EstMeth = "REML",
+#               ssn1,
+#               CorModels = c("locID",'Exponential.Euclid','Exponential.taildown'),
+#               addfunccol = "afvArea",
+#               family = "Gaussian")
+# 
 # 
 # #Gather reference site info for determining reference condition
+# #Have to run this in 32 bit R
 # con <- odbcConnectAccess('//deqlab1/biomon/Databases/Biomon_Phoenix.mdb')
 # refOG <- sqlFetch(con, 'STATION 2015_calculated')
 # odbcCloseAll()
 # ref <- refOG[!is.na(refOG$F2014_REF),]
 # ref <- ref[ref$F2014_REF == 'Y',]
-# 
-# #Saving this here makes it so we don't have to run 32 bit windows but can still
-# #use the ref information from Biomon_Phoenix
-# save.image('06_scenarios_inputs_02192106_0848.Rdata')
-# load('06_scenarios_inputs_02192106_0848.Rdata')
-# 
-# # RUN 2
-# fit <- glmssn(log10_BSTI ~ sum_1095_days + XSLOPE_MAP + MIN_Z + KFACT_MARCA + 
-#                 OWN_FED_PRCA + DIS_3YR_PRSA + ROADLEN_DRSA + OWN_URB_PARCA + HDWTR, 
-#               EstMeth = "REML",
-#               ssn1,
-#               CorModels = c("locID",'Exponential.Euclid','Exponential.taildown'),
-#               addfunccol = "afvArea",
-#               family = "Gaussian")
-#  
-# save.image('06_scenarios_post_fit_02192016_0848.Rdata')
-load('06_scenarios_post_fit_02192016_0848.Rdata')
 
-# #RUN 3
-# fit <- glmssn(log10_BSTI ~ STRMPWR + EROD_PARCA + MIN_Z + OWN_FED_PRCA + 
-#                 SQM_ARCA + OWN_URB_PARCA + ROADLEN_DARCA, 
-#               EstMeth = "REML",
-#               ssn1,
-#               CorModels = c("locID",'Exponential.Euclid','Exponential.taildown'),
-#               addfunccol = "afvArea",
-#               family = "Gaussian")
- 
+#Save everything up to this point to make it easier to run from here
+#save.image('06_scenarios_post_fit_07292016_0745.Rdata')
+load('06_scenarios_post_fit_07292016_0745.Rdata')
+
 CART_imp <- read.csv('midcoast_Updated_Status_Table.csv')
 impaired <- read.csv('midcoast_new_status.csv')
 impaired <- impaired[grep('Imp',impaired$biocriteria_status), ]
@@ -80,7 +72,7 @@ betahat <-dcast(data.frame(variable = rownames(fit$estimates$betahat),
 #Generate predictions at TMDL Target conditions and at aobserved rainfall amounts
 preds.0 <- getSSNdata.frame(fit, Name = "preds")
 preds.0[, 'ROADLEN_DRSA'] <- quantile(
-          preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'ROADLEN_DRSA'], 
+          preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'POP_DARCA'], 
           seq(0,1,.25))[4]
 preds.0[, 'OWN_URB_PARCA'] <- quantile(
           preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'OWN_URB_PARCA'], 
