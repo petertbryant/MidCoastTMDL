@@ -6,8 +6,8 @@ name_vec <- c(name_vec,paste0("ssn1_glmssn", 1:8, "_RUN2_ML.Rdata"))
 #name_vec <- c(name_vec, paste0("ssn1_glmssn", 1:9, "_HWFAC_ML_20151216.Rdata"))
 for (i in 1:length(name_vec)) {
   load(name_vec[i])
-  assign(paste0(gsub("[0-9]+_ML.Rdata|{0-9}._RUN2_ML.Rdata",
-                     "",name_vec[i]),i), tmp)
+  # assign(paste0(gsub("[0-9]+_ML.Rdata|{0-9}._RUN2_ML.Rdata",
+  #                    "",name_vec[i]),i), tmp)
 }
 #load("ssn1_glmssn5_20151019.Rdata")
 # ssn1_glmssn1_forward, ssn1_glmssn2_forward, 
@@ -19,14 +19,14 @@ for (i in 1:length(name_vec)) {
 # ssn1_glmssn13_forward,
 models <- list(ssn1_glmssn1,ssn1_glmssn2,ssn1_glmssn3,ssn1_glmssn4,
                ssn1_glmssn5,ssn1_glmssn6,ssn1_glmssn7,ssn1_glmssn8,
-               ssn1_glmssn9,ssn1_glmssn10,ssn1_glmssn11,ssn1_glmssn12,
-               ssn1_glmssn13,ssn1_glmssn14,ssn1_glmssn15,ssn1_glmssn16)
-results <- InfoCritCompare(models)
+               ssn1_glmssn9)
+bhats <- lapply(models, function(x) {x$estimates$betahat})
+results <- InfoCritCompare2(models)
 results$dAIC <- min(results$AIC) - results$AIC
-results[order(results$dAIC, decreasing = TRUE),]
+results[order(results$RMSPE, decreasing = TRUE),]
 
-save(results, file = "back_results_RUN1_aand_RUN2_02052016.Rdata")
-
+save(results, file = "back_results_20160715.Rdata")
+load('back_results_20160715.Rdata')
 
 # results[1:13, 'method'] <- 'forward'
 # results[14:22, 'method'] <- 'backward'

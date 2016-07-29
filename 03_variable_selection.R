@@ -37,7 +37,10 @@ correlation_threshold <- 0.4
 pcor <- cor(bsti[,setdiff(bsti.vi.median$var_name,"DATE")])
 pnames <- attr(pcor, "dimnames")[[1]]
 pkeep <- pnames
+tracking <- vector("list", length(pnames))
+names(tracking) <- pnames
 for (i in length(pnames):1) {
+  tracking[[i]] <- pcor[order(abs(pcor[,i])),i]#[apply(pcor, MARGIN = 1, FUN = function(x) abs(x) >= correlation_threshold)[,i]]
   if (any(round(abs(pcor[i,][-i]),2) >= correlation_threshold)) {
     if (i != 1) {
       pkeep <- pkeep[-i]

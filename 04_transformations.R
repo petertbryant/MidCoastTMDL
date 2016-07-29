@@ -28,8 +28,10 @@ obs.bsti <- bsti.s2
 # obs_est <- obs.complete[lng_est, ]
 # obs_prd <- obs.complete[lng_prd, ]
 
-ssn1 <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN07/lsn.ssn",
-                  predpts = "obs_prd", o.write = TRUE)
+ssn1 <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN06/lsn.ssn",
+                  predpts = "preds", o.write = TRUE)
+# ssn1 <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN07/lsn.ssn",
+#                   predpts = "preds", o.write = TRUE)
 #only needs to be run once - RAN 07-01-2016
 #createDistMat(ssn1, o.write = TRUE)
 # ssn2 <- importSSN("//deqhq1/TMDL/TMDL_WR/MidCoast/Models/Sediment/SSN/LSN06/lsn.ssn",
@@ -87,7 +89,7 @@ obs.complete.vars$log10_BSTI <- obs.complete.vars$log10_BSTI / max_log10_bsti * 
 #to the correct sample
 obs.vars <- merge(obs[,c("SVN","rid", "ratio", "locID", "netID", "pid", "upDist",
                          "afvArea", "HU_6_NAME", "HU_8_NAME", "HU_10_NAME", 
-                         "HU_12_NAME", "HU_08", "LONG_RAW", "NHDHigh",
+                         "HU_12_NAME", "HU_08", "NHDHigh", "LONG_RAW", 
                          "NHDh_Reach", "NHDP21_Rea", "NHDP12_COM", "HU_10", 
                          "HU_12")],
                   obs.complete.vars, 
@@ -103,25 +105,26 @@ row.names(obs.vars) <- obs.vars$pid
 ssn1 <- putSSNdata.frame(obs.vars, ssn1, Name = 'Obs')
 
 obs <- getSSNdata.frame(ssn1, Name = 'Obs')
-preds <- getSSNdata.frame(ssn1, Name = "obs_prd")
+preds <- getSSNdata.frame(ssn1, Name = "preds")
+# preds <- getSSNdata.frame(ssn1, Name = "obs_prd")
 
 pid.order <- preds$pid
 preds <- rename(preds, c('STATION_KE' = "STATION_KEY"))
-# obs_sub <- obs[,c('STATION_KEY',pkeep,'log10_BSTI','HDWTR')]
-# obs_sub <- obs_sub[order(obs_sub$STATION_KEY, obs_sub$log10_BSTI, decreasing = TRUE),]
-# obs_sub <- obs_sub[!duplicated(obs_sub$STATION_KEY),]
-# preds <- merge(preds, obs_sub, by = 'STATION_KEY', all.x = TRUE)
-preds.vars <- merge(preds[,c("SVN","rid", "ratio", "locID", "netID", "pid", "upDist",
-                         "afvArea", "HU_6_NAME", "HU_8_NAME", "HU_10_NAME", 
-                         "HU_12_NAME", "HU_08", "LONG_RAW", "NHDHigh",
-                         "NHDh_Reach", "NHDP21_Rea", "NHDP12_COM", "HU_10", 
-                         "HU_12")],
-                  obs.complete.vars, 
-                  by = "SVN",
-                  all.x = TRUE)
+obs_sub <- obs[,c('STATION_KEY',pkeep,'log10_BSTI','HDWTR')]
+obs_sub <- obs_sub[order(obs_sub$STATION_KEY, obs_sub$log10_BSTI, decreasing = TRUE),]
+obs_sub <- obs_sub[!duplicated(obs_sub$STATION_KEY),]
+preds.vars <- merge(preds, obs_sub, by = 'STATION_KEY', all.x = TRUE)
+# preds.vars <- merge(preds[,c("SVN","rid", "ratio", "locID", "netID", "pid", "upDist",
+#                          "afvArea", "HU_6_NAME", "HU_8_NAME", "HU_10_NAME", 
+#                          "HU_12_NAME", "HU_08", "LONG_RAW", "NHDHigh",
+#                          "NHDh_Reach", "NHDP21_Rea", "NHDP12_COM", "HU_10", 
+#                          "HU_12")],
+#                   obs.complete.vars, 
+#                   by = "SVN",
+#                   all.x = TRUE)
 preds.vars <- preds.vars[match(pid.order,preds.vars$pid),]
 row.names(preds.vars) <- preds.vars$pid
-ssn1 <- putSSNdata.frame(preds.vars, ssn1, Name = "obs_prd")
-
+# ssn1 <- putSSNdata.frame(preds.vars, ssn1, Name = "obs_prd")
+ssn1 <- putSSNdata.frame(preds.vars, ssn1, Name = "preds")
 #save the ssn object to the github folder
 #writeSSN(ssn1, filename = 'bugs.ssn')

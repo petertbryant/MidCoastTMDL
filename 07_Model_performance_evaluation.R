@@ -31,7 +31,7 @@ plot(fit_resid)
 
 resids <- getSSNdata.frame(fit_resid, Name = "Obs")
 
-plot(Torgegram(fit_resid, "log10_BSTI"))
+plot(Torgegram(fit_resid, "log10_BSTI", maxlag = 100000, nlagcutoff = 10, nlag = 100000))
 
 ###################################################
 ### plot the residuals
