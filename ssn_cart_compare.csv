@@ -1,55 +1,55 @@
 "STATION_KEY","SITE_NAME","BSTI","CART_Target","CART_Sed_Stressor","SSN_Target","SSN_Sed_Stressor","agree"
 "21792","Montgomery Cr",36,20,TRUE,20,TRUE,TRUE
 "23826","Deadwood Creek at RM 5.2 (Lake, Siuslaw)",9,20,FALSE,10,FALSE,TRUE
-"25297","Siuslaw River at RM 76.2",22,20,TRUE,19,TRUE,TRUE
-"26816","Siuslaw R",20,11,TRUE,19,TRUE,TRUE
+"25297","Siuslaw River at RM 76.2",22,20,TRUE,18,TRUE,TRUE
+"26816","Siuslaw R",20,11,TRUE,18,TRUE,TRUE
 "26818","Siletz River South Fork",21,9,TRUE,12,TRUE,TRUE
 "26822","Indian Cr",20,20,FALSE,14,TRUE,FALSE
-"26964","Siuslaw R",29,11,TRUE,21,TRUE,TRUE
+"26964","Siuslaw R",29,11,TRUE,20,TRUE,TRUE
 "29898","Boulder Cr (Upper Siletz)",2,4,FALSE,3,FALSE,TRUE
 "29900","Cummins Cr",6,20,FALSE,7,FALSE,TRUE
-"29906","Sweet Cr (Siuslaw)",27,20,TRUE,15,TRUE,TRUE
-"30403","Siuslaw River",39,11,TRUE,23,TRUE,TRUE
+"29906","Sweet Cr (Siuslaw)",27,20,TRUE,16,TRUE,TRUE
+"30403","Siuslaw River",39,11,TRUE,22,TRUE,TRUE
 "32594","Tenmile Creek",5,20,FALSE,5,FALSE,TRUE
-"33320","Indian Cr",20,20,FALSE,14,TRUE,FALSE
-"33325","Wolf Cr",17,20,FALSE,16,TRUE,FALSE
+"33320","Indian Cr",20,20,FALSE,15,TRUE,FALSE
+"33325","Wolf Cr",17,20,FALSE,15,TRUE,FALSE
 "33327","Esmond Cr, Trib A",21,20,TRUE,15,TRUE,TRUE
 "33329","Bear Cr",21,20,TRUE,17,TRUE,TRUE
 "33331","Jeans Cr",18,20,FALSE,16,TRUE,FALSE
 "33333","Simpson Cr",22,20,TRUE,21,TRUE,TRUE
-"33361","Siletz R, S Fk",8,4,TRUE,6,TRUE,TRUE
+"33361","Siletz R, S Fk",8,4,TRUE,7,TRUE,TRUE
 "33363","Drift Cr",8,11,FALSE,8,FALSE,TRUE
 "34521","Needle Branch",15,20,FALSE,14,TRUE,FALSE
 "34645","Russell Cr at RM 0.20",29,20,TRUE,18,TRUE,TRUE
 "34659","Beaver Cr NF at RM 3.06",15,20,FALSE,13,TRUE,FALSE
-"34660","Oliver Cr at RM 0.63",49,20,TRUE,24,TRUE,TRUE
-"34665","Siuslaw R at RM 57.02",28,20,TRUE,21,TRUE,TRUE
+"34660","Oliver Cr at RM 0.63",49,20,TRUE,16,TRUE,TRUE
+"34665","Siuslaw R at RM 57.02",28,20,TRUE,20,TRUE,TRUE
 "34670","Potato Patch Cr at RM 0.97",12,20,FALSE,14,FALSE,TRUE
 "34672","Deer Cr at Mouth",4,11,FALSE,4,FALSE,TRUE
-"34695","Fivemile Cr at Mouth",21,20,TRUE,21,FALSE,FALSE
+"34695","Fivemile Cr at Mouth",21,20,TRUE,22,FALSE,FALSE
 "37161","North Fork Siuslaw River at RM 24.38",5,20,FALSE,6,FALSE,TRUE
 "37165","McLeod Creek at RM 2.1",12,20,FALSE,10,TRUE,FALSE
 "37176","Big Elk Creek at RM 29.84",6,20,FALSE,6,FALSE,TRUE
 "37179","Deer Creek at RM 2.41",42,20,TRUE,19,TRUE,TRUE
 "37181","Cougar Creek at RM 0.26",7,20,FALSE,10,FALSE,TRUE
-"37185","Morris Creek at RM 3.82",15,20,FALSE,13,TRUE,FALSE
+"37185","Morris Creek at RM 3.82",15,20,FALSE,12,TRUE,FALSE
 "37188","Big Elk Creek at RM 12.77",15,20,FALSE,12,TRUE,FALSE
 "CTSI_22","Cedar Creek at mouth",5,20,FALSE,6,FALSE,TRUE
 "CTSI_23","Euchre Creek at mouth",4,20,FALSE,5,FALSE,TRUE
 "CTSI_28","Sam's Creek mouth",7,20,FALSE,7,FALSE,TRUE
-"CTSI_30","Mill Creek at mouth (Logsden)",6,20,FALSE,6,FALSE,TRUE
+"CTSI_30","Mill Creek at mouth (Logsden)",6,20,FALSE,7,FALSE,TRUE
 "CTSI_55","North Fork Siletz River just upstream of Warnicke Creek",1,4,FALSE,2,FALSE,TRUE
 "CTSI_NA1","Big Rock Creek at mouth",4,20,FALSE,5,FALSE,TRUE
 "CTSI_NA2","Little Rock Creek at mouth",6,20,FALSE,6,FALSE,TRUE
 "dfw_1998","McLeod Cr.",7,20,FALSE,10,FALSE,TRUE
-"dfw_2464","Pittenger Cr",20,20,FALSE,20,FALSE,TRUE
-"dfw_2492","Wolf Cr at RM 3.12 (Umpqua)",11,11,FALSE,13,FALSE,TRUE
+"dfw_2464","Pittenger Cr",20,20,FALSE,19,TRUE,FALSE
+"dfw_2492","Wolf Cr at RM 3.12 (Umpqua)",11,11,FALSE,12,FALSE,TRUE
 "dfw_2891","Flynn Cr.",46,20,TRUE,20,TRUE,TRUE
-"dfw_3285","West Olla Cr Trib A",45,20,TRUE,26,TRUE,TRUE
-"dfw_35004","Alsea River",21,20,TRUE,12,TRUE,TRUE
+"dfw_3285","West Olla Cr Trib A",45,20,TRUE,28,TRUE,TRUE
+"dfw_35004","Alsea River",21,20,TRUE,13,TRUE,TRUE
 "dfw_35429","Salmon R",2,11,FALSE,3,FALSE,TRUE
 "dfw_39721","Big Cr",7,20,FALSE,7,FALSE,TRUE
-"dfw_39965","Sutton Cr.",35,20,TRUE,18,TRUE,TRUE
+"dfw_39965","Sutton Cr.",35,20,TRUE,11,TRUE,TRUE
 "dfw_39983","Drift Cr.",15,20,FALSE,10,TRUE,FALSE
 "dfw_39988","Haight",17,20,FALSE,16,TRUE,FALSE
-"dfw_6041","Five Mile Cr",25,20,TRUE,20,TRUE,TRUE
+"dfw_6041","Five Mile Cr",25,20,TRUE,21,TRUE,TRUE

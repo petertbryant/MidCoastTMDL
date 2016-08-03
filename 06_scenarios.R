@@ -4,8 +4,11 @@ library(RODBC)
 library(ggplot2)
 library(reshape2)
 
+source('C:/Users/pbryant/Desktop/MidCoastTMDL/functions_custom.R')
+
 options(stringsAsFactors = FALSE)
 
+#### Run these from here to simplify processing up to this point ####
 # #Run Step 3
 # source('03_variable_selection.R')
 # 
@@ -23,7 +26,7 @@ options(stringsAsFactors = FALSE)
 #               addfunccol = "afvArea",
 #               family = "Gaussian")
 
-# #Gather reference site info for determining reference condition
+#### Gather reference site info for determining reference condition ####
 # #Have to run this in 32 bit R
 # con <- odbcConnectAccess('//deqlab1/biomon/Databases/Biomon_Phoenix.mdb')
 # refOG <- sqlFetch(con, 'STATION 2015_calculated')
@@ -33,14 +36,19 @@ options(stringsAsFactors = FALSE)
 
 #Save everything up to this point to make it easier to run from here
 #save.image('06_scenarios_post_fit_07292016_0745.Rdata')
+#### START HERE IF NO CHANGES TO PRECURSOR DATA, MODELS OR FILES ####
+#Load previously run data to facilitate processing from this point forward
 load('06_scenarios_post_fit_07292016_0745.Rdata')
 load('min_max_0_100_07292016.Rdata')
 
+#Bring in CART identified impairments and biocriteria impairment idenfitifications
 CART_imp <- read.csv('midcoast_Updated_Status_Table.csv')
 impaired <- read.csv('midcoast_new_status.csv')
 impaired <- impaired[grep('Imp',impaired$biocriteria_status), ]
 impaired <- impaired[order(impaired$STATION_KEY, decreasing = TRUE),]
 #write.csv(impaired, 'mc_biocrite_impaired.csv')
+
+#Get the data out of the glmssn object
 obs <- getSSNdata.frame(fit, Name = 'Obs')
 preds <- getSSNdata.frame(fit, Name = "preds")
 
@@ -50,26 +58,13 @@ obs_sub <- obs_sub[order(obs_sub$STATION_KEY, obs_sub$log10_BSTI, decreasing = T
 obs_sub <- obs_sub[!duplicated(obs_sub$STATION_KEY),]
 
 #Preserve observed BSTI values in the prediction data set
-preds_obs <- preds_obs[,c('pid','log10_BSTI')]
+preds_obs <- preds[,c('pid','log10_BSTI')]
 preds_obs <- rename(preds_obs, c('log10_BSTI' = 'log10_BSTI_obs'))
 
-
-#### ####
-#### ####
-#### ####
-#### ####
-#### ####
-
-source('C:/Users/pbryant/Desktop/MidCoastTMDL/fun_simplify_target_equation.R')
-
-betahat <-dcast(data.frame(variable = rownames(fit$estimates$betahat), 
-                           betahat = fit$estimates$betahat), 
-                . ~ variable, 
-                value.var = "betahat")[,-1]
-
+#### Build least disturbed reference condition scenario ####
 #Test to see if changing each one individually affects prediction estimation
-#RESULT: No difference in predicitions when each all are modified at the same time
-#Generate predictions at TMDL Target conditions and at aobserved rainfall amounts
+#RESULT: No difference in predicitions when all are modified at the same time
+#Generate predictions at TMDL Target conditions and at observed rainfall amounts
 preds.0 <- getSSNdata.frame(fit, Name = "preds")
 preds.0[, 'POP_DARCA'] <- quantile(
           preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'POP_DARCA'], 
@@ -91,6 +86,24 @@ fit_0_preds <- predict.glmssn(fit_0, predpointsID = "preds",
 #Check the results
 ssid_all <- getSSNdata.frame(fit_0_preds, Name = 'preds')
 
+#### Idetnify impaired sites where sediment is a stressor ####
+ssid <- ssid_all
+ssid <- merge(ssid, preds_obs, by = 'pid')
+ssid$BSTI <- as.integer(10^(ssid$log10_BSTI_obs/100 * max_log10_bsti))
+ssid$BSTI_target <- as.integer(round(10^(ssid$log10_BSTI/100 * max_log10_bsti)))
+ssid$BSTI_target_SE <- as.integer(round(10^(ssid$log10_BSTI.predSE/100 * max_log10_bsti)))
+ssid$Sed_Stressor <- ifelse(ssid$BSTI > ssid$BSTI_target,TRUE,FALSE)
+ssid$pr_target <- round(abs(((ssid$BSTI - ssid$BSTI_target)/ssid$BSTI) * 100),1)
+ssid$STATION_KEY <- as.character(ssid$STATION_KEY)
+ssid <- ssid[order(ssid$STATION_KEY, decreasing = TRUE),]
+ss <- ssid[ssid$STATION_KEY %in% impaired$STATION_KEY & ssid$Sed_Stressor,]
+
+#### Generate rainfall target curve equation values ####
+betahat <-dcast(data.frame(variable = rownames(fit$estimates$betahat), 
+                           betahat = fit$estimates$betahat), 
+                . ~ variable, 
+                value.var = "betahat")[,-1]
+
 for (i in 1:nrow(ssid_all)) {
   bm_list <- simplify_target_equation(betahat, ssid_all, ssid_all[i, 'STATION_KEY'])
   tmp_df_bm <- as.data.frame(bm_list)
@@ -102,55 +115,16 @@ for (i in 1:nrow(ssid_all)) {
     df_bm <- rbind(df_bm, tmp_df_bm)
   }
 }
-ssid <- ssid_all
-ssid <- merge(ssid, preds_obs, by = 'pid')
-ssid$BSTI <- as.integer(10^(ssid$log10_BSTI_obs/100 * max_log10_bsti))
-ssid$BSTI_target <- as.integer(round(10^(ssid$log10_BSTI/100 * max_log10_bsti)))
-ssid$BSTI_target_SE <- as.integer(round(10^(ssid$log10_BSTI.predSE/100 * max_log10_bsti)))
-ssid$Sed_Stressor <- ifelse(ssid$BSTI > ssid$BSTI_target,TRUE,FALSE)
-ssid$pr_target <- round(abs(((ssid$BSTI - ssid$BSTI_target)/ssid$BSTI) * 100),1)
-#ssid$predSE_untran <- 10^(ssid$log10_BSTI.predSE/100 * max_log10_bsti)
-ssid$STATION_KEY <- as.character(ssid$STATION_KEY)
-ssid <- ssid[order(ssid$STATION_KEY, decreasing = TRUE),]
-ss <- ssid[ssid$STATION_KEY %in% impaired$STATION_KEY & ssid$Sed_Stressor,]
 
-#CART vs SSN condition compare
-ss2 <- ssid[ssid$STATION_KEY %in% impaired$STATION_KEY,]
-cc <- merge(impaired, ss2, by = 'STATION_KEY')
-cc_sub <- cc[,c('STATION_KEY','SITE_NAME.x','FSS','Q90TH','sediment_resid_status','BSTI','BSTI_target','Sed_Stressor')]
-cc_sub$CART_Sed_Stressor <- ifelse(cc_sub$BSTI > cc_sub$Q90TH,TRUE,FALSE)
-cc_sub$agree <- ifelse(cc_sub$Sed_Stressor & cc_sub$CART_Sed_Stressor, TRUE, 
-                       ifelse(!cc_sub$Sed_Stressor & !cc_sub$CART_Sed_Stressor, TRUE, FALSE))
-cc_sub <- within(cc_sub, rm(FSS, sediment_resid_status))
-cc_sub <- cc_sub[!duplicated(cc_sub$STATION_KEY),]
-cc_sub <- plyr::rename(cc_sub, c('SITE_NAME.x' = 'SITE_NAME', 'Q90TH'= 'CART_Target', 'BSTI_target' = 'SSN_Target', 'Sed_Stressor' = 'SSN_Sed_Stressor'))
-cc_sub <- cc_sub[,c('STATION_KEY','SITE_NAME','BSTI','CART_Target','CART_Sed_Stressor','SSN_Target','SSN_Sed_Stressor','agree')]
-write.csv(cc_sub, file = 'ssn_cart_compare.csv', row.names = FALSE)
-
+#Save simplified equation values for sediment stressor impaired sites
 df_bm_ss <- df_bm[df_bm$STATION_KEY %in% ss$STATION_KEY,]
 write.csv(df_bm_ss, file = 'b_values_sediment_stressor_sites.csv', row.names = FALSE)
 
-# lapply(list('sum_1095_days', 'XSLOPE_MAP', 'MIN_Z', 'KFACT_MARCA',
-#              'ROADLEN_DRSA', 'HDWTR'), function(x) {preds[,x] <- (preds[,x]/100) * 
-#                min.max[min.max$variable == x, 'max_val']})
-# 
-# unique(ss$HU_10_NAME)
-# 
-# CART_HUCs <- preds[preds$STATION_KEY %in% CART_imp$Station.Key, 
-#                    c('STATION_KEY',grep("HU",names(preds),value = TRUE))]
-# unique(ss$HU_12_NAME)[!unique(ss$HU_12_NAME) %in% unique(CART_HUCs$HU_12_NAME)]
-
-#### Generate target range ####
+#### Generate TMDL target rainfall curve ####
+#Get rainfall values at each sampling location
 load('C:/users/pbryant/desktop/midcoasttmdl-gis/precip_daily_sum_1095_days.Rdata')
 dfdall$sum_1095_days <- dfdall$sum_1095_days / 
   (min.max[min.max$variable == 'sum_1095_days', 'max_val'])*100
-
-
-#Percent reduction 
-rf <- obs[obs$STATION_KEY == 21792, 'sum_1095_days']
-bsti_target <- (10^(df_bm[31,3] + df_bm[31,4] * rf))
-bsti_obs <- 10^(obs[obs$STATION_KEY == 21792, 'log10_BSTI']/100*max_log10_bsti)
-(1 - (bsti_target / bsti_obs)) * 100
 
 ss$SITE_NAME <- as.character(ss$SITE_NAME)
 for (i in 1:nrow(ss)) {
@@ -180,12 +154,31 @@ for (i in 1:nrow(ss)) {
   print(g + geom_point(data = df_ob, aes(x = p, y = o), color = "orange") + theme(legend.position = "none"))
 }
 
+#Percent reduction calculation based on multiple samples
+rf <- obs[obs$STATION_KEY == 21792, 'sum_1095_days']
+bsti_target <- (10^(df_bm[31,3] + df_bm[31,4] * rf))
+bsti_obs <- 10^(obs[obs$STATION_KEY == 21792, 'log10_BSTI']/100*max_log10_bsti)
+(1 - (bsti_target / bsti_obs)) * 100
+
+#### CART vs SSN condition compare ####
+ss2 <- ssid[ssid$STATION_KEY %in% impaired$STATION_KEY,]
+cc <- merge(impaired, ss2, by = 'STATION_KEY')
+cc_sub <- cc[,c('STATION_KEY','SITE_NAME.x','FSS','Q90TH','sediment_resid_status','BSTI','BSTI_target','Sed_Stressor')]
+cc_sub$CART_Sed_Stressor <- ifelse(cc_sub$BSTI > cc_sub$Q90TH,TRUE,FALSE)
+cc_sub$agree <- ifelse(cc_sub$Sed_Stressor & cc_sub$CART_Sed_Stressor, TRUE, 
+                       ifelse(!cc_sub$Sed_Stressor & !cc_sub$CART_Sed_Stressor, TRUE, FALSE))
+cc_sub <- within(cc_sub, rm(FSS, sediment_resid_status))
+cc_sub <- cc_sub[!duplicated(cc_sub$STATION_KEY),]
+cc_sub <- plyr::rename(cc_sub, c('SITE_NAME.x' = 'SITE_NAME', 'Q90TH'= 'CART_Target', 'BSTI_target' = 'SSN_Target', 'Sed_Stressor' = 'SSN_Sed_Stressor'))
+cc_sub <- cc_sub[,c('STATION_KEY','SITE_NAME','BSTI','CART_Target','CART_Sed_Stressor','SSN_Target','SSN_Sed_Stressor','agree')]
+write.csv(cc_sub, file = 'ssn_cart_compare.csv', row.names = FALSE)
+
+
 #Compare SSN sed stressor ID to CART Stressor ID 
 #CART sites not in SSN
 CART_imp[!CART_imp$Station.Key %in% ss$STATION_KEY, c('Station.Key','Site.Name')]
 #    Station.Key                   Site.Name
 # 10       34695        Fivemile Cr at Mouth
-# 16    dfw_2464                Pittenger Cr
 # 24   dfw_36277                   Sweet Cr.
 # 26    dfw_2492 Wolf Cr at RM 3.12 (Umpqua)
 
@@ -204,52 +197,4 @@ ss[!ss$STATION_KEY %in% CART_imp$Station.Key, c('STATION_KEY', 'SITE_NAME')]
 
 #Number of stations in agreement
 nrow(ss[ss$STATION_KEY %in% CART_imp$Station.Key,])
-# 22
-
-#preds.0$BSTI_untran <- 10^(preds.0$log10_BSTI)
-# preds.0$uci <- preds.0$log10_BSTI + (critval * preds.0$log10_BSTI.predSE)
-# preds.0$lci <- preds.0$log10_BSTI - (critval * preds.0$log10_BSTI.predSE)
-# 
-# 
-# obs_sub$BSTI <- 10^(obs_sub$log10_BSTI/100 * max_log10_bsti)
-# preds.0 <- merge(preds.0, obs_sub[,c('STATION_KEY', 'BSTI')], by = 'STATION_KEY', all.x = TRUE)
-# 
-# 
-# 
-# #CART for Target identification
-# impaired$log10_Target <- log10(impaired$TMDL.FSS.Target)
-# impaired$pr_target <- abs(((impaired$TMDL.FSS.Target - impaired$FSS)/impaired$FSS) * 100)
-# impaired$pr_Q90_target <- abs(((impaired$Sediment.Stressor.Benchmark - impaired$FSS)/impaired$FSS) * 100)
-# 
-# impaired.0 <- merge(preds.0, impaired[,names(impaired) != 'FSS'], by.x = 'STATION_KEY', by.y = 'Station.Key')
-# impaired.0$log10_Target <- impaired.0$log10_Target / max_log10_bsti * 100
-# #impaired.0$target_met <- ifelse(impaired.0$log10_BSTI < (log10(impaired.0$Sediment.Stressor.Benchmark)/ max_log10_bsti * 100),1,0)
-# impaired.0$untran_BSTI <- round(10^(impaired.0$log10_BSTI/100 * max_log10_bsti))
-# impaired.0$pr_achieved <- abs(((impaired.0$untran_BSTI - impaired.0$BSTI)/impaired.0$BSTI) * 100)
-# impaired.0$pr_target_met <- ifelse(impaired.0$pr_achieved >= impaired.0$pr_target,1,0)
-# impaired.0$pr_Q90_target_met <- ifelse(impaired.0$pr_achieved >= impaired.0$pr_Q90_target,1,0)
-# impaired.0$untran_uci <- 10^(impaired.0$uci/100 * max_log10_bsti)
-# impaired.0$untran_lci <- 10^(impaired.0$lci/100 * max_log10_bsti)
-# impaired.0$lci_meets <- ifelse(impaired.0$lci < impaired.0$log10_Target, 1, 0)
-# #impaired.0[,c('STATION_KEY','log10_BSTI','uci','lci','log10_Target','untran_BSTI','TMDL.BSTI.Target','target_met',all.vars(ssn1_glmssn5$args$formula))]
-# impaired.0 <- merge(impaired.0, preds_obs, by = 'pid', all.x = TRUE)
-# impaired.0$BSTI_obs <- 10^(obs_sub$log10_BSTI_obs/100 * max_log10_bsti)
-# 
-# df <- melt(impaired.0[,c('STATION_KEY','BSTI','untran_BSTI',
-#                          'untran_uci','untran_lci')], id.vars = "STATION_KEY",
-#      measure.vars = c('untran_BSTI', 'untran_uci', 'untran_lci', 'BSTI'))
-# 
-# # df2 <- melt(ss, id.vars = "STATION_KEY", measure.vars = c('BSTI', 'BSTI_target',
-# #                                                          'untran_uci', 'untran_lci'))
-# 
-# hline.data <- data.frame(z = impaired.0[,"TMDL.FSS.Target"], 
-#                          STATION_KEY = impaired.0[,c('STATION_KEY')])
-# ggplot(df, 
-#        aes(x = 1, y = value, color = variable)) + 
-#   geom_point(size = c(3, 8, 8, 3), shape = c(19, 95, 95, 19)) + 
-#   scale_color_discrete(labels = c("Predicted BSTI at 0 Anthro", "UCI", "LCI", "Observed BSTI")) +
-#   facet_wrap(~ STATION_KEY) +
-#   geom_hline(aes(yintercept = z), hline.data) 
-# 
-# impaired.0[,c('STATION_KEY',grep('untran',names(impaired.0), value = TRUE),
-#               'TMDL.BSTI.Target','Sediment.Stressor.Benchmark','target_met')]
+# 23
