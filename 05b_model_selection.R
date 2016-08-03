@@ -1,7 +1,7 @@
 library(SSN)
 
 name_vec <- paste0("ssn1_glmssn", 1:9, "_ML.Rdata")
-name_vec <- c(name_vec,paste0("ssn1_glmssn", 1:8, "_RUN2_ML.Rdata"))
+#name_vec <- c(name_vec,paste0("ssn1_glmssn", 1:8, "_RUN2_ML.Rdata"))
 #name_vec <- c(name_vec,paste0("ssn1_glmssn",1:8,"_ML_RUN3.Rdata"))
 #name_vec <- c(name_vec, paste0("ssn1_glmssn", 1:9, "_HWFAC_ML_20151216.Rdata"))
 for (i in 1:length(name_vec)) {

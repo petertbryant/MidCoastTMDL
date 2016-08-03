@@ -2,8 +2,8 @@ simplify_target_equation <- function(betahat, ss, station) {
   options(warn = -1)
   betahat <- plyr::rename(betahat, c('HDWTR100' = 'HDWTR'))
   bsubm <- melt(betahat)
-  vals <- ss[ss$STATION_KEY == station, names(betahat)[2:10]]
-  vals <- melt(vals, measure.vars = 1:9)
+  vals <- ss[ss$STATION_KEY == station, names(betahat)[-1]]
+  vals <- melt(vals, measure.vars = 1:length(names(betahat[-1])))
   vals$value <- as.numeric(vals$value)
   inter <- merge(bsubm, vals, by = 'variable', suffixes = c('.betahat',''))
   inter$inter <- inter$value.betahat * inter$value

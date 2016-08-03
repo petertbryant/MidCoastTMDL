@@ -71,4 +71,36 @@ confint.glmssn <- function (object, parm, level = 0.95, ...)
     ses <- sqrt(diag(object$estimates$covb))[parm]
     ci[] <- cf[parm] + ses %o% fac
     ci
+}
+
+predict.vary <- function(betahat, ss, r_vec) {
+  options(warn = -1)
+  betahat <- plyr::rename(betahat, c('HDWTR100' = 'HDWTR'))
+  bsubm <- melt(betahat)
+  r_vec <- plyr::rename(r_vec, c('HDWTR100' = 'HDWTR'))
+  r_vec <- melt(r_vec)
+  r_vec$variable <- rownames(r_vec)
+  r_vec <- plyr::rename(r_vec, c("value" = "value.betahat.vary"))
+  for (i in 1:nrow(ss)) {
+    vals <- ss[i, names(betahat)[-1]]
+    vals <- melt(vals, measure.vars = 1:length(names(betahat[-1])))
+    vals$value <- as.numeric(vals$value)
+    inter <- merge(bsubm, vals, by = 'variable', suffixes = c('.betahat',''))
+    inter$inter <- inter$value.betahat * inter$value
+    BSTI <- ss[i, 'log10_BSTI']
+    Z <- BSTI - betahat$`(Intercept)`[1] - sum(inter$inter)
+    
+    inter <- merge(inter, r_vec, by = 'variable')
+    inter$inter3 <- inter$value * inter$value.betahat.vary
+    BSTI_prd <- Z + betahat$`(Intercept)` + sum(inter$inter3)
+    
+    if (i == 1) {
+      BSTI_prd_df <- data.frame("pid" = ss[i, 'pid'], "BSTI_prd" = BSTI_prd)
+    } else {
+      BSTI_prd_df <- rbind(BSTI_prd_df, data.frame("pid" = ss[i, 'pid'], "BSTI_prd" = BSTI_prd))
+    }
   }
+  
+  return(BSTI_prd_df)
+  options(warn = 0)
+}

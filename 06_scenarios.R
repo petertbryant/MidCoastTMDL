@@ -22,8 +22,7 @@ options(stringsAsFactors = FALSE)
 #               CorModels = c("locID",'Exponential.Euclid','Exponential.taildown'),
 #               addfunccol = "afvArea",
 #               family = "Gaussian")
-# 
-# 
+
 # #Gather reference site info for determining reference condition
 # #Have to run this in 32 bit R
 # con <- odbcConnectAccess('//deqlab1/biomon/Databases/Biomon_Phoenix.mdb')
@@ -35,6 +34,7 @@ options(stringsAsFactors = FALSE)
 #Save everything up to this point to make it easier to run from here
 #save.image('06_scenarios_post_fit_07292016_0745.Rdata')
 load('06_scenarios_post_fit_07292016_0745.Rdata')
+load('min_max_0_100_07292016.Rdata')
 
 CART_imp <- read.csv('midcoast_Updated_Status_Table.csv')
 impaired <- read.csv('midcoast_new_status.csv')
@@ -42,7 +42,7 @@ impaired <- impaired[grep('Imp',impaired$biocriteria_status), ]
 impaired <- impaired[order(impaired$STATION_KEY, decreasing = TRUE),]
 #write.csv(impaired, 'mc_biocrite_impaired.csv')
 obs <- getSSNdata.frame(fit, Name = 'Obs')
-preds_obs <- getSSNdata.frame(fit, Name = "preds")
+preds <- getSSNdata.frame(fit, Name = "preds")
 
 #Takes the highest BSTI score from each station
 obs_sub <- obs[,c('STATION_KEY',all.vars(fit$args$formula))]
@@ -71,18 +71,9 @@ betahat <-dcast(data.frame(variable = rownames(fit$estimates$betahat),
 #RESULT: No difference in predicitions when each all are modified at the same time
 #Generate predictions at TMDL Target conditions and at aobserved rainfall amounts
 preds.0 <- getSSNdata.frame(fit, Name = "preds")
-preds.0[, 'ROADLEN_DRSA'] <- quantile(
+preds.0[, 'POP_DARCA'] <- quantile(
           preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'POP_DARCA'], 
           seq(0,1,.25))[4]
-preds.0[, 'OWN_URB_PARCA'] <- quantile(
-          preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'OWN_URB_PARCA'], 
-          seq(0,1,.25))[2]
-
-ref_DIS_3YR_PRSA <- quantile(
-  preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'DIS_3YR_PRSA'], 
-  seq(0,1,.25))[4]
-preds.0[preds.0$DIS_3YR_PRSA > ref_DIS_3YR_PRSA, 
-        'DIS_3YR_PRSA'] <- ref_DIS_3YR_PRSA
 
 ref_OWN_FED_PRCA <- quantile(
   preds.0[preds.0$STATION_KEY %in% ref$STATION_KEY,'OWN_FED_PRCA'], 
@@ -90,7 +81,7 @@ ref_OWN_FED_PRCA <- quantile(
 preds.0[preds.0$OWN_FED_PRCA < ref_OWN_FED_PRCA, 
         'OWN_FED_PRCA'] <- ref_OWN_FED_PRCA
 
-#Run the fit
+#Put the scenario back in the model object
 fit_0 <- putSSNdata.frame(preds.0, fit, Name = "preds")
 
 #Run the prediction
@@ -115,6 +106,7 @@ ssid <- ssid_all
 ssid <- merge(ssid, preds_obs, by = 'pid')
 ssid$BSTI <- as.integer(10^(ssid$log10_BSTI_obs/100 * max_log10_bsti))
 ssid$BSTI_target <- as.integer(round(10^(ssid$log10_BSTI/100 * max_log10_bsti)))
+ssid$BSTI_target_SE <- as.integer(round(10^(ssid$log10_BSTI.predSE/100 * max_log10_bsti)))
 ssid$Sed_Stressor <- ifelse(ssid$BSTI > ssid$BSTI_target,TRUE,FALSE)
 ssid$pr_target <- round(abs(((ssid$BSTI - ssid$BSTI_target)/ssid$BSTI) * 100),1)
 #ssid$predSE_untran <- 10^(ssid$log10_BSTI.predSE/100 * max_log10_bsti)
