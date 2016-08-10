@@ -141,17 +141,47 @@ for (i in 1:nrow(ss)) {
                         fun = function(x) 10^(bm_list$b_u + (-5.228741e-05 * x)))
   
   #Set formatting on plot
+  stn_title <- paste(ss[i, c('STATION_KEY','SITE_NAME')], collapse = " - ")
   g = g + ylim(0, 50) + 
-    ggtitle(paste(ss[i, c('STATION_KEY','SITE_NAME')], collapse = " - ")) +
-    xlab("3 year sum of rainfall (mm)") + ylab("BSTI")
+    ggtitle(stn_title) + 
+    xlab("3 year sum of rainfall (mm)") + 
+    ylab("BSTI")
   
   #Extract the observed BSTI and the rainfall at which it occurs
+  rf <- obs[obs$STATION_KEY == ss$STATION_KEY[i], 'sum_1095_days']
+  yr <- obs[obs$STATION_KEY == ss$STATION_KEY[i], "YEAR"]
+  bsti_target <- round(10^(df_bm[31,3] + df_bm[31,4] * rf))
+  bsti_obs <- 10^(obs[obs$STATION_KEY == ss$STATION_KEY[i], 
+                      'log10_BSTI']/100*max_log10_bsti)
+  pr <- round((1 - (bsti_target / bsti_obs)) * 100)
+  df_pr <- data.frame("Year" = yr,
+                      "TMDL Target" = bsti_target, 
+                      "BSTI Observed" = bsti_obs,
+                      "Percent Reduction" = pr)
+  
   df_ob <- data.frame('s' = ss$STATION_KEY[i],
-             'o' = ssid[ssid$STATION_KEY == ss$STATION_KEY[i],'BSTI'],
-             'p' = min.max[min.max$variable == 'sum_1095_days', "max_val"]*(preds[preds$STATION_KEY %in% ss$STATION_KEY[i],'sum_1095_days'])/100)
+                      'o' = obs[obs$STATION_KEY == ss$STATION_KEY[i],'BSTI'],
+                      'p' = min.max[min.max$variable == 'sum_1095_days', 
+                                    "max_val"]*(obs[obs$STATION_KEY %in% 
+                                                        ss$STATION_KEY[i],
+                                                      'sum_1095_days'])/100)
   
   #Add the observed BSTI to the plot
-  print(g + geom_point(data = df_ob, aes(x = p, y = o), color = "orange") + theme(legend.position = "none"))
+  g <- g + geom_point(data = df_ob, aes(x = p, y = o), color = "orange") + 
+    theme(legend.position = "none") + geom_label()
+  
+  #Make pie charts of land use
+  prca_lu <- obs.complete[obs.complete$STATION_KEY == ss$STATION_KEY[i], 
+               grep('OWN_..._PRCA',names(obs.complete))]
+  prca_lu <- melt(unique(prca_lu))
+  prca_plot <- ggplot(prca_lu, aes(x = factor(1), 
+                                   y = value, 
+                                   fill = factor(variable))) + 
+    geom_bar(width = 1, stat = 'identity') + coord_polar("y")
+  
+  rmarkdown::render('C:/users/pbryant/desktop/rwar.Rmd',
+                    output_file = paste0('report_', ss[i, 'STATION_KEY'], '.html'),
+                    output_dir = 'C:/users/pbryant/desktop/rmd_test')
 }
 
 #Percent reduction calculation based on multiple samples

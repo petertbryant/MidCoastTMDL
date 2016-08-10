@@ -513,7 +513,10 @@ obs.a$HDWTR <- ifelse(obs.a$SQM_ARCA == obs.a$SQM_RCA, 1, 0)
 
 #Now we need to keep the columns we want for modeling
 to_remove <- grep('_ARCA|_RCA|_ARSA|_RSA', names(obs.a))
-to_remove <- setdiff(to_remove, grep('^SQM_ARCA$',names(obs.a))) # grep('^SQM_.(1|2)', names(obs.a), value = TRUE)
+to_remove <- setdiff(to_remove, c(grep('^SQM_ARCA$',names(obs.a)), 
+                                  grep('^SQM_ARSA$', names(obs.a)),
+                                  grep('^SQM_RSA$', names(obs.a)),
+                                  grep('^SQM_RCA$', names(obs.a)))) # grep('^SQM_.(1|2)', names(obs.a), value = TRUE)
 obs.a <- obs.a[,-to_remove]
 
 #Clean up the columns in obs.a a bit
