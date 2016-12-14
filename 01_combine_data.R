@@ -253,67 +253,75 @@ obs.a <- rename(obs.a, c('KFACTWS_RCA' = 'KFACT_RCA'))
 
 #To eliminate overlapping variables to achieve greater independence (and less
 #covariance) between variables for further modeling we want each spatial scale
-#to be non-overlapping
-arca_names <- grep('_ARCA', names(obs.a), value = TRUE)
-arca_names <- arca_names[!arca_names %in% c('COUNT_ARCA','NASQM_ARCA')]
-
-arsa_names <- grep('_ARSA', names(obs.a), value = TRUE)
-arsa_names <- arsa_names[!arsa_names %in% c('COUNT_ARSA')]
-
-#Start with ARCA1 and ARCA2
-for (i in 1:length(arca_names)) {
-  var <- strsplit(arca_names[i], "_AR")[[1]][1]
-  if (any(grepl(var, arsa_names))) {
-    new_name <- paste0(arca_names[i],"1")
-    sub <- arsa_names[grep(var, arsa_names)]
-  } else {
-    new_name <- paste0(arca_names[i],"2")
-    sub <- paste(var, "RCA", sep = "_")
-  }
-  obs.a[,new_name] <- obs.a[,arca_names[i]] - obs.a[,sub]
-}
-obs.a[,'SQM_ARCA2'] <- obs.a[,'SQM_ARCA'] - obs.a[,'SQM_RCA']
-
-#sort(grep('ARCA1|ARCA2',names(obs.a),value=TRUE))
-
-#Now onto ARSA1
-for (i in 1:length(arsa_names)) {
-  var <- strsplit(arsa_names[i], "_AR")[[1]][1]
-  new_name <- paste0(arsa_names[i],"1")
-  sub <- paste(var, "RSA", sep = "_")
-  obs.a[,new_name] <- obs.a[,arsa_names[i]] - obs.a[,sub]
-}
-
-#sort(grep('ARSA1',names(obs.a),value=TRUE))
-
-#And then RCA1
-rca_names <- paste(unlist(lapply(arsa_names, 
-                                 function(x) {
-                                   strsplit(x, "_AR")[[1]][1]}
-                                 )
-                          ), "RCA", sep = "_")
-for (i in 1:length(rca_names)) {
-  var <- strsplit(rca_names[i], "_RC")[[1]][1]
-  new_name <- paste0(rca_names[i],"1")
-  sub <- paste(var, "RSA", sep = "_")
-  if (any(sub %in% names(obs.a))) {
-    obs.a[,new_name] <- obs.a[,rca_names[i]] - obs.a[,sub] 
-  }
-}
-
-#sort(grep('_RCA1',names(obs.a),value=TRUE))
-
-#Headwater sites end up with 0 for ARCA2. This is inaccurate. The ARCA for these
-#sites is equivalent to the RCA. This affects 111 observations at this time (11-13-2015)
-obs.a[obs.a$SQM_ARCA2 == 0, 'SQM_ARCA2'] <- obs.a[obs.a$SQM_ARCA2 == 0, 
-                                                  'SQM_RCA']
-obs.a[obs.a$SQM_ARSA1 == 0, 'SQM_ARSA1'] <- obs.a[obs.a$SQM_ARSA1 == 0, 
-                                                  'SQM_RSA']
-obs.a[obs.a$NACOUNT_ARCA2 == 0, 'NACOUNT_ARCA2'] <- obs.a[obs.a$NACOUNT_ARCA2 
-                                                          == 0, 'NACOUNT_RCA']
-obs.a[obs.a$FPA_ARCA2 == 0, 'FPA_ARCA2'] <- obs.a[obs.a$FPA_ARCA2 == 0,
-                                                  'FPA_RCA']
-obs.a[obs.a$SQM_RCA1 == 0, 'SQM_RCA1'] <- obs.a[obs.a$SQM_RCA1 == 0, 'SQM_RCA']
+#to be non-overlapping.
+#NOTE: 2016-09-06: For the objectives of the model to have management variables
+#available at the watershed scale and through the experience of fitting the model
+#with this level of dicing, it follows we can rely on the correlation threshold
+#step to remove correlated variables thus leaving us with independent variables to
+#include in the linear regression step of the model framework. For example,
+#OWN_FED_PRCA*PRSA*PARCA*PARSA are all highly correlated > 0.67 so only OWN_FED_PRCA
+#is included in the regression step. To this end we don't need to separate the 
+#areas and can skip the cutting out step.
+# arca_names <- grep('_ARCA', names(obs.a), value = TRUE)
+# arca_names <- arca_names[!arca_names %in% c('COUNT_ARCA','NASQM_ARCA')]
+# 
+# arsa_names <- grep('_ARSA', names(obs.a), value = TRUE)
+# arsa_names <- arsa_names[!arsa_names %in% c('COUNT_ARSA')]
+# 
+# #Start with ARCA1 and ARCA2
+# for (i in 1:length(arca_names)) {
+#   var <- strsplit(arca_names[i], "_AR")[[1]][1]
+#   if (any(grepl(var, arsa_names))) {
+#     new_name <- paste0(arca_names[i],"1")
+#     sub <- arsa_names[grep(var, arsa_names)]
+#   } else {
+#     new_name <- paste0(arca_names[i],"2")
+#     sub <- paste(var, "RCA", sep = "_")
+#   }
+#   obs.a[,new_name] <- obs.a[,arca_names[i]] - obs.a[,sub]
+# }
+# obs.a[,'SQM_ARCA2'] <- obs.a[,'SQM_ARCA'] - obs.a[,'SQM_RCA']
+# 
+# #sort(grep('ARCA1|ARCA2',names(obs.a),value=TRUE))
+# 
+# #Now onto ARSA1
+# for (i in 1:length(arsa_names)) {
+#   var <- strsplit(arsa_names[i], "_AR")[[1]][1]
+#   new_name <- paste0(arsa_names[i],"1")
+#   sub <- paste(var, "RSA", sep = "_")
+#   obs.a[,new_name] <- obs.a[,arsa_names[i]] - obs.a[,sub]
+# }
+# 
+# #sort(grep('ARSA1',names(obs.a),value=TRUE))
+# 
+# #And then RCA1
+# rca_names <- paste(unlist(lapply(arsa_names, 
+#                                  function(x) {
+#                                    strsplit(x, "_AR")[[1]][1]}
+#                                  )
+#                           ), "RCA", sep = "_")
+# for (i in 1:length(rca_names)) {
+#   var <- strsplit(rca_names[i], "_RC")[[1]][1]
+#   new_name <- paste0(rca_names[i],"1")
+#   sub <- paste(var, "RSA", sep = "_")
+#   if (any(sub %in% names(obs.a))) {
+#     obs.a[,new_name] <- obs.a[,rca_names[i]] - obs.a[,sub] 
+#   }
+# }
+# 
+# #sort(grep('_RCA1',names(obs.a),value=TRUE))
+# 
+# #Headwater sites end up with 0 for ARCA2. This is inaccurate. The ARCA for these
+# #sites is equivalent to the RCA. This affects 111 observations at this time (11-13-2015)
+# obs.a[obs.a$SQM_ARCA2 == 0, 'SQM_ARCA2'] <- obs.a[obs.a$SQM_ARCA2 == 0, 
+#                                                   'SQM_RCA']
+# obs.a[obs.a$SQM_ARSA1 == 0, 'SQM_ARSA1'] <- obs.a[obs.a$SQM_ARSA1 == 0, 
+#                                                   'SQM_RSA']
+# obs.a[obs.a$NACOUNT_ARCA2 == 0, 'NACOUNT_ARCA2'] <- obs.a[obs.a$NACOUNT_ARCA2 
+#                                                           == 0, 'NACOUNT_RCA']
+# obs.a[obs.a$FPA_ARCA2 == 0, 'FPA_ARCA2'] <- obs.a[obs.a$FPA_ARCA2 == 0,
+#                                                   'FPA_RCA']
+# obs.a[obs.a$SQM_RCA1 == 0, 'SQM_RCA1'] <- obs.a[obs.a$SQM_RCA1 == 0, 'SQM_RCA']
 
 
 # -----------------------------------------------------------

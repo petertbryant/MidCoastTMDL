@@ -72,20 +72,20 @@ if (RUN == 1) {
 }
 
 #Normalize by maximum range
-melted <- melt(bsti[,names(bsti[,-c(grep('_P',names(bsti)),
-                                          which(names(bsti) %in% 
-                                                  c('DATE')))])])
-min.max <- ddply(melted, .(variable), 
-                 summarize, 
-                 min_val = min(value), 
-                 max_val = max(value))
-bsti[,-c(grep('_P',names(bsti)),
-            which(names(bsti) %in% 
-                    c('DATE')))] <- as.data.frame(
-                      lapply(bsti[,-c(grep('_P', names(bsti)), 
-                                         which(names(bsti) %in% c('DATE')))], 
-                             function(x) {((x) / (max(x)))*100}))
-
+# melted <- melt(bsti[,names(bsti[,-c(grep('_P',names(bsti)),
+#                                           which(names(bsti) %in%
+#                                                   c('DATE')))])])
+# 
+# min.max <- ddply(melted, .(variable),
+#                  summarize,
+#                  min_val = min(value),
+#                  max_val = max(value))
+# bsti[,-c(grep('_P',names(bsti)),
+#             which(names(bsti) %in%
+#                     c('DATE')))] <- as.data.frame(
+#                       lapply(bsti[,-c(grep('_P', names(bsti)),
+#                                          which(names(bsti) %in% c('DATE')))],
+#                              function(x) {((x) / (max(x)))*100}))
 #OR standardize using mean and two times standard deviation to aid in coefficient interpretation
 stdpreds <- function(newset,originalset) {
   xnames <- colnames(newset)
@@ -98,8 +98,8 @@ stdpreds <- function(newset,originalset) {
   return(sx)
 }
 
-bsti_std <- (as.data.frame(stdpreds(bsti, bsti)))
-lapply(bsti_std, hist)
+bsti <- (as.data.frame(stdpreds(bsti, bsti)))
+#look <- lapply(bsti_std, hist)
 
 # mtry value
 mtry.bsti <- as.integer(((ncol(bsti) - 1) / 3), 0)

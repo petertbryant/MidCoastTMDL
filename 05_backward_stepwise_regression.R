@@ -27,9 +27,9 @@ while (halt == FALSE) {
                 CorModels = c("locID",'Exponential.Euclid','Exponential.taildown'),
                 addfunccol = "afvArea",
                 family = "Gaussian")
-  save_name <- paste0("ssn1_glmssn_cor6_",cntr,'_ML.Rdata')
-  assign(paste0("ssn1_glmssn_cor6_",cntr), tmp)
-  save(list=paste0("ssn1_glmssn_cor6_",cntr), file = save_name)
+  save_name <- paste0("ssn1_glmssn_std_",cntr,'_ML.Rdata')
+  assign(paste0("ssn1_glmssn_std_",cntr), tmp)
+  save(list=paste0("ssn1_glmssn_std_",cntr), file = save_name)
   
   stmp <- summary(tmp)
   sum_tab <- stmp$fixed.effects.estimates

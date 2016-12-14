@@ -1,6 +1,6 @@
 library(SSN)
 
-name_vec <- paste0("ssn1_glmssn", 1:9, "_ML.Rdata")
+name_vec <- paste0("ssn1_glmssn_std_", 1:7, "_ML.Rdata")
 #name_vec <- c(name_vec,paste0("ssn1_glmssn", 1:8, "_RUN2_ML.Rdata"))
 #name_vec <- c(name_vec,paste0("ssn1_glmssn",1:8,"_ML_RUN3.Rdata"))
 #name_vec <- c(name_vec, paste0("ssn1_glmssn", 1:9, "_HWFAC_ML_20151216.Rdata"))
@@ -17,9 +17,8 @@ for (i in 1:length(name_vec)) {
 # ssn1_glmssn9_forward, ssn1_glmssn10_forward,
 # ssn1_glmssn11_forward, ssn1_glmssn12_forward,
 # ssn1_glmssn13_forward,
-models <- list(ssn1_glmssn1,ssn1_glmssn2,ssn1_glmssn3,ssn1_glmssn4,
-               ssn1_glmssn5,ssn1_glmssn6,ssn1_glmssn7,ssn1_glmssn8,
-               ssn1_glmssn9)
+models <- list(ssn1_glmssn_std_1,ssn1_glmssn_std_2,ssn1_glmssn_std_3,ssn1_glmssn_std_4,
+               ssn1_glmssn_std_5,ssn1_glmssn_std_6,ssn1_glmssn_std_7)
 bhats <- lapply(models, function(x) {x$estimates$betahat})
 results <- InfoCritCompare2(models)
 results$dAIC <- min(results$AIC) - results$AIC

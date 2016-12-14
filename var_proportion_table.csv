@@ -1,65 +1,65 @@
 newfield,numerator,denominator,multiplier,final_units,numerator_units
-CLAY_PARCA,CLAY_ARCA2,NACOUNT_ARCA2,1,percent,sum of percents
+CLAY_PARCA,CLAY_ARCA,NACOUNT_ARCA,1,percent,sum of percents
 CLAY_PRCA,CLAY_RCA,NACOUNT_RCA,1,percent,sum of percents
-COMP_PARCA,COMP_ARCA1,SQM_ARCA1,100,percent,square meters
-COMP_PARSA,COMP_ARSA1,SQM_ARSA1,100,percent,square meters
-COMP_PRCA,COMP_RCA1,SQM_RCA1,100,percent,square meters
+COMP_PARCA,COMP_ARCA,SQM_ARCA,100,percent,square meters
+COMP_PARSA,COMP_ARSA,SQM_ARSA,100,percent,square meters
+COMP_PRCA,COMP_RCA,SQM_RCA,100,percent,square meters
 COMP_PRSA,COMP_RSA,SQM_RSA,100,percent,square meters
-DIS_10YR_PARCA,DIS_10YR_ARCA1,SQM_ARCA1,100,percent,square meters
-DIS_10YR_PARSA,DIS_10YR_ARSA1,SQM_ARSA1,100,percent,square meters
-DIS_10YR_PRCA,DIS_10YR_RCA1,SQM_RCA1,100,percent,square meters
+DIS_10YR_PARCA,DIS_10YR_ARCA,SQM_ARCA,100,percent,square meters
+DIS_10YR_PARSA,DIS_10YR_ARSA,SQM_ARSA,100,percent,square meters
+DIS_10YR_PRCA,DIS_10YR_RCA,SQM_RCA,100,percent,square meters
 DIS_10YR_PRSA,DIS_10YR_RSA,SQM_RSA,100,percent,square meters
-DIS_1YR_PARCA,DIS_1YR_ARCA1,SQM_ARCA1,100,percent,square meters
-DIS_1YR_PARSA,DIS_1YR_ARSA1,SQM_ARSA1,100,percent,square meters
-DIS_1YR_PRCA,DIS_1YR_RCA1,SQM_RCA1,100,percent,square meters
+DIS_1YR_PARCA,DIS_1YR_ARCA,SQM_ARCA,100,percent,square meters
+DIS_1YR_PARSA,DIS_1YR_ARSA,SQM_ARSA,100,percent,square meters
+DIS_1YR_PRCA,DIS_1YR_RCA,SQM_RCA,100,percent,square meters
 DIS_1YR_PRSA,DIS_1YR_RSA,SQM_RSA,100,percent,square meters
-DIS_3YR_PARCA,DIS_3YR_ARCA1,SQM_ARCA1,100,percent,square meters
-DIS_3YR_PARSA,DIS_3YR_ARSA1,SQM_ARSA1,100,percent,square meters
-DIS_3YR_PRCA,DIS_3YR_RCA1,SQM_RCA1,100,percent,square meters
+DIS_3YR_PARCA,DIS_3YR_ARCA,SQM_ARCA,100,percent,square meters
+DIS_3YR_PARSA,DIS_3YR_ARSA,SQM_ARSA,100,percent,square meters
+DIS_3YR_PRCA,DIS_3YR_RCA,SQM_RCA,100,percent,square meters
 DIS_3YR_PRSA,DIS_3YR_RSA,SQM_RSA,100,percent,square meters
-EROD_PARCA,EROD_ARCA1,SQM_ARCA1,100,percent,square meters
-EROD_PARSA,EROD_ARSA1,SQM_ARSA1,100,percent,square meters
-EROD_PRCA,EROD_RCA1,SQM_RCA1,100,percent,square meters
+EROD_PARCA,EROD_ARCA,SQM_ARCA,100,percent,square meters
+EROD_PARSA,EROD_ARSA,SQM_ARSA,100,percent,square meters
+EROD_PRCA,EROD_RCA,SQM_RCA,100,percent,square meters
 EROD_PRSA,EROD_RSA,SQM_RSA,100,percent,square meters
-KFACT_MARCA,KFACT_ARCA2,NACOUNT_ARCA2,1,mean,sum of means
+KFACT_MARCA,KFACT_ARCA,NACOUNT_ARCA,1,mean,sum of means
 KFACT_MRCA,KFACT_RCA,NACOUNT_RCA,1,mean,sum of means
-OWN_AGR_PARCA,OWN_AGR_ARCA1,SQM_ARCA1,100,percent,square meters
-OWN_AGR_PARSA,OWN_AGR_ARSA1,SQM_ARSA1,100,percent,square meters
-OWN_AGR_PRCA,OWN_AGR_RCA1,SQM_RCA1,100,percent,square meters
+OWN_AGR_PARCA,OWN_AGR_ARCA,SQM_ARCA,100,percent,square meters
+OWN_AGR_PARSA,OWN_AGR_ARSA,SQM_ARSA,100,percent,square meters
+OWN_AGR_PRCA,OWN_AGR_RCA,SQM_RCA,100,percent,square meters
 OWN_AGR_PRSA,OWN_AGR_RSA,SQM_RSA,100,percent,square meters
-OWN_FED_PARCA,OWN_FED_ARCA1,SQM_ARCA1,100,percent,square meters
-OWN_FED_PARSA,OWN_FED_ARSA1,SQM_ARSA1,100,percent,square meters
-OWN_FED_PRCA,OWN_FED_RCA1,SQM_RCA1,100,percent,square meters
+OWN_FED_PARCA,OWN_FED_ARCA,SQM_ARCA,100,percent,square meters
+OWN_FED_PARSA,OWN_FED_ARSA,SQM_ARSA,100,percent,square meters
+OWN_FED_PRCA,OWN_FED_RCA,SQM_RCA,100,percent,square meters
 OWN_FED_PRSA,OWN_FED_RSA,SQM_RSA,100,percent,square meters
-OWN_ODF_PARCA,OWN_ODF_ARCA1,SQM_ARCA1,100,percent,square meters
-OWN_ODF_PARSA,OWN_ODF_ARSA1,SQM_ARSA1,100,percent,square meters
-OWN_ODF_PRCA,OWN_ODF_RCA1,SQM_RCA1,100,percent,square meters
+OWN_ODF_PARCA,OWN_ODF_ARCA,SQM_ARCA,100,percent,square meters
+OWN_ODF_PARSA,OWN_ODF_ARSA,SQM_ARSA,100,percent,square meters
+OWN_ODF_PRCA,OWN_ODF_RCA,SQM_RCA,100,percent,square meters
 OWN_ODF_PRSA,OWN_ODF_RSA,SQM_RSA,100,percent,square meters
-OWN_PRI_PARCA,OWN_PRI_ARCA1,SQM_ARCA1,100,percent,square meters
-OWN_PRI_PARSA,OWN_PRI_ARSA1,SQM_ARSA1,100,percent,square meters
-OWN_PRI_PRCA,OWN_PRI_RCA1,SQM_RCA1,100,percent,square meters
+OWN_PRI_PARCA,OWN_PRI_ARCA,SQM_ARCA,100,percent,square meters
+OWN_PRI_PARSA,OWN_PRI_ARSA,SQM_ARSA,100,percent,square meters
+OWN_PRI_PRCA,OWN_PRI_RCA,SQM_RCA,100,percent,square meters
 OWN_PRI_PRSA,OWN_PRI_RSA,SQM_RSA,100,percent,square meters
-OWN_URB_PARCA,OWN_URB_ARCA1,SQM_ARCA1,100,percent,square meters
-OWN_URB_PARSA,OWN_URB_ARSA1,SQM_ARSA1,100,percent,square meters
-OWN_URB_PRCA,OWN_URB_RCA1,SQM_RCA1,100,percent,square meters
+OWN_URB_PARCA,OWN_URB_ARCA,SQM_ARCA,100,percent,square meters
+OWN_URB_PARSA,OWN_URB_ARSA,SQM_ARSA,100,percent,square meters
+OWN_URB_PRCA,OWN_URB_RCA,SQM_RCA,100,percent,square meters
 OWN_URB_PRSA,OWN_URB_RSA,SQM_RSA,100,percent,square meters
-POP_DARCA,POP_ARCA2,SQM_ARCA2,1000,density persons per sqkm,count
+POP_DARCA,POP_ARCA,SQM_ARCA,1000,density persons per sqkm,count
 POP_DRCA,POP_RCA,SQM_RCA,1000,density persons per sqkm,count
-ROADLEN_DARCA,ROADLEN_ARCA1,SQM_ARCA1,1000,density length per sqkm,meters
-ROADLEN_DARSA,ROADLEN_ARSA1,SQM_ARSA1,1000,density length per sqkm,meters
-ROADLEN_DRCA,ROADLEN_RCA1,SQM_RCA1,1000,density length m per sqkm,meters
+ROADLEN_DARCA,ROADLEN_ARCA,SQM_ARCA,1000,density length per sqkm,meters
+ROADLEN_DARSA,ROADLEN_ARSA,SQM_ARSA,1000,density length per sqkm,meters
+ROADLEN_DRCA,ROADLEN_RCA,SQM_RCA,1000,density length m per sqkm,meters
 ROADLEN_DRSA,ROADLEN_RSA,SQM_RCA,1000,density length m per sqkm,meters
-ROADX_DARCA,ROADX_ARCA2,SQM_ARCA2,1000,density crossings per sqkm,count
+ROADX_DARCA,ROADX_ARCA,SQM_ARCA,1000,density crossings per sqkm,count
 ROADX_DRCA,ROADX_RCA,SQM_RCA,1000,density crossings per sqkm,count
-SAND_PARCA,SAND_ARCA2,NACOUNT_ARCA2,1,percent,sum of percents
+SAND_PARCA,SAND_ARCA,NACOUNT_ARCA,1,percent,sum of percents
 SAND_PRCA,SAND_RCA,NACOUNT_RCA,1,percent,sum of percents
-SILT_CLAY_PARCA,SILT_CLAY_ARCA2,NACOUNT_ARCA2,1,percent,sum of percents
+SILT_CLAY_PARCA,SILT_CLAY_ARCA,NACOUNT_ARCA,1,percent,sum of percents
 SILT_CLAY_PRCA,SILT_CLAY_RCA,NACOUNT_RCA,1,percent,sum of percents
-SILT_PARCA,SILT_ARCA2,NACOUNT_ARCA2,1,percent,sum of percents
+SILT_PARCA,SILT_ARCA,NACOUNT_ARCA,1,percent,sum of percents
 SILT_PRCA,SILT_RCA,NACOUNT_RCA,1,percent,sum of percents
-SUSCEP4_PARCA,SUSCEP4_ARCA2,SQM_ARCA2,100,percent,square meters
+SUSCEP4_PARCA,SUSCEP4_ARCA,SQM_ARCA,100,percent,square meters
 SUSCEP4_PRCA,SUSCEP4_RCA,SQM_RCA,100,percent,square meters
-SUSCEP5_PARCA,SUSCEP5_ARCA2,SQM_ARCA2,100,percent,square meters
+SUSCEP5_PARCA,SUSCEP5_ARCA,SQM_ARCA,100,percent,square meters
 SUSCEP5_PRCA,SUSCEP5_RCA,SQM_RCA,100,percent,square meters
-TYPEF_PARCA,TYPEF_ARCA2,FPA_ARCA2,100,percent,meters
+TYPEF_PARCA,TYPEF_ARCA,FPA_ARCA,100,percent,meters
 TYPEF_PRCA,TYPEF_RCA,FPA_RCA,100,percent,meters
