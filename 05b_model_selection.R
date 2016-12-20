@@ -9,16 +9,12 @@ for (i in 1:length(name_vec)) {
   # assign(paste0(gsub("[0-9]+_ML.Rdata|{0-9}._RUN2_ML.Rdata",
   #                    "",name_vec[i]),i), tmp)
 }
-#load("ssn1_glmssn5_20151019.Rdata")
-# ssn1_glmssn1_forward, ssn1_glmssn2_forward, 
-# ssn1_glmssn3_forward, ssn1_glmssn4_forward, 
-# ssn1_glmssn5_forward, ssn1_glmssn6_forward,
-# ssn1_glmssn7_forward, ssn1_glmssn8_forward,
-# ssn1_glmssn9_forward, ssn1_glmssn10_forward,
-# ssn1_glmssn11_forward, ssn1_glmssn12_forward,
-# ssn1_glmssn13_forward,
-models <- list(ssn1_glmssn_std_1,ssn1_glmssn_std_2,ssn1_glmssn_std_3,ssn1_glmssn_std_4,
-               ssn1_glmssn_std_5,ssn1_glmssn_std_6,ssn1_glmssn_std_7)
+c(paste("ssn1_glmssn_std_RUN1_", 1:7, sep = ""), 
+  paste("ssn1_glmssn_std_RUN2_", 1:7, sep = ""))
+models <- list(ssn1_glmssn_std_RUN1_1, ssn1_glmssn_std_RUN1_2, ssn1_glmssn_std_RUN1_3, ssn1_glmssn_std_RUN1_4,
+               ssn1_glmssn_std_RUN1_5, ssn1_glmssn_std_RUN1_6, ssn1_glmssn_std_RUN1_7, ssn1_glmssn_std_RUN2_1,
+               ssn1_glmssn_std_RUN2_2, ssn1_glmssn_std_RUN2_3, ssn1_glmssn_std_RUN2_4, ssn1_glmssn_std_RUN2_5,
+               ssn1_glmssn_std_RUN2_6, ssn1_glmssn_std_RUN2_7)
 bhats <- lapply(models, function(x) {x$estimates$betahat})
 results <- InfoCritCompare2(models)
 results$dAIC <- min(results$AIC) - results$AIC

@@ -81,9 +81,9 @@ obs.complete.vars$log10_BSTI <- log10(obs.complete.vars$BSTI)
 #   obs.vars[,c(names(obs.bsti),'log10_FSS_26Aug14')], function(x) {(x-min(x))/
 #       (max(x)-min(x))}))
 # save(min.max, file = 'minmax.Rdata')
-max_log10_bsti <- max(obs.complete.vars$log10_BSTI, na.rm = TRUE)
-
-obs.complete.vars$log10_BSTI <- obs.complete.vars$log10_BSTI / max_log10_bsti * 100
+# max_log10_bsti <- max(obs.complete.vars$log10_BSTI, na.rm = TRUE)
+# 
+# obs.complete.vars$log10_BSTI <- obs.complete.vars$log10_BSTI / max_log10_bsti * 100
 
 #Merge the selected predictors with the critical columns by SVN so they match
 #to the correct sample

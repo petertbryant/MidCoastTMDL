@@ -137,9 +137,9 @@ confint.glmssn <- function (object, parm, level = 0.95, ...)
 
 predict.vary <- function(betahat, ss, r_vec) {
   options(warn = -1)
-  betahat <- plyr::rename(betahat, c('HDWTR100' = 'HDWTR'))
+  betahat <- plyr::rename(betahat, c('HDWTR1' = 'HDWTR'))
   bsubm <- melt(betahat)
-  r_vec <- plyr::rename(r_vec, c('HDWTR100' = 'HDWTR'))
+  r_vec <- plyr::rename(r_vec, c('HDWTR1' = 'HDWTR'))
   r_vec <- melt(r_vec)
   r_vec$variable <- rownames(r_vec)
   r_vec <- plyr::rename(r_vec, c("value" = "value.betahat.vary"))

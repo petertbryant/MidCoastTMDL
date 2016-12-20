@@ -65,10 +65,11 @@ bsti <- bsti[, -grep('COMP', names(bsti))]
 #SLOPE and Q0001E_adj arrived at a model with lower AIC suggesting they
 #produce a more likely model. Both may be run but for now we will use the
 #component variables instead of the calculated variavle
+for (RUN in 1:2) {
 if (RUN == 1) {
-  bsti <- within(bsti, rm(STRMPWR))
+  bsti.run <- within(bsti, rm(STRMPWR))
 } else if (RUN == 2) {
-  bsti <- within(bsti, rm(Q0001E_adj, XSLOPE_MAP))
+  bsti.run <- within(bsti, rm(Q0001E_adj, XSLOPE_MAP))
 }
 
 #Normalize by maximum range
@@ -98,17 +99,17 @@ stdpreds <- function(newset,originalset) {
   return(sx)
 }
 
-bsti <- (as.data.frame(stdpreds(bsti, bsti)))
-#look <- lapply(bsti_std, hist)
+bsti.run <- (as.data.frame(stdpreds(bsti.run, bsti.run)))
+#look <- lapply(bsti.run_std, hist)
 
 # mtry value
-mtry.bsti <- as.integer(((ncol(bsti) - 1) / 3), 0)
+mtry.bsti <- as.integer(((ncol(bsti.run) - 1) / 3), 0)
 
 # initialize the variable importance df to store the importance scores from each run
-bsti.vi <- data.frame(matrix(nrow = ncol(bsti) - 1, ncol = 50))
-bsti.visd <- data.frame(matrix(nrow = ncol(bsti) - 1, ncol = 50))
+bsti.vi <- data.frame(matrix(nrow = ncol(bsti.run) - 1, ncol = 50))
+bsti.visd <- data.frame(matrix(nrow = ncol(bsti.run) - 1, ncol = 50))
 
-bsti.col <- colnames(bsti)
+bsti.col <- colnames(bsti.run)
 bsti.col <- bsti.col[!(bsti.col == "BSTI")]
 
 
@@ -116,10 +117,10 @@ bsti.col <- bsti.col[!(bsti.col == "BSTI")]
 # WARNING - Takes about 30 min
 beg <- Sys.time()
 print(beg)
-set.seed(100)
 for (i in 1:50) {
+  set.seed(i)
   bsti.rf <- randomForest(BSTI ~ ., 
-                             data = bsti,
+                             data = bsti.run,
                              mtry = mtry.bsti,
                              ntree = 2000, 
                              keep.forest = TRUE, 
@@ -161,6 +162,7 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M")
 vi_median_name <- paste0("bsti_vi_median_", timestamp, ".RData")
 bsti_name <- paste0("bsti_", timestamp, ".RData")
 save(bsti.vi.median, file = vi_median_name)
-save(bsti, file = bsti_name)
+save(bsti.run, file = bsti_name)
 timestamp
 
+}
