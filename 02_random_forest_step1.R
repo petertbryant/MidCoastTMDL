@@ -7,7 +7,7 @@ library(plyr)
 options(stringsAsFactors = FALSE)
 
 ssn_RF_data <- read.csv("ssn_RF_data.csv")
-RUN <- 1
+
 # ----------------------------------------------------------- #
 # FSS2 - Random forests excluding the physical habitat data ####
 # ----------------------------------------------------------- #

@@ -11,15 +11,15 @@ obs.vars.lst <- list()
 for (j in 1:2) {
   if (j == 1) {
       #RUN1
-  vi_median_name <- "bsti_vi_median_20161215_1347.Rdata"
-  bsti_name <- "bsti_20161215_1347.Rdata"
+  vi_median_name <- "bsti_vi_median_20161220_1204.Rdata"
+  bsti_name <- "bsti_20161220_1204.Rdata"
 
   load(vi_median_name)
   load(bsti_name)
   } else {
       #RUN2
-  vi_median_name <- "bsti_vi_median_20161215_1412.Rdata"
-  bsti_name <- "bsti_20161215_1412.Rdata"
+  vi_median_name <- "bsti_vi_median_20161220_1224.Rdata"
+  bsti_name <- "bsti_20161220_1224.Rdata"
   
   load(vi_median_name)
   load(bsti_name)
