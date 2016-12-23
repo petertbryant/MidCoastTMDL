@@ -31,8 +31,8 @@ for (j in 1:2) {
   # grab all variable names with median values > 1.004880e-04 = 50% of the data
   # This 50% of the data reflects 50% of the original list of variables prior to scaling
   # Scaling had the effect of dropping variables that were all 0s anyway.
-  bsti.s2.col <- bsti.vi.median[1:ceiling(nrow(bsti.vi.median)) / 2, ][, 1]
-  bsti.vi.median <- bsti.vi.median[1:ceiling(nrow(bsti.vi.median)) / 2, ]
+  bsti.s2.col <- bsti.vi.median[1:(ceiling(nrow(bsti.vi.median)) / 2), ][, 1]
+  bsti.vi.median <- bsti.vi.median[1:(ceiling(nrow(bsti.vi.median)) / 2), ]
   #bsti.s2.col <- c("FSS_26Aug14",(bsti.vi.median[,'var_name']))
   bsti.s2 <- bsti[, colnames(bsti) %in% c(bsti.s2.col,'HDWTR')]
   
@@ -170,7 +170,6 @@ for (j in 1:2) {
   #Now that we have the transformed variables we put them back in the 
   #SSN object
   obs.vars$HDWTR <- as.factor(obs.vars$HDWTR)
-  levels(obs.vars$HDWTR) <- c("0","1")
   obs.vars <- obs.vars[match(obs$pid, obs.vars$pid),]
   row.names(obs.vars) <- obs.vars$pid
   ssn1 <- putSSNdata.frame(obs.vars, ssn1, Name = 'Obs')

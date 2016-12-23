@@ -29,8 +29,8 @@ for (i in 1:(nrow(acs)/10)) {
     
     model.start.time <- Sys.time()
     print(paste("Starting model fit", ind[j], "at", model.start.time))
-    ssn_list[[j]] <- glmssn(log10_BSTI ~ sum_1095_days + XSLOPE_MAP + MIN_Z + KFACT_MARCA + 
-                              OWN_FED_PRCA + DIS_3YR_PRSA + ROADLEN_DRSA + OWN_URB_PARCA + HDWTR,
+    ssn_list[[j]] <- glmssn(log10_BSTI ~ sum_1095_days + XSLOPE_MAP + MIN_Z +  
+                              OWN_FED_PRCA + DIS_1YR_PARSA + HDWTR,
                             EstMeth = "ML",
                             ssn1,
                             CorModels = cm,
@@ -62,6 +62,6 @@ for (i in 1:(nrow(acs)/10)) {
 }
 
 results$dAIC <- min(results$AIC) - results$AIC
-results <- results[order(results$dAIC, decreasing = TRUE),]
+results <- results[order(results$RMSPE, decreasing = TRUE),]
 save(results, file = "autocorrelation_function_compare.Rdata")
 write.csv(results, "autocorrelation_function_compare.Rdata")
