@@ -169,23 +169,48 @@ predict.vary <- function(betahat, ss, r_vec) {
 
 simplify_target_equation <- function(betahat, ss, station) {
   options(warn = -1)
-  betahat <- plyr::rename(betahat, c('HDWTR100' = 'HDWTR'))
+  betahat <- plyr::rename(betahat, c('HDWTR1' = 'HDWTR'))
   bsubm <- melt(betahat)
   vals <- ss[ss$STATION_KEY == station, names(betahat)[-1]]
   vals <- melt(vals, measure.vars = 1:length(names(betahat[-1])))
   vals$value <- as.numeric(vals$value)
   inter <- merge(bsubm, vals, by = 'variable', suffixes = c('.betahat',''))
   inter$inter <- inter$value.betahat * inter$value
-  BSTI <- ss[ss$STATION_KEY == station, 'log10_BSTI']
+  BSTI <- ss[ss$STATION_KEY == station, 'log10_pred']
   Z <- BSTI - betahat$`(Intercept)`[1] - sum(inter$inter)
   
   inter2 <- inter[inter$variable != 'sum_1095_days',]
   b <- betahat$`(Intercept)`[1] + sum(inter2$inter) + Z
-  b_u <- (b*max_log10_bsti)/100
-  m_u <- (betahat$sum_1095_days*max_log10_bsti)/100
+  m <- betahat$sum_1095_days
   
   
-  x <- list("b_u" = b_u, "m_u" = m_u, "Z" = Z)
+  x <- list("b" = b, "m" = m, "Z" = Z)
+  attr(x, 'inter') <- inter
+  attr(x, 'inter2') <- inter2
+  
+  return(x)
+  options(warn = 0)
+}
+
+simplify_target_equation_all <- function(betahat, ss, var_means, var_sd) {
+  options(warn = -1)
+  betahat <- plyr::rename(betahat, c('HDWTR1.21463119808789' = 'HDWTR'))
+  bsubm <- melt(betahat)
+  vals <- ss[, names(betahat)[-1]]
+  vals <- melt(vals, measure.vars = 1:length(names(betahat[-1])))
+  vals$value <- as.numeric(vals$value)
+  inter <- merge(bsubm, vals, by = 'variable', suffixes = c('.betahat',''))
+  inter$inter <- inter$value.betahat * inter$value
+  BSTI <- ss[, 'log10_BSTI']
+  Z <- BSTI - betahat$`(Intercept)`[1] - sum(inter$inter)
+  
+  inter2 <- inter[inter$variable != 'sum_1095_days',]
+  b <- betahat$`(Intercept)`[1] + sum(inter2$inter) + Z
+  b_u <- (b*(2*var_sd["BSTI"]))+var_means["BSTI"]
+  m_u <- (betahat$sum_1095_days*(2*var_sd["BSTI"]))+var_means["BSTI"]
+  
+  
+  x <- list("b_u" = b_u, "m_u" = m_u, "Z" = Z, "SVN" = ss[,'SVN'])
   attr(x, 'inter') <- inter
   attr(x, 'inter2') <- inter2
   
