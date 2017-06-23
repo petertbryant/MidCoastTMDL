@@ -28,19 +28,19 @@ wqlim_shp@data$id <- rownames(wqlim_shp@data)
 dmas_shp <- readOGR("C:/Users/pbryant/Desktop/MidCoastTMDL-GIS/Shapefiles_for_mapping", "DMAs")
 dmas_shp <- spTransform(dmas_shp, CRS("+proj=longlat +datum=WGS84"))
 
-pop_ras <- raster("C:/Users/pbryant/Desktop/MidCoastTMDL-GIS/Shapefiles_for_mapping/coast_dasy")
-pop_ras <- projectRaster(pop_ras, crs = CRS("+proj=longlat +datum=WGS84"))
+# pop_ras <- raster("C:/Users/pbryant/Desktop/MidCoastTMDL-GIS/Shapefiles_for_mapping/coast_dasy")
+# pop_ras <- projectRaster(pop_ras, crs = CRS("+proj=longlat +datum=WGS84"))
 
 # suscep_ras <- raster("C:/Users/pbryant/Desktop/MidCoastTMDL-GIS/Shapefiles_for_mapping/smc")
 # suscep.poly <- rasterToPolygons(suscep_ras, dissolve = TRUE)
 
 #### Define station area #### 
-stn <- stns_shp[stns_shp$STATION_KE == ss$STATION_KEY[i],][1,]
+stn <- stns_shp[stns_shp$STATION_KE == 26822,][1,]
 stn <- spTransform(stn, CRS("+proj=longlat +datum=WGS84"))
 stn <- data.frame(stn)
 
 stn_arca.shp <- arca_shp[arca_shp$rid_LSN04 == unique(
-  obs.complete[obs.complete$STATION_KEY == ss$STATION_KEY[i], "rid_LSN04"]),]
+  ssn_RF_data[ssn_RF_data$STATION_KEY == 26822, "rid"]),]
 stn_arca.shp <- spTransform(stn_arca.shp,  
                             CRS("+proj=longlat +datum=WGS84"))
 stn_arca <- fortify(stn_arca.shp)
@@ -83,7 +83,7 @@ gmap_arca <- gmap + ggtitle("ARCA") +
            location = 'topright', 
            anchor = c(x = (attr(gm, "bb")$ur.lon - .001), 
                       y = (attr(gm, "bb")$ur.lat - .001)))
-#gmap_arca
+gmap_arca
 
 #### Road crossings ####
 gmap_roadx <- gmap_arca + 
@@ -110,13 +110,13 @@ if (nrow(wqlim_shp@data) > 0) {
                                           group = group,
                                           color = WQ_limited)) +
     ggtitle("303(d) Listings") + 
-    scale_color_manual(values = c('orange','black')) +
+    scale_color_manual(values = c('orange','black','blue')) +
     theme(legend.title = element_blank())
 } else {
   gmap_wqlim <- gmap_arca + ggtitle("No 303(d) Listings in the ARCA") +
     theme(legend.title = element_blank())
 }
-#gmap_wqlim
+gmap_wqlim
 
 #### Set up base map for polygon and raster mapping ####
 gm <- get_googlemap(center = center, zoom = zoom, maptype = "roadmap")
@@ -275,7 +275,7 @@ if (!all(pop.poly.fort$coast_dasy == 0)) {
 # gmap_suscep
 
 #### Disturbance ####
-yrs <- unique(obs.complete[obs.complete$STATION_KEY == ss$STATION_KEY[i], "YEAR"])
+yrs <- unique(ssn_RF_data[ssn_RF_data$STATION_KEY == 26822, "YEAR"])
 dis_map_list <- list()
 for (i in 1:length(yrs)) {
   if (any(yrs > 2008)) {

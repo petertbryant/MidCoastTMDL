@@ -176,7 +176,7 @@ simplify_target_equation <- function(betahat, ss, station) {
   vals$value <- as.numeric(vals$value)
   inter <- merge(bsubm, vals, by = 'variable', suffixes = c('.betahat',''))
   inter$inter <- inter$value.betahat * inter$value
-  BSTI <- ss[ss$STATION_KEY == station, 'log10_pred']
+  BSTI <- ss[ss$STATION_KEY == station, 'log10_BSTI']
   Z <- BSTI - betahat$`(Intercept)`[1] - sum(inter$inter)
   
   inter2 <- inter[inter$variable != 'sum_1095_days',]
@@ -194,14 +194,14 @@ simplify_target_equation <- function(betahat, ss, station) {
 
 simplify_target_equation_all <- function(betahat, ss, var_means, var_sd) {
   options(warn = -1)
-  betahat <- plyr::rename(betahat, c('HDWTR1.21463119808789' = 'HDWTR'))
+  betahat <- plyr::rename(betahat, c('HDWTR1' = 'HDWTR'))
   bsubm <- melt(betahat)
   vals <- ss[, names(betahat)[-1]]
   vals <- melt(vals, measure.vars = 1:length(names(betahat[-1])))
   vals$value <- as.numeric(vals$value)
   inter <- merge(bsubm, vals, by = 'variable', suffixes = c('.betahat',''))
   inter$inter <- inter$value.betahat * inter$value
-  BSTI <- ss[, 'log10_BSTI']
+  BSTI <- ss[, 'log10_obs']
   Z <- BSTI - betahat$`(Intercept)`[1] - sum(inter$inter)
   
   inter2 <- inter[inter$variable != 'sum_1095_days',]
@@ -210,7 +210,7 @@ simplify_target_equation_all <- function(betahat, ss, var_means, var_sd) {
   m_u <- (betahat$sum_1095_days*(2*var_sd["BSTI"]))+var_means["BSTI"]
   
   
-  x <- list("b_u" = b_u, "m_u" = m_u, "Z" = Z, "SVN" = ss[,'SVN'])
+  x <- list("b_u" = b_u, "m_u" = m_u, "Z" = Z, "STATION_KEY" = ss[,"STATION_KEY"])
   attr(x, 'inter') <- inter
   attr(x, 'inter2') <- inter2
   

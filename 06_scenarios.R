@@ -183,9 +183,18 @@ ssid_all <- getSSNdata.frame(fit_0_preds, Name = 'preds')
 #### Idetnify impaired sites where sediment is a stressor ####
 ssid <- ssid_all
 ssid <- merge(ssid, preds_obs, by = 'pid')
-critval <- qnorm(0.95)
-ssid$log10_BSTI_uci <- ssid$log10_BSTI + (critval * ssid$log10_BSTI.predSE)
-ssid$log10_BSTI_lci <- ssid$log10_BSTI - (critval * ssid$log10_BSTI.predSE)
+df <- fit$sampinfo$sample.size - fit$sampinfo$rankX
+critval <- qt(0.95, df)#qnorm(0.95)
+ssid$log10_BSTI_upi <- ssid$log10_BSTI + (critval * ssid$log10_BSTI.predSE)
+ssid$log10_BSTI_lpi <- ssid$log10_BSTI - (critval * ssid$log10_BSTI.predSE)
+critval2 <- qnorm(0.95)
+ssid$log10_BSTI_uci <- ssid$log10_BSTI + (critval2 * ssid$log10_BSTI.predSE)
+ssid$log10_BSTI_lci <- ssid$log10_BSTI - (critval2 * ssid$log10_BSTI.predSE)
+ssid$pred_upi <- as.integer(round(10^ssid$log10_BSTI_upi))
+ssid$pred_lpi <- as.integer(round(10^ssid$log10_BSTI_lpi))
+ssid$pred_uci <- as.integer(round(10^ssid$log10_BSTI_uci))
+ssid$pred_lci <- as.integer(round(10^ssid$log10_BSTI_lci))
+
 ssid <- plyr::rename(ssid, c('log10_BSTI' = 'log10_pred', 'log10_BSTI_obs' = 'log10_obs',
                              'log10_BSTI_uci' = 'log10_pred_uci',
                              'log10_BSTI_lci' = 'log10_pred_lci'))
@@ -205,17 +214,19 @@ betahat <-dcast(data.frame(variable = rownames(fit$estimates$betahat),
                 . ~ variable,
                 value.var = "betahat")[,-1]
 
-# for (i in 1:nrow(ssid_all)) {
-#   bm_list <- simplify_target_equation(betahat, ssid_all, ssid_all[i, 'STATION_KEY'])
-#   tmp_df_bm <- as.data.frame(bm_list)
-#   tmp_df_bm <- cbind(ssid_all[i ,c('STATION_KEY','SITE_NAME')], tmp_df_bm)
-# 
-#   if (i == 1) {
-#     df_bm <- tmp_df_bm
-#   } else {
-#     df_bm <- rbind(df_bm, tmp_df_bm)
-#   }
-# }
+for (i in 1:nrow(ssid_all)) {
+  bm_list <- simplify_target_equation(betahat, ssid_all, ssid_all[i, 'STATION_KEY'])
+  tmp_df_bm <- as.data.frame(bm_list)
+  tmp_df_bm <- cbind(ssid_all[i ,c('STATION_KEY','SITE_NAME')], tmp_df_bm)
+
+  if (i == 1) {
+    df_bm <- tmp_df_bm
+  } else {
+    df_bm <- rbind(df_bm, tmp_df_bm)
+  }
+}
+
+10^df_bm[df_bm$STATION_KEY == 26822,'b'] + df_bm[df_bm$STATION_KEY == 26822,'m'] * obs[obs$STATION_KEY == 26822, 'sum_1095_days']
 
 #Save simplified equation values for sediment stressor impaired sites
 # df_bm_ss <- df_bm[df_bm$STATION_KEY %in% ss$STATION_KEY,]
@@ -233,7 +244,7 @@ for (i in 1:nrow(ss)) {
   rf_range <- rf_range * (2*var_sd["sum_1095_days"]) + var_means["sum_1095_days"]
   
   #Pull out the simplified equation values to use for plotting
-  bm_list <- simplify_target_equation(betahat, ss, ss[i, 'STATION_KEY'])
+  bm_list <- simplify_target_equation(betahat, ss, ss[i, 'STATION_KEY']) 
   
   #Build plot using the simplified equation
   g = ggplot() + stat_function(data = data.frame(x = rf_range), size = 1, 
