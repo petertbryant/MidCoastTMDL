@@ -169,14 +169,19 @@ predict.vary <- function(betahat, ss, r_vec) {
 
 simplify_target_equation <- function(betahat, ss, station) {
   options(warn = -1)
-  betahat <- plyr::rename(betahat, c('HDWTR1' = 'HDWTR'))
+  if ('HDWTR1' %in% names(betahat)) betahat <- plyr::rename(betahat, c('HDWTR1' = 'HDWTR'))
   bsubm <- melt(betahat)
   vals <- ss[ss$STATION_KEY == station, names(betahat)[-1]]
   vals <- melt(vals, measure.vars = 1:length(names(betahat[-1])))
   vals$value <- as.numeric(vals$value)
   inter <- merge(bsubm, vals, by = 'variable', suffixes = c('.betahat',''))
   inter$inter <- inter$value.betahat * inter$value
-  BSTI <- ss[ss$STATION_KEY == station, 'log10_BSTI']
+  if ('log10_BSTI' %in% names(ss)) {
+    BSTI <- ss[ss$STATION_KEY == station, 'log10_BSTI']
+  } else if ('log10_obs' %in% names(ss)) {
+    BSTI <- ss[ss$STATION_KEY == station, 'log10_pred']
+  }
+  
   Z <- BSTI - betahat$`(Intercept)`[1] - sum(inter$inter)
   
   inter2 <- inter[inter$variable != 'sum_1095_days',]
