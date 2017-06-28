@@ -2,9 +2,10 @@ MidCoastTMDL
 ============
 
 This folder contains all the code for model development, target/Loading Capacity
-calculations and predictions. 
-
-# Model development
+calculations and predictions. The header size is related to 
+the importance of the file. Larger means it is useful and/or was used to produce
+the current model. Smaller means that it was used for plotting or other uses. Smallest
+means that it is no longer being used.
 
 ## 01_combine_data.R
 This file takes all the input data that has been calculated by Ryan Michie and
@@ -148,5 +149,5 @@ to look at station locations. Ultimately this was not used.
 This script compiles all the modifications I made to the SSN cross validation
 functions to work with our unique case of multiple samples at a location
 
-# dma_unique.R
+## dma_unique.R
 This script identifies the DMAs that are covered in each impaired watershed.
