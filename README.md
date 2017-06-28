@@ -1,4 +1,4 @@
-MidCoastTMDL
+MidCoastSedimentScripts
 ============
 
 This folder contains all the code for model development, target/Loading Capacity
