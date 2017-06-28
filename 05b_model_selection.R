@@ -1,5 +1,7 @@
 library(SSN)
 
+source('functions_custom.R')
+
 name_vec <- paste0("ssn1_glmssn_std_", 1:7, "_ML.Rdata")
 #name_vec <- c(name_vec,paste0("ssn1_glmssn", 1:8, "_RUN2_ML.Rdata"))
 #name_vec <- c(name_vec,paste0("ssn1_glmssn",1:8,"_ML_RUN3.Rdata"))
